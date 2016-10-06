@@ -62,7 +62,7 @@ syntax InterfaceDecHead =
   ;
 
 syntax LocalVarDec =
-  @prefer localVarDec: (Anno | VarMod)* Type {VarDec ","}+ 
+  localVarDec: (Anno | VarMod)* Type {VarDec ","}+ 
   ;
 
 syntax TypeParams =
@@ -239,7 +239,7 @@ syntax EnumConstArgs =
   ;
 
 syntax LocalVarDecStm =
-  @prefer localVarDecStm: LocalVarDec ";" 
+   localVarDecStm: LocalVarDec ";" 
   ;
 
 keyword HexaSignificandKeywords =
@@ -372,6 +372,12 @@ syntax CatchFormalParameter = CatchType VarDec
 
 syntax CatchType = {ClassType "|"}+ ;
 
+syntax ResourceSpecification = 
+   \resourceSpecification: "(" {Resource ";"}+ ")"
+  ;
+
+syntax Resource = VarMod* Type VarDec "=" Expr; 
+   
 syntax ArrayInit =
    arrayInit: "{" {VarInit ","}* "," "}" 
   |  arrayInit: "{" {VarInit ","}* "}" 
@@ -453,7 +459,7 @@ syntax ArrayBaseType =
 
 syntax TypeName =
    typeName: PackageOrTypeName "." Id 
-  |  typeName: Id 
+  | typeName: Id  
   ;
 
 lexical DeciLiteral =
@@ -473,18 +479,19 @@ syntax Stm =
    \continue: "continue"  Id? ";" 
   |  forEach: "for"  "(" FormalParam ":" Expr ")" Stm 
   |  \try: "try" Block CatchClause* "finally"  Block 
+  |  \try: "try"  Block CatchClause+ 
+  |  \try: "try" ResourceSpecification Block CatchClause* ("finally"  Block)?
   |  \throw: "throw"  Expr ";" 
   | Block 
   |  assertStm: "assert"  Expr ":" Expr ";" 
   |  \for: "for" "(" {Expr ","}* ";" Expr? ";" {Expr ","}* ")" Stm 
-  |  \try: "try"  Block CatchClause+ 
   |  labeled: Id ":" Stm 
   |  \for: "for"  "(" LocalVarDec ";" Expr? ";" {Expr ","}* ")" Stm 
   |  \switch: "switch"  "(" Expr ")" SwitchBlock 
-  |  \if: "if" "(" Expr ")" Stm "else"  Stm 
+  |  @prefer \if: "if" "(" Expr ")" Stm "else"  Stm 
   |  doWhile: "do"  Stm "while"  "(" Expr ")" ";" 
   |  synchronized: "synchronized"  "(" Expr ")" Block 
-  | @prefer \if: "if"  "(" Expr ")" Stm 
+  |  \if: "if"  "(" Expr ")" Stm 
   |  empty: ";" 
   |  \while: "while"  "(" Expr ")" Stm 
   |  assertStm: "assert"  Expr ";" 
@@ -492,7 +499,6 @@ syntax Stm =
   |  \break: "break" Id? ";" 
   |  exprStm: Expr ";" 
   ;
-
 
 syntax NullLiteral =
    null: "null" 
@@ -527,6 +533,18 @@ syntax Expr =
   |  this: "this"  
   | ArrayAccess \ ArrayAccessKeywords 
   ;
+
+//  |   lambdaExpr : LambdaParameters "-\>" LambdaBody 
+  
+syntax LambdaParameters = Id 
+                        | {FormalParam ","}*
+                        | { Id "," }*
+                        ;
+                          
+syntax LambdaBody = Expr
+                  | Block
+                  ; 
+
 
 syntax Expr =
   right 
@@ -623,7 +641,7 @@ syntax Expr =
 syntax Expr =
   exprName: ExprName 
   ;
-
+ 
 lexical NamedEscape =
    namedEscape: "\\" [\" \' \\ b f n r t] 
   ;
@@ -982,9 +1000,9 @@ lexical HexaFloatLiteral =
   ;
 
 syntax BlockStm =
-  Stm 
+  @prefer localVarDec: LocalVarDecStm
   |  classDecStm: ClassDec 
-  | LocalVarDecStm 
+  |  stm : Stm 
   ;
 
 syntax DimExpr =

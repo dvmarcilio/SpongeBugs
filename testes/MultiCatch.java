@@ -6,6 +6,9 @@ public class MultiCatch {
 		}catch(IOException | SQLException e) {
 			System.out.println(" ok");
 		}
+		if(!blah()) 
+			return true;  
+		else return false;  
 	}
 	
 }
