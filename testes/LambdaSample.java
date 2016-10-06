@@ -34,7 +34,7 @@ public class LambdaSample {
 		List<String> projects = null; // rcsv.readInput();
 		
 		try {		
-	//		projects.stream().forEach(project -> { pa.analyse(project)});
+			projects.stream().forEach(project -> { pa.analyse(project) });
 		}catch(Exception t) {
 			t.printStackTrace();
 		}

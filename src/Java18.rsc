@@ -497,9 +497,13 @@ syntax Stm =
   |  assertStm: "assert"  Expr ";" 
   |  \return: "return"  Expr? ";" 
   |  \break: "break" Id? ";" 
-  |  exprStm: Expr ";" 
+  |  exprStm: NonRelExpr ";" 
   ;
 
+syntax NonRelExpr =
+   nre: Expr!gt!ltEq!lt!gtEq!eq!notEq 
+  ;
+  
 syntax NullLiteral =
    null: "null" 
   ;
@@ -525,7 +529,8 @@ syntax ResultType =
 syntax Expr =
   FieldAccess \ FieldAccessKeywords 
   |  newInstance: "new"  TypeArgs? ClassOrInterfaceType "(" {Expr ","}* ")" ClassBody? 
-  |  invoke: MethodSpec "(" {Expr ","}* ")" 
+  |  invoke: MethodSpec "(" {Expr ","}* ")"
+  |   lambdaExpr : LambdaParameters "-\>" LambdaBody  
   | bracket "(" Expr ")" 
   |  lit: Literal 
   |  qThis: TypeName "." "this"  
@@ -533,8 +538,6 @@ syntax Expr =
   |  this: "this"  
   | ArrayAccess \ ArrayAccessKeywords 
   ;
-
-//  |   lambdaExpr : LambdaParameters "-\>" LambdaBody 
   
 syntax LambdaParameters = Id 
                         | {FormalParam ","}*
@@ -1000,7 +1003,7 @@ lexical HexaFloatLiteral =
   ;
 
 syntax BlockStm =
-  @prefer localVarDec: LocalVarDecStm
+   localVarDec: LocalVarDecStm
   |  classDecStm: ClassDec 
   |  stm : Stm 
   ;
