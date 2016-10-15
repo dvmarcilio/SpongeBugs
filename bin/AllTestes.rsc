@@ -1,7 +1,6 @@
 module AllTestes
 
-//import lang::java::\syntax::Java18;
-import Java8;
+import lang::java::\syntax::Java18;
 import ParseTree; 
 import IO;
 import util::Math;

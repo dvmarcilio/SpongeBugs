@@ -12,7 +12,7 @@
 //  - https://docs.oracle.com/javase/specs/jls/se8/html/jls-19.html
 //  - https://github.com/antlr/grammars-v4/blob/master/java8/Java8.g4
 
-module Java8
+module lang::java::\syntax::Java18
 
 start syntax CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* LAYOUT?;
 
