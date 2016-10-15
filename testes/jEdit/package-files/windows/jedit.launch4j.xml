@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ jEdit - Programmer's Text Editor
+  ~ :tabSize=8:indentSize=8:noTabs=false:
+  ~ :folding=explicit:collapseFolds=1:
+  ~
+  ~ Copyright © 2014 jEdit contributors
+  ~
+  ~ This program is free software; you can redistribute it and/or
+  ~ modify it under the terms of the GNU General Public License
+  ~ as published by the Free Software Foundation; either version 2
+  ~ of the License, or any later version.
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program; if not, write to the Free Software
+  ~ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+  -->
+
+<launch4jConfig>
+	<headerType>gui</headerType>
+	<outfile>jedit.exe</outfile>
+	<jar>@jar.filename@</jar>
+	<dontWrapJar>true</dontWrapJar>
+	<errTitle>jEdit</errTitle>
+	<downloadUrl>http://www.java.com/download</downloadUrl>
+	<supportUrl>http://www.jEdit.org</supportUrl>
+	<cmdLine>-reuseview</cmdLine>
+	<stayAlive>true</stayAlive>
+	<icon>@base.dir@/icons/jedit.ico</icon>
+	<jre>
+		<minVersion>@target.java.version@.0</minVersion>
+		<!-- Prefer JDK to make tools.jar available if possible. -->
+		<jdkPreference>preferJdk</jdkPreference>
+	</jre>
+	<versionInfo>
+		<fileVersion>@jedit.build.number@</fileVersion>
+		<txtFileVersion>@jedit.version@</txtFileVersion>
+		<fileDescription>jEdit - Programmer&apos;s Text Editor</fileDescription>
+		<copyright>Copyright © 1998-@current.year@ Contributors</copyright>
+		<productVersion>@jedit.build.number@</productVersion>
+		<txtProductVersion>@jedit.version@</txtProductVersion>
+		<productName>jEdit</productName>
+		<companyName>Contributors</companyName>
+		<internalName>jEdit</internalName>
+		<originalFilename>jedit.exe</originalFilename>
+	</versionInfo>
+</launch4jConfig>

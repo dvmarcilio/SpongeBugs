@@ -14,6 +14,8 @@
 
 module Java8
 
+start syntax CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* LAYOUT?;
+
 syntax Literal = IntegerLiteral
   			   | FloatingPointLiteral
   			   | BooleanLiteral
@@ -48,12 +50,12 @@ syntax IntegralType = "byte"
 syntax FloatingPointType = "float" | "double" ;
 
 syntax ReferenceType = ClassOrInterfaceType 
-                     | TypeVariable 
+          //           | TypeVariable 
                      | ArrayType
                      ;
                      
 syntax ClassOrInterfaceType = ClassType 
-                     | InterfaceType
+                //     | InterfaceType
                      ;
                                           
 syntax ClassType = Annotation* Identifier TypeArguments? 
@@ -65,7 +67,8 @@ syntax TypeVariable = Annotation* Identifier;
 
 syntax ArrayType = PrimitiveType Dims 
                  | ClassOrInterfaceType Dims 
-                 | TypeVariable Dims;
+                 //| TypeVariable Dims
+                 ;
                  
 syntax Dims = Annotation* "[" "]" (Annotation* "[" "]")*; 
 
@@ -73,8 +76,8 @@ syntax TypeParameter = TypeParameterModifier* Identifier TypeBound? ;
 
 syntax TypeParameterModifier = Annotation; 
 
-syntax TypeBound = "extends" TypeVariable
-                 | "extends" ClassOrInterfaceType AdditionalBound*
+syntax TypeBound = "extends" { TypeVariable "&" } +
+               //  | "extends" ClassOrInterfaceType AdditionalBound*
                  ;
                  
 syntax AdditionalBound = "&" InterfaceType ;
@@ -121,8 +124,6 @@ syntax AmbiguousName = Identifier
 /*
  * Productions from §7 (Packages)
  */                    
- 
-syntax CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* ;
  
 syntax PackageDeclaration = PackageModifier* "package" {Identifier "."}+ ";" ;
 
@@ -183,7 +184,7 @@ syntax ClassMemberDeclaration = FieldDeclaration
                               | InterfaceDeclaration 
                               ;
                               
-syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ;
+syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ";" ;
 
 syntax FieldModifier = Annotation 
                      | "public" 
@@ -214,12 +215,12 @@ syntax UnannPrimitiveType = NumericType
                           ;
 
 syntax UnannReferenceType = UnannClassOrInterfaceType 
-                          | UnannTypeVariable 
+                         // | UnannTypeVariable 
                           | UnannArrayType
                           ;
                           
 syntax UnannClassOrInterfaceType = UnannClassType 
-                                 | UnannInterfaceType
+                     //            | UnannInterfaceType
                                  ; 
                           
 syntax UnannClassType = Identifier TypeArguments? 
@@ -231,7 +232,7 @@ syntax UnannTypeVariable = Identifier ;
 
 syntax UnannArrayType = UnannPrimitiveType Dims 
                | UnannClassOrInterfaceType Dims 
-               |UnannTypeVariable Dims
+             //  |UnannTypeVariable Dims
                ;
 
 syntax MethodDeclaration = MethodModifier* MethodHeader MethodBody ;
@@ -255,34 +256,58 @@ syntax MethodHeader = Result MethodDeclarator Throws?
 syntax Result = UnannType 
               | "void" 
               ;
-              
-syntax MethodDeclarator = Identifier "(" FormalParameterList? ")" Dims? ;
 
-syntax FormalParameterList = ReceiverParameter 
-                           | FormalParameters "," LastFormalParameter 
-                           | LastFormalParameter
-                           ;
+
+syntax MethodDeclarator = Identifier "(" FormalParameterList? ")" Dims? ;
+            
+syntax FormalParameterList = FormalParameters ;
                             
-syntax FormalParameters = {FormalParameter ","}+  
-                         | ReceiverParameter ("," FormalParameter)*
-                         ;                                   
+syntax FormalParameters = formalParameter : FormalParameter ("," FormalParameters)?
+                      //  | receiveParameter: ReceiverParameter (", FormalParameter)*
+                        | lastFormalParamete: LastFormalParameter
+                        ;                                   
 
 syntax FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
 
-syntax VariableModifier = Annotation 
-                        | "final" 
-                        ;
                         
 syntax LastFormalParameter = VariableModifier* UnannType Annotation* "..." VariableDeclaratorId 
-                           | FormalParameter
                            ;
 
 syntax ReceiverParameter = Annotation* UnannType (Identifier ".")? "this" ;
 
+syntax VariableModifier = Annotation 
+                        | "final" 
+                        ;
+              
+//syntax MethodDeclarator = Identifier "(" FormalParameterList? ")" Dims? ;
+//
+////syntax FormalParameterList = ReceiverParameter 
+////                           | FormalParameters "," LastFormalParameter 
+////                           | LastFormalParameter
+////                           ;
+//syntax FormalParameterList = {FormalParameter ","}+;
+//                           
+//                            
+//syntax FormalParameters = {FormalParameter ","}+  
+//                         | ReceiverParameter ("," FormalParameter)*
+//                         ;                                   
+//
+//syntax FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
+//
+//syntax VariableModifier = Annotation 
+//                        | "final" 
+//                        ;
+//                        
+//syntax LastFormalParameter = VariableModifier* UnannType Annotation* "..." VariableDeclaratorId 
+//                           | FormalParameter
+//                           ;
+//
+//syntax ReceiverParameter = Annotation* UnannType (Identifier ".")? "this" ;
+
 syntax Throws = "throws" { ExceptionType "," }+;  
 
 syntax ExceptionType = ClassType 
-                     | TypeVariable
+                 //    | TypeVariable
                      ; 
 
 
@@ -427,15 +452,16 @@ syntax VariableInitializerList = { VariableInitializer "," }+ ;
  */
  
 syntax Block = "{" BlockStatements? "}" ;
+             
 
-syntax BlockStatements = BlockStatement* ;
+syntax BlockStatements = BlockStatement+ ;
 
 syntax BlockStatement = LocalVariableDeclarationStatement 
                       | ClassDeclaration 
                       | Statement
                       ;
                       
-syntax LocalVariableDeclarationStatement = LocalVariableDeclaration ";" ;
+syntax LocalVariableDeclarationStatement = LocalVariableDeclaration ";"+ ;
 
 syntax LocalVariableDeclaration = VariableModifier* UnannType VariableDeclaratorList ;
 
@@ -504,7 +530,7 @@ syntax SwitchBlockStatementGroup = SwitchLabels BlockStatements ;
 syntax SwitchLabels = SwitchLabel+ ; 
 
 syntax SwitchLabel = "case" ConstantExpression ":" 
-                   | "case" EnumConstantName ":" 
+                //   | "case" EnumConstantName ":" 
                    | "default" ":" 
                    ;
                    
@@ -514,5 +540,584 @@ syntax WhileStatement = "while" "(" Expression ")" Statement ;
 
 syntax WhileStatementNoShortIf = "while" "(" Expression ")" StatementNoShortIf ;
 
-                   
+syntax DoStatement = "do" Statement "while" "(" Expression ")" ;
 
+syntax ForStatement = BasicForStatement  
+                    | EnhancedForStatement
+                    ;
+                    
+syntax ForStatementNoShortIf = BasicForStatementNoShortIf 
+                             | EnhancedForStatementNoShortIf
+                             ;
+                             
+syntax BasicForStatement = "for" "(" ForInit? ";" Expression? ";" ForUpdate? ")" Statement ;
+
+syntax BasicForStatementNoShortIf = "for" "(" ForInit? ";" Expression? ";" ForUpdate? ")" StatementNoShortIf ;
+
+syntax ForInit = StatementExpressionList 
+               | LocalVariableDeclaration
+               ;
+               
+syntax  ForUpdate = StatementExpressionList ;
+               
+syntax StatementExpressionList = {StatementExpression ","} + ;
+
+syntax EnhancedForStatement = "for" "(" VariableModifier* UnannType VariableDeclaratorId ":" Expression ")" Statement ;
+
+syntax EnhancedForStatementNoShortIf = "for" "(" VariableModifier* UnannType VariableDeclaratorId ":" Expression ")" StatementNoShortIf ;
+
+syntax BreakStatement = "break" Identifier? ";" ;
+
+syntax ContinueStatement = "continue" Identifier? ";" ;
+
+syntax ReturnStatement = "return" Expression? ";" ;
+
+syntax ThrowStatement = "throw" Expression ";" ;
+
+syntax SynchronizedStatement = "synchronized" "(" Expression ")" Block ;
+
+syntax TryStatement = "try" Block Catches 
+                    | "try" Block Catches? Finally 
+                    | TryWithResourcesStatement
+                    ;
+                    
+syntax Catches = CatchClause+ ;
+
+syntax CatchClause = "catch" "(" CatchFormalParameter ")" Block ;
+
+syntax CatchFormalParameter = VariableModifier* CatchType VariableDeclaratorId ; 
+
+syntax CatchType = UnannClassType ("|" ClassType)* ;
+
+syntax Finally = "finally" Block ; 
+
+syntax TryWithResourcesStatement = "try" ResourceSpecification Block Catches? Finally? ;
+
+syntax ResourceSpecification = "(" ResourceList ";"? ")" ; 
+
+syntax ResourceList = { Resource ";" }*;
+
+syntax Resource = VariableModifier* UnannType VariableDeclaratorId "=" Expression ;
+
+/*
+ * Productions from §15 (Expressions)
+ */
+
+syntax Primary = PrimaryNoNewArray 
+                | ArrayCreationExpression
+                ; 
+                
+syntax PrimaryNoNewArray = Literal 
+                          | ClassLiteral 
+                          | "this" 
+                          | TypeName "." "this" 
+                          | "(" Expression ")" 
+                          | ClassInstanceCreationExpression 
+                          | FieldAccess 
+                          | ArrayAccess 
+                          | MethodInvocation 
+                          | MethodReference               
+                          ;
+                          
+syntax ClassLiteral = TypeName ("[" "]")* "." "class" 
+                    | NumericType ("[" "]")* "." "class" 
+                    | "boolean" ("[" "]")* "." "class" 
+                    | "void" "." "class"              
+                    ;
+                    
+syntax ClassInstanceCreationExpression = UnqualifiedClassInstanceCreationExpression 
+                                       | ExpressionName "." UnqualifiedClassInstanceCreationExpression 
+                                       | Primary "." UnqualifiedClassInstanceCreationExpression
+                                       ; 
+
+syntax UnqualifiedClassInstanceCreationExpression = "new" TypeArguments? ClassOrInterfaceTypeToInstantiate "(" ArgumentList? ")" ClassBody? ;
+
+// syntax ClassOrInterfaceTypeToInstantiate = Annotation? Identifier ("." Annotation* Identifier)* TypeArgumentsOrDiamond? ;
+
+syntax ClassOrInterfaceTypeToInstantiate = {AnnotatedType "."}* TypeArgumentsOrDiamond? ;
+
+syntax AnnotatedType = Annotation* Identifier ;
+
+syntax TypeArgumentsOrDiamond = TypeArguments  
+                            //  | "\<" "\>" 
+                              ;
+                                       
+syntax FieldAccess = Primary "." Identifier 
+                   | "super" "." Identifier 
+                   | TypeName "." "super" "." Identifier
+                   ;
+                  
+syntax ArrayAccess = ExpressionName "[" Expression "]" 
+                   | PrimaryNoNewArray "[" Expression "]" 
+                   ;
+                  
+syntax MethodInvocation = MethodName "(" ArgumentList? ")"  
+                        //| TypeName "." TypeArguments? Identifier "(" ArgumentList? ")"  
+                        | ExpressionName "." TypeArguments? Identifier "(" ArgumentList? ")" 
+                        | Primary "." TypeArguments? Identifier "(" ArgumentList? ")"  
+                        | "super" "." TypeArguments? Identifier "(" ArgumentList? ")"  
+                        | TypeName "." "super" "." TypeArguments? Identifier "(" ArgumentList? ")" 
+                        ;
+                        
+syntax ArgumentList = { Expression "," }+ ; 
+
+syntax MethodReference = ExpressionName "::" TypeArguments? Identifier 
+                       // ReferenceType "::" TypeArguments? Identifier 
+                       | Primary "::" TypeArguments? Identifier 
+                       | "super" "::" TypeArguments? Identifier 
+                       | TypeName "." "super" "::" TypeArguments? Identifier 
+                       | ClassType "::" TypeArguments? "new" 
+                       | ArrayType "::" "new"
+                       ;                         
+                  
+syntax ArrayCreationExpression = "new" PrimitiveType DimExprs Dims? 
+                               | "new" ClassOrInterfaceType DimExprs Dims? 
+                               | "new" PrimitiveType Dims ArrayInitializer 
+                               | "new" ClassOrInterfaceType Dims ArrayInitializer
+                               ;
+                               
+syntax DimExprs = DimExpr+ ;
+
+syntax DimExpr = Annotation* "[" Expression "]" ;
+
+//syntax Expression = LambdaExpression 
+//                  | AssignmentExpression
+//                  ;
+                  
+syntax Expression = LambdaExpression 
+                  | AssignmentExpression
+                  ;
+                  
+syntax LambdaExpression = LambdaParameters "-\>" LambdaBody ;
+
+syntax LambdaParameters = Identifier 
+                        | "(" FormalParameterList? ")"
+                        | "(" InferredFormalParameterList ")" 
+                        ;
+                        
+syntax InferredFormalParameterList = { Identifier "," }+; 
+
+syntax LambdaBody = Expression 
+                  | Block                               
+                  ;
+                  
+syntax AssignmentExpression = ConditionalExpression 
+                            | Assignment
+                            ;
+                            
+syntax Assignment = LeftHandSide AssignmentOperator Expression ;
+
+syntax LeftHandSide = ExpressionName 
+                    | FieldAccess 
+                    | ArrayAccess
+                    ; 
+                    
+syntax AssignmentOperator = "=" 
+                          | "*="  
+                          | "/="  
+                          | "%="  
+                          | "+="  
+                          | "-="  
+                          | "\<\<="  
+                          | "\>\>="  
+                          | "\>\>\>="  
+                          | "&="
+                          | "^="  
+                          | "|=" 
+                          ; 
+                          
+syntax ConditionalExpression = ConditionalOrExpression 
+                             | ConditionalOrExpression "?" Expression ":" ConditionalExpression 
+                             | ConditionalOrExpression "?" Expression ":" LambdaExpression
+                             ;
+                             
+syntax ConditionalOrExpression = ConditionalAndExpression 
+                               | ConditionalOrExpression "||" ConditionalAndExpression                              
+                               ;
+                               
+syntax ConditionalAndExpression = InclusiveOrExpression 
+                                | ConditionalAndExpression "&&" InclusiveOrExpression
+                                ;
+                                
+syntax InclusiveOrExpression = ExclusiveOrExpression 
+                             | InclusiveOrExpression "|" ExclusiveOrExpression
+                             ;
+
+syntax ExclusiveOrExpression = AndExpression 
+                      | ExclusiveOrExpression "^" AndExpression
+                      ;
+                      
+syntax AndExpression = EqualityExpression 
+                     | AndExpression "&" EqualityExpression
+                     ;                                
+                     
+syntax EqualityExpression = RelationalExpression 
+                          | EqualityExpression "==" RelationalExpression 
+                          | EqualityExpression "!=" RelationalExpression
+                          ; 
+                          
+syntax RelationalExpression = ShiftExpression 
+                            | RelationalExpression "\<" ShiftExpression 
+                            | RelationalExpression "\>" ShiftExpression 
+                            | RelationalExpression "\<=" ShiftExpression 
+                            | RelationalExpression "\>=" ShiftExpression 
+                            | RelationalExpression "instanceof" ReferenceType
+                            ;
+
+syntax ShiftExpression = AdditiveExpression 
+                       | ShiftExpression "\<\<" AdditiveExpression 
+                       | ShiftExpression "\>\>" AdditiveExpression 
+                       | ShiftExpression "\>\>\>" AdditiveExpression
+                       ;
+                       
+syntax AdditiveExpression = MultiplicativeExpression 
+                          | AdditiveExpression "+" !>> "+" MultiplicativeExpression 
+                          | AdditiveExpression "-" !>> "-" MultiplicativeExpression
+                          ;
+                          
+syntax MultiplicativeExpression = UnaryExpression 
+                                | MultiplicativeExpression "*" UnaryExpression 
+                                | MultiplicativeExpression "/" UnaryExpression 
+                                | MultiplicativeExpression "%" UnaryExpression
+                                ;
+                                
+syntax UnaryExpression = PreIncrementExpression 
+                       | PreDecrementExpression 
+                       > "+" !>> "+" UnaryExpression 
+                       | "-" !>> "-" UnaryExpression 
+                       | UnaryExpressionNotPlusMinus
+                       ;
+                       
+syntax PreIncrementExpression = "++" UnaryExpression ; 
+
+syntax PreDecrementExpression = "--" UnaryExpression ;
+
+syntax UnaryExpressionNotPlusMinus = PostfixExpression 
+                                   | "~" UnaryExpression 
+                                   | "!" UnaryExpression 
+                                   | CastExpression                                
+                                   ;
+                                   
+syntax PostfixExpression = Primary 
+                         | ExpressionName 
+                         | PostIncrementExpression 
+                         | PostDecrementExpression                                   
+                         ;
+                         
+syntax PostIncrementExpression = PostfixExpression "++" ;
+
+syntax PostDecrementExpression = PostfixExpression "--" ;
+
+syntax CastExpression = "(" PrimitiveType ")" UnaryExpression 
+                      | "(" ReferenceType AdditionalBound* ")" UnaryExpressionNotPlusMinus 
+                      | "(" ReferenceType AdditionalBound* ")" LambdaExpression
+                      ; 
+syntax ConstantExpression = Expression ;
+
+// Lexical Definitions 
+
+lexical SignedInteger =
+  [+ \-]? [0-9]+ 
+  ;
+  
+lexical LEX_StringLiteral =
+   string: "\"" StringPart* "\"" 
+  ;
+
+
+lexical HexaSignificand =
+  [0] [X x] [0-9 A-F a-f]* "." [0-9 A-F a-f]* 
+  | [0] [X x] [0-9 A-F a-f]+ 
+  ;
+
+lexical OctaNumeral =
+  [0] [0-7]+ 
+  ;
+
+lexical HexaNumeral =
+  [0] [X x] [0-9 A-F a-f]+ 
+  ;
+  
+lexical LEX_CharLiteral =
+   char: "\'" CharContent "\'" 
+  ;
+
+lexical EscChar =
+  "\\" 
+  ;
+
+lexical OctaEscape 
+  = "\\" [0-3] [0-7]+ !>> [0-7] 
+  | "\\" [0-7] !>> [0-7] 
+  | "\\" [4-7] [0-7] 
+  ;
+
+lexical EscEscChar =
+  "\\\\" 
+  ;
+
+lexical DeciNumeral =
+  [1-9] [0-9]* 
+  | "0" 
+  ;
+ 
+ 
+keyword HexaSignificandKeywords =
+  [0] [X x] "." 
+  ;
+
+
+lexical StringChars =
+  FooStringChars 
+  ;
+
+lexical LAYOUT =
+  [\t-\n \a0C-\a0D \ ] 
+  | Comment 
+  ;
+
+lexical CharContent =
+  EscapeSeq 
+  | UnicodeEscape 
+  |  single: SingleChar 
+  ;
+
+lexical Comment =
+  "/**/" 
+  | "//" EOLCommentChars !>> ![\n \a0D] LineTerminator 
+  | "/*" !>> [*] CommentPart* "*/" 
+  | "/**" !>> [/] CommentPart* "*/" 
+  ;
+
+syntax FloatingPointLiteral =
+   float: HexaFloatLiteral !>> [D F d f] 
+  |  float: DeciFloatLiteral \ DeciFloatLiteralKeywords !>> [D F d f] 
+  ;
+
+lexical OctaLiteral =
+  OctaNumeral !>> [0-7] [L l]? 
+  ;
+
+lexical HexaFloatNumeral =
+  HexaSignificand \ HexaSignificandKeywords !>> [0-9 A-F a-f] BinaryExponent 
+  ;
+
+syntax IntegerLiteral =
+   hexa: HexaLiteral !>> [L l.] 
+  |  octa: OctaLiteral !>> [L l] 
+  |  deci: DeciLiteral !>> [L l] 
+  ;
+
+lexical HexaLiteral =
+  HexaNumeral !>> [0-9 A-F a-f] [L l]? 
+  ;
+
+lexical DeciFloatLiteral =
+  DeciFloatNumeral [D F d f]? 
+  ;
+  
+lexical ID =
+	// Yes, this would be more correct, but REALLY slow at the moment
+	//JavaLetter JavaLetterDigits* 
+	//
+	// therefore we go the ascii route:
+  [$ A-Z _ a-z] [$ 0-9 A-Z _ a-z]* 
+  ; 
+  
+lexical DeciFloatDigits =
+  [0-9]+ 
+  | [0-9]* "." [0-9]* 
+  ;
+
+lexical DeciLiteral =
+  DeciNumeral !>> [. 0-9 D F d f] [L l]? 
+  ;
+
+lexical EscapeSeq =
+  NamedEscape 
+  | OctaEscape 
+  ;
+
+layout LAYOUTLIST  =
+  LAYOUT* !>> [\t-\n \a0C-\a0D \ ] !>> (  [/]  [*]  ) !>> (  [/]  [/]  ) !>> "/*" !>> "//"
+  ;
+
+lexical NamedEscape =
+   namedEscape: "\\" [\" \' \\ b f n r t] 
+  ;
+ 
+ 
+lexical BinaryExponent =
+  [P p] SignedInteger !>> [0-9] 
+  ;
+
+lexical BlockCommentChars =
+  ![* \\]+ 
+  ;
+  
+  
+keyword Keyword =
+  "continue" 
+  | "package" 
+  | "short" 
+  | "boolean" 
+  | "for" 
+  | "extends" 
+  | "do" 
+  | "strictfp" 
+  | "if" 
+  | "enum" 
+  | "synchronized" 
+  | "else" 
+  | "interface" 
+  | "return" 
+  | "private" 
+  | "volatile" 
+  | "default" 
+  | "throws" 
+  | "static" 
+  | "long" 
+  | "throw" 
+  | "this" 
+  | "catch" 
+  | "super" 
+  | "const" 
+  | "switch" 
+  | "int" 
+  | "implements" 
+  | "native" 
+  | "abstract" 
+  | "break" 
+  | "goto" 
+  | "final" 
+  | "class" 
+  | "byte" 
+  | "instanceof" 
+  | "void" 
+  | "finally" 
+  | "try" 
+  | "new" 
+  | "float" 
+  | "public" 
+  | "transient" 
+  | "char" 
+  | "assert" 
+  | "case" 
+  | "while" 
+  | "double" 
+  | "protected" 
+  | "import" 
+  ;
+
+lexical FooStringChars =
+  ([\a00] | ![\n \a0D \" \\])+ 
+  ;
+
+lexical StringPart =
+  UnicodeEscape 
+  | EscapeSeq 
+  |  chars: StringChars !>> ![\n \a0D \" \\]  !>> [\a00]
+  ;
+
+keyword FieldAccessKeywords =
+  ExprName "." Id 
+  ;
+
+lexical EOLCommentChars =
+  ![\n \a0D]* 
+  ;
+
+lexical SingleChar =
+  ![\n \a0D \' \\] 
+  ;
+
+
+keyword ElemValKeywords =
+  LHS "=" Expr 
+  ;
+
+lexical CommentPart =
+  UnicodeEscape 
+  | BlockCommentChars !>> ![* \\] 
+  | EscChar !>> [\\ u] 
+  | Asterisk !>> [/] 
+  | EscEscChar 
+  ;
+
+syntax Identifier =
+   id: [$ A-Z _ a-z] !<< ID \ IDKeywords !>> [$ 0-9 A-Z _ a-z] 
+  ;
+  
+keyword ArrayAccessKeywords =
+  ArrayCreationExpr ArraySubscript 
+  ;
+
+syntax BooleanLiteral
+  = \false: "false" 
+  | \true: "true" 
+  ;
+
+lexical DeciFloatExponentPart =
+  [E e] SignedInteger !>> [0-9] 
+  ;
+
+lexical EndOfFile =
+  
+  ;
+
+keyword DeciFloatLiteralKeywords =
+  [0-9]+ 
+  ;
+
+keyword DeciFloatDigitsKeywords =
+  "." 
+  ;
+
+keyword IDKeywords =
+  "null" 
+  | Keyword 
+  | "true" 
+  | "false" 
+  ;
+
+lexical DeciFloatNumeral
+	= [0-9] !<< [0-9]+ DeciFloatExponentPart
+	| [0-9] !<< [0-9]+ >> [D F d f]
+	| [0-9] !<< [0-9]+ "." [0-9]* !>> [0-9] DeciFloatExponentPart?
+	| [0-9] !<< "." [0-9]+ !>> [0-9] DeciFloatExponentPart?
+  ;
+
+lexical CarriageReturn =
+  [\a0D] 
+  ;
+  
+lexical UnicodeEscape =
+   unicodeEscape: "\\" [u]+ [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
+  ;
+
+lexical LineTerminator =
+  [\n] 
+  | EndOfFile !>> ![] 
+  | [\a0D] [\n] 
+  | CarriageReturn !>> [\n] 
+  ;
+
+lexical HexaFloatLiteral =
+  HexaFloatNumeral [D F d f]? 
+  ;
+
+lexical Asterisk =
+  "*" 
+  ;
+  
+syntax CharacterLiteral =
+  LEX_CharLiteral 
+  ;  
+  
+syntax StringLiteral =
+  LEX_StringLiteral 
+  ;  
+  
+syntax Null = "null" ;   
+
+syntax NullLiteral = Null ;
