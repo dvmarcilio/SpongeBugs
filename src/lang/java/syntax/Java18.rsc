@@ -11,6 +11,7 @@
 //
 //  - https://docs.oracle.com/javase/specs/jls/se8/html/jls-19.html
 //  - https://github.com/antlr/grammars-v4/blob/master/java8/Java8.g4
+//  - Rascal Java15 grammar 
 
 module lang::java::\syntax::Java18
 
@@ -76,7 +77,7 @@ syntax TypeParameter = TypeParameterModifier* Identifier TypeBound? ;
 
 syntax TypeParameterModifier = Annotation; 
 
-syntax TypeBound = "extends" { TypeVariable "&" } +
+syntax TypeBound = "extends" { ClassOrInterfaceType "&" }+
                //  | "extends" ClassOrInterfaceType AdditionalBound*
                  ;
                  
@@ -144,12 +145,12 @@ syntax SingleStaticImportDeclaration = "import" "static" TypeName "." Identifier
 syntax StaticImportOnDemandDeclaration = "import" "static" TypeName "." "*" ";" ;                         
 
 
-syntax TypeDeclaration = ClassDeclaration 
-                       | InterfaceDeclaration 
+syntax TypeDeclaration = ClassDeclaration ";"*
+                       | InterfaceDeclaration ";"* 
                        ;
 
-syntax ClassDeclaration = NormalClassDeclaration 
-                        | EnumDeclaration
+syntax ClassDeclaration = NormalClassDeclaration
+                        | EnumDeclaration 
                         ;
                         
 syntax NormalClassDeclaration = ClassModifier* "class" Identifier TypeParameters? Superclass? Superinterfaces? ClassBody ;
@@ -184,7 +185,7 @@ syntax ClassMemberDeclaration = FieldDeclaration
                               | InterfaceDeclaration 
                               ;
                               
-syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ";" ;
+syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ";"+ ;
 
 syntax FieldModifier = Annotation 
                      | "public" 
@@ -235,7 +236,7 @@ syntax UnannArrayType = UnannPrimitiveType Dims
              //  |UnannTypeVariable Dims
                ;
 
-syntax MethodDeclaration = MethodModifier* MethodHeader MethodBody ;
+syntax MethodDeclaration = MethodModifier* MethodHeader MethodBody ";"?;
 
 syntax MethodModifier = Annotation 
                       | "public" 
@@ -250,7 +251,7 @@ syntax MethodModifier = Annotation
                       ;
 
 syntax MethodHeader = Result MethodDeclarator Throws?
-                    |  TypeParameters Annotation* Result MethodDeclarator Throws
+                    |  TypeParameters Annotation* Result MethodDeclarator Throws?
                     ;
                     
 syntax Result = UnannType 
@@ -374,7 +375,7 @@ syntax InterfaceMemberDeclaration = ConstantDeclaration
                                   | InterfaceMethodDeclaration 
                                   | ClassDeclaration 
                                   | InterfaceDeclaration 
-                                  | ";" 
+                                //  | ";" 
                                   ;
 
 syntax ConstantDeclaration = ConstantModifier* UnannType VariableDeclaratorList ";" ;
@@ -403,7 +404,7 @@ syntax AnnotationTypeMemberDeclaration = AnnotationTypeElementDeclaration
                                        | ConstantDeclaration 
                                        | ClassDeclaration 
                                        | InterfaceDeclaration 
-                                       | ";"
+                                    //   | ";"
                                        ;
 
 syntax AnnotationTypeElementDeclaration = AnnotationTypeElementModifier* UnannType Identifier "(" ")" Dims? DefaultValue? ;
@@ -451,7 +452,7 @@ syntax VariableInitializerList = { VariableInitializer "," }+ ;
  * Productions from §14 (Blocks and Statements)
  */
  
-syntax Block = "{" BlockStatements? "}" ;
+syntax Block = "{" BlockStatements? "}"  ;
              
 
 syntax BlockStatements = BlockStatement+ ;
@@ -857,8 +858,8 @@ lexical EscEscChar =
   ;
 
 lexical DeciNumeral =
-  [1-9] [0-9]* 
-  | "0" 
+   "0" 
+  | [1-9] [0-9 _]*
   ;
  
  
