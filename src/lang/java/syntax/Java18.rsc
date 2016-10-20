@@ -52,7 +52,7 @@ syntax FloatingPointType = "float" | "double" ;
 
 syntax ReferenceType = ClassOrInterfaceType 
           //           | TypeVariable 
-                     | ArrayType
+                     | arrayType: ArrayType
                      ;
                      
 syntax ClassOrInterfaceType = ClassType 
@@ -73,7 +73,7 @@ syntax ArrayType = PrimitiveType Dims
                  
 syntax Dims = Annotation* "[" "]" (Annotation* "[" "]")*; 
 
-syntax TypeParameter = TypeParameterModifier* Identifier TypeBound? ;
+syntax TypeParameter = typeParameter: TypeParameterModifier* Identifier TypeBound? ;
 
 syntax TypeParameterModifier = Annotation; 
 
@@ -153,7 +153,7 @@ syntax ClassDeclaration = NormalClassDeclaration
                         | EnumDeclaration 
                         ;
                         
-syntax NormalClassDeclaration = ClassModifier* "class" Identifier TypeParameters? Superclass? Superinterfaces? ClassBody ;
+syntax NormalClassDeclaration = normalClassDeclaration: ClassModifier* "class" Identifier TypeParameters? Superclass? Superinterfaces? ClassBody ;
 
 syntax ClassModifier = Annotation 
                      | "public" 
@@ -165,13 +165,13 @@ syntax ClassModifier = Annotation
                      | "strictfp"
                      ;
 
-syntax TypeParameters = "\<" {TypeParameter ","}+ "\>" ; 
+syntax TypeParameters = typeParameters : "\<" {TypeParameter ","}+ "\>" ; 
 
 syntax Superclass = "extends" ClassType ;
 
 syntax Superinterfaces = "implements" {InterfaceType ","}+ ;
 
-syntax ClassBody = "{" ClassBodyDeclaration* "}";
+syntax ClassBody = "{" ClassBodyDeclaration* "}" ;
 
 syntax ClassBodyDeclaration = ClassMemberDeclaration 
                             | InstanceInitializer 
@@ -183,6 +183,7 @@ syntax ClassMemberDeclaration = FieldDeclaration
                               | MethodDeclaration 
                               | ClassDeclaration 
                               | InterfaceDeclaration 
+                              //| ";"
                               ;
                               
 syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ";"+ ;
@@ -236,7 +237,7 @@ syntax UnannArrayType = UnannPrimitiveType Dims
              //  |UnannTypeVariable Dims
                ;
 
-syntax MethodDeclaration = MethodModifier* MethodHeader MethodBody ";"?;
+syntax MethodDeclaration = methodDeclaration: MethodModifier* MethodHeader MethodBody ";"?;
 
 syntax MethodModifier = Annotation 
                       | "public" 
@@ -265,7 +266,7 @@ syntax FormalParameterList = FormalParameters ;
                             
 syntax FormalParameters = formalParameter : FormalParameter ("," FormalParameters)?
                       //  | receiveParameter: ReceiverParameter (", FormalParameter)*
-                        | lastFormalParamete: LastFormalParameter
+                        | lastFormalParameter: LastFormalParameter
                         ;                                   
 
 syntax FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
@@ -342,7 +343,7 @@ syntax ExplicitConstructorInvocation = TypeArguments? "this" "(" ArgumentList? "
 
 syntax EnumDeclaration = ClassModifier* "enum" Identifier Superinterfaces? EnumBody ;
 
-syntax EnumBody = "{" EnumConstantList? ","? EnumBodyDeclarations? "}" ;
+syntax EnumBody = "{" EnumConstantList? ","? EnumBodyDeclarations? "}" ";"?;
 
 syntax EnumConstantList = { EnumConstant "," }+ ;
 
@@ -350,7 +351,7 @@ syntax EnumConstant = EnumConstantModifier* Identifier ("(" ArgumentList? ")")? 
 
 syntax EnumConstantModifier = Annotation ; 
 
-syntax EnumBodyDeclarations = ";" ClassBodyDeclaration* ;
+syntax EnumBodyDeclarations =  ";" ClassBodyDeclaration* ;
 
 syntax InterfaceDeclaration = NormalInterfaceDeclaration 
                             | AnnotationTypeDeclaration
@@ -386,7 +387,7 @@ syntax ConstantModifier = Annotation
                         | "final"
                         ;
                         
-syntax InterfaceMethodDeclaration = InterfaceMethodModifier* MethodHeader MethodBody ;
+syntax InterfaceMethodDeclaration = InterfaceMethodModifier* MethodHeader MethodBody ";"?;
 
 syntax InterfaceMethodModifier = Annotation 
                                | "public" 
