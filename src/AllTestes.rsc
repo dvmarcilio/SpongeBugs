@@ -9,22 +9,27 @@ import util::Math;
  * Parse all files within the testes directory.
  * This method is usefull for testing the Java18 grammar.
  */
-void parseAllFiles() {
+void parseAllFiles(bool verbose, loc baseDir) {
   real ok = 0.0; 
   real nok = 0.0; 
-  entries = listJavaFiles(|project://rascal-Java8/testes|);  
+  entries = listJavaFiles(baseDir);  
   
   for(loc s <- entries) {
-     print("[parsing file:] " + s.path);
+     if(verbose) { 
+        print("[parsing file:] " + s.path);
+     }
      
      try {
         //f = find(s, [|project://rascal-Java8/testes|]);
         contents = readFile(s);
         CompilationUnit cu = parse(#CompilationUnit, contents);
-        println("... ok");
+        if(verbose) {println("... ok");}
         ok = ok + 1.0;
      }
      catch ParseError(loc l): {
+        if(!verbose) {
+           print("[parsing file:] " + s.path);
+        }
         println("... found an error at line <l.begin.line>, column <l.begin.column> "); 
         nok = nok + 1.0;
      }

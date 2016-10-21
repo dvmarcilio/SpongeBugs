@@ -11,6 +11,7 @@
 //
 //  - https://docs.oracle.com/javase/specs/jls/se8/html/jls-19.html
 //  - https://github.com/antlr/grammars-v4/blob/master/java8/Java8.g4
+//  - Rascal Java15 grammar 
 
 module lang::java::\syntax::Java18
 
@@ -51,7 +52,7 @@ syntax FloatingPointType = "float" | "double" ;
 
 syntax ReferenceType = ClassOrInterfaceType 
           //           | TypeVariable 
-                     | ArrayType
+                     | arrayType: ArrayType
                      ;
                      
 syntax ClassOrInterfaceType = ClassType 
@@ -72,11 +73,11 @@ syntax ArrayType = PrimitiveType Dims
                  
 syntax Dims = Annotation* "[" "]" (Annotation* "[" "]")*; 
 
-syntax TypeParameter = TypeParameterModifier* Identifier TypeBound? ;
+syntax TypeParameter = typeParameter: TypeParameterModifier* Identifier TypeBound? ;
 
 syntax TypeParameterModifier = Annotation; 
 
-syntax TypeBound = "extends" { TypeVariable "&" } +
+syntax TypeBound = "extends" { ClassOrInterfaceType "&" }+
                //  | "extends" ClassOrInterfaceType AdditionalBound*
                  ;
                  
@@ -144,15 +145,15 @@ syntax SingleStaticImportDeclaration = "import" "static" TypeName "." Identifier
 syntax StaticImportOnDemandDeclaration = "import" "static" TypeName "." "*" ";" ;                         
 
 
-syntax TypeDeclaration = ClassDeclaration 
-                       | InterfaceDeclaration 
+syntax TypeDeclaration = ClassDeclaration ";"*
+                       | InterfaceDeclaration ";"* 
                        ;
 
-syntax ClassDeclaration = NormalClassDeclaration 
-                        | EnumDeclaration
+syntax ClassDeclaration = NormalClassDeclaration
+                        | EnumDeclaration 
                         ;
                         
-syntax NormalClassDeclaration = ClassModifier* "class" Identifier TypeParameters? Superclass? Superinterfaces? ClassBody ;
+syntax NormalClassDeclaration = normalClassDeclaration: ClassModifier* "class" Identifier TypeParameters? Superclass? Superinterfaces? ClassBody ;
 
 syntax ClassModifier = Annotation 
                      | "public" 
@@ -164,13 +165,13 @@ syntax ClassModifier = Annotation
                      | "strictfp"
                      ;
 
-syntax TypeParameters = "\<" {TypeParameter ","}+ "\>" ; 
+syntax TypeParameters = typeParameters : "\<" {TypeParameter ","}+ "\>" ; 
 
 syntax Superclass = "extends" ClassType ;
 
 syntax Superinterfaces = "implements" {InterfaceType ","}+ ;
 
-syntax ClassBody = "{" ClassBodyDeclaration* "}";
+syntax ClassBody = classBody : "{" ClassBodyDeclaration* "}" ;
 
 syntax ClassBodyDeclaration = ClassMemberDeclaration 
                             | InstanceInitializer 
@@ -182,9 +183,10 @@ syntax ClassMemberDeclaration = FieldDeclaration
                               | MethodDeclaration 
                               | ClassDeclaration 
                               | InterfaceDeclaration 
+                              //| ";"
                               ;
                               
-syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ";" ;
+syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ";"+ ;
 
 syntax FieldModifier = Annotation 
                      | "public" 
@@ -235,7 +237,7 @@ syntax UnannArrayType = UnannPrimitiveType Dims
              //  |UnannTypeVariable Dims
                ;
 
-syntax MethodDeclaration = MethodModifier* MethodHeader MethodBody ;
+syntax MethodDeclaration = methodDeclaration: MethodModifier* MethodHeader MethodBody ";"?;
 
 syntax MethodModifier = Annotation 
                       | "public" 
@@ -250,7 +252,7 @@ syntax MethodModifier = Annotation
                       ;
 
 syntax MethodHeader = Result MethodDeclarator Throws?
-                    |  TypeParameters Annotation* Result MethodDeclarator Throws
+                    |  TypeParameters Annotation* Result MethodDeclarator Throws?
                     ;
                     
 syntax Result = UnannType 
@@ -258,13 +260,13 @@ syntax Result = UnannType
               ;
 
 
-syntax MethodDeclarator = Identifier "(" FormalParameterList? ")" Dims? ;
+syntax MethodDeclarator = methodDeclarator: Identifier "(" FormalParameterList? ")" Dims? ;
             
 syntax FormalParameterList = FormalParameters ;
                             
 syntax FormalParameters = formalParameter : FormalParameter ("," FormalParameters)?
                       //  | receiveParameter: ReceiverParameter (", FormalParameter)*
-                        | lastFormalParamete: LastFormalParameter
+                        | lastFormalParameter: LastFormalParameter
                         ;                                   
 
 syntax FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
@@ -341,7 +343,7 @@ syntax ExplicitConstructorInvocation = TypeArguments? "this" "(" ArgumentList? "
 
 syntax EnumDeclaration = ClassModifier* "enum" Identifier Superinterfaces? EnumBody ;
 
-syntax EnumBody = "{" EnumConstantList? ","? EnumBodyDeclarations? "}" ;
+syntax EnumBody = "{" EnumConstantList? ","? EnumBodyDeclarations? "}" ";"?;
 
 syntax EnumConstantList = { EnumConstant "," }+ ;
 
@@ -349,7 +351,7 @@ syntax EnumConstant = EnumConstantModifier* Identifier ("(" ArgumentList? ")")? 
 
 syntax EnumConstantModifier = Annotation ; 
 
-syntax EnumBodyDeclarations = ";" ClassBodyDeclaration* ;
+syntax EnumBodyDeclarations =  ";" ClassBodyDeclaration* ;
 
 syntax InterfaceDeclaration = NormalInterfaceDeclaration 
                             | AnnotationTypeDeclaration
@@ -374,7 +376,7 @@ syntax InterfaceMemberDeclaration = ConstantDeclaration
                                   | InterfaceMethodDeclaration 
                                   | ClassDeclaration 
                                   | InterfaceDeclaration 
-                                  | ";" 
+                                //  | ";" 
                                   ;
 
 syntax ConstantDeclaration = ConstantModifier* UnannType VariableDeclaratorList ";" ;
@@ -385,7 +387,7 @@ syntax ConstantModifier = Annotation
                         | "final"
                         ;
                         
-syntax InterfaceMethodDeclaration = InterfaceMethodModifier* MethodHeader MethodBody ;
+syntax InterfaceMethodDeclaration = InterfaceMethodModifier* MethodHeader MethodBody ";"?;
 
 syntax InterfaceMethodModifier = Annotation 
                                | "public" 
@@ -403,7 +405,7 @@ syntax AnnotationTypeMemberDeclaration = AnnotationTypeElementDeclaration
                                        | ConstantDeclaration 
                                        | ClassDeclaration 
                                        | InterfaceDeclaration 
-                                       | ";"
+                                    //   | ";"
                                        ;
 
 syntax AnnotationTypeElementDeclaration = AnnotationTypeElementModifier* UnannType Identifier "(" ")" Dims? DefaultValue? ;
@@ -451,7 +453,7 @@ syntax VariableInitializerList = { VariableInitializer "," }+ ;
  * Productions from §14 (Blocks and Statements)
  */
  
-syntax Block = "{" BlockStatements? "}" ;
+syntax Block = "{" BlockStatements? "}"  ;
              
 
 syntax BlockStatements = BlockStatement+ ;
@@ -857,8 +859,8 @@ lexical EscEscChar =
   ;
 
 lexical DeciNumeral =
-  [1-9] [0-9]* 
-  | "0" 
+   "0" 
+  | [1-9] [0-9 _]*
   ;
  
  
