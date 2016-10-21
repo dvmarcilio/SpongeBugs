@@ -171,7 +171,7 @@ syntax Superclass = "extends" ClassType ;
 
 syntax Superinterfaces = "implements" {InterfaceType ","}+ ;
 
-syntax ClassBody = "{" ClassBodyDeclaration* "}" ;
+syntax ClassBody = classBody : "{" ClassBodyDeclaration* "}" ;
 
 syntax ClassBodyDeclaration = ClassMemberDeclaration 
                             | InstanceInitializer 
@@ -260,7 +260,7 @@ syntax Result = UnannType
               ;
 
 
-syntax MethodDeclarator = Identifier "(" FormalParameterList? ")" Dims? ;
+syntax MethodDeclarator = methodDeclarator: Identifier "(" FormalParameterList? ")" Dims? ;
             
 syntax FormalParameterList = FormalParameters ;
                             
