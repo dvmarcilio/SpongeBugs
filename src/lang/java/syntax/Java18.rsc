@@ -9,7 +9,7 @@
 
 // This grammar is based on the following references:
 //
-//  - https://docs.oracle.com/javase/specs/jls/se8/html/jls-19.html
+//  - https://docs.oracle.com/ja\dvase/specs/jls/se8/html/jls-19.html
 //  - https://github.com/antlr/grammars-v4/blob/master/java8/Java8.g4
 //  - Rascal Java15 grammar 
 
@@ -45,7 +45,7 @@ syntax IntegralType = "byte"
                     | "short" 
                     | "int" 
                     | "long" 
-                    | "char"
+nt                    | "char"
                     ;
                     
 syntax FloatingPointType = "float" | "double" ;
@@ -859,9 +859,9 @@ lexical EscEscChar =
   ;
 
 lexical DeciNumeral =
-   "0" 
-  | [1-9] [0-9 _]*
-  ;
+  "0"
+  | [1-9]
+  > [1-9] [0-9 _]* [0-9];
  
  
 keyword HexaSignificandKeywords =
