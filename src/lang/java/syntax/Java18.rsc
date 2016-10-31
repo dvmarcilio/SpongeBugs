@@ -171,7 +171,7 @@ syntax Superclass = "extends" ClassType ;
 
 syntax Superinterfaces = "implements" {InterfaceType ","}+ ;
 
-syntax ClassBody = classBody : "{" ClassBodyDeclaration* "}" ;
+syntax ClassBody = classBody : "{" ClassBodyDeclaration* decls "}" ;
 
 syntax ClassBodyDeclaration = ClassMemberDeclaration 
                             | InstanceInitializer 
@@ -251,7 +251,7 @@ syntax MethodModifier = Annotation
                       | "strictfp"
                       ;
 
-syntax MethodHeader = Result MethodDeclarator Throws?
+syntax MethodHeader = methodHeader: Result MethodDeclarator Throws?
                     |  TypeParameters Annotation* Result MethodDeclarator Throws?
                     ;
                     
@@ -260,7 +260,12 @@ syntax Result = UnannType
               ;
 
 
-syntax MethodDeclarator = methodDeclarator: Identifier "(" FormalParameterList? ")" Dims? ;
+// syntax MethodDeclarator = methodDeclarator: Identifier "(" FormalParameterList? pmts ")" Dims? ;
+
+syntax MethodDeclarator = Identifier "(" ")" Dims?
+                        | Identifier "(" LastFormalParameter ")" Dims?
+                        | Identifier "(" {FormalParameter ","}+ ("," LastFormalParameter)?")" Dims?
+                        ; 
             
 syntax FormalParameterList = FormalParameters ;
                             
@@ -269,7 +274,7 @@ syntax FormalParameters = formalParameter : FormalParameter ("," FormalParameter
                         | lastFormalParameter: LastFormalParameter
                         ;                                   
 
-syntax FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
+syntax FormalParameter = VariableModifier* mds UnannType atype VariableDeclaratorId vdid;
 
                         
 syntax LastFormalParameter = VariableModifier* UnannType Annotation* "..." VariableDeclaratorId 
