@@ -10,8 +10,10 @@ import Set;
  * on the Rascal documentation. 
  */ 
 CompilationUnit transformNaiveIfStatement(CompilationUnit unit) = visit(unit) {
-       case (Statement) `if (<Expression cond>) { return true; } else { return false; }` =>  (Statement) `return <Expression cond>;`
-       case (Statement) `if (<Expression cond>)  return true;  else return false;` =>  (Statement) `return <Expression cond>;`   
+       case (Statement) `if (<Expression cond>) { return true; } else { return false; }` =>  
+       		(Statement) `return <Expression cond>;`
+       case (Statement) `if (<Expression cond>)  return true;  else return false;` =>  
+       		(Statement) `return <Expression cond>;`   
 };
 
 /**
@@ -54,6 +56,20 @@ CompilationUnit refactorToVarArgs(CompilationUnit unit) =  visit(unit) {
       case (MethodDeclarator)`<Identifier n>(<{FormalParameter ","}+ pmts>, <UnannType t> <Identifier arg>[])` => 
         (MethodDeclarator)`<Identifier n>(<{FormalParameter ","}+ pmts>, <UnannType t> ... <Identifier arg>)` 
  };
+ 
+/**
+ * Refactor a while statement to a for statement. 
+ */
+CompilationUnit refactorWhileStatement(CompilationUnit unit) =  visit(unit) {
+     case (Statement) `while (<Identifier id>.hasNext()) <Statement stmtWhile>` => 
+       		(Statement) `for (Object value : <Identifier id>) <Statement stmtFor>` 
+       		when stmtFor := replaceNextByValue(stmtWhile)
+       		
+};
+
+Statement replaceNextByValue(Statement stmt) = visit(stmt){
+	case (Expression) `<Identifier id>.next()` => (Expression) `value`
+};
 
 // sample: code = (CompilationUnit) `class MyClass { int m() { if (x) { return true;} else {return false; }} }`;
-//code = parse(#CompilationUnit, |project://JavaSamples/src/br/unb/cic/Rascal/Main.java|);
+// code = parse(#CompilationUnit, |project://rascal-Java8/testes/BasicTest.java|);

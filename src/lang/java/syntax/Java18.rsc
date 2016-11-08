@@ -543,7 +543,7 @@ syntax SwitchLabel = "case" ConstantExpression ":"
                    
 syntax EnumConstantName = Identifier ;  
 
-syntax WhileStatement = "while" "(" Expression ")" Statement ; 
+syntax WhileStatement = whileStatement: "while" "(" Expression ")" Statement ; 
 
 syntax WhileStatementNoShortIf = "while" "(" Expression ")" StatementNoShortIf ;
 
@@ -569,7 +569,7 @@ syntax  ForUpdate = StatementExpressionList ;
                
 syntax StatementExpressionList = {StatementExpression ","} + ;
 
-syntax EnhancedForStatement = "for" "(" VariableModifier* UnannType VariableDeclaratorId ":" Expression ")" Statement ;
+syntax EnhancedForStatement = enhancedForStatement: "for" "(" VariableModifier* UnannType VariableDeclaratorId ":" Expression ")" Statement ;
 
 syntax EnhancedForStatementNoShortIf = "for" "(" VariableModifier* UnannType VariableDeclaratorId ":" Expression ")" StatementNoShortIf ;
 
