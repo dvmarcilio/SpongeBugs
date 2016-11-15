@@ -530,7 +530,9 @@ syntax AssertStatement = "assert" Expression ";"
                       
 syntax SwitchStatement = "switch" "(" Expression ")" SwitchBlock ; 
 
-syntax SwitchBlock = "{" SwitchBlockStatementGroup* SwitchLabel* "}" ;
+syntax SwitchBlock = "{" SwitchBlockStatementGroups SwitchLabel* "}" ;
+
+syntax SwitchBlockStatementGroups = SwitchBlockStatementGroup* ;
 
 syntax SwitchBlockStatementGroup = SwitchLabels BlockStatements ;
 
