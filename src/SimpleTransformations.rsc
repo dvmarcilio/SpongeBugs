@@ -31,23 +31,6 @@ int countClassDeclarations(CompilationUnit unit) {
 }
 
 
-/**
- * Count the number of parameterized classes. 
- * TODO: Now, it seems to me that it would be better 
- * to work with ConcreteSyntax. 
- */
-int countPmtClassDeclarations(CompilationUnit unit) {
-  int res = 0; 
-  visit(unit) {
-     case normalClassDeclaration(mds, name, pmts, super, infs, bdy): { 
-        if(size({n | /typeParameter(_, n, _) <- pmts}) > 0) {
-           res = res + 1; 
-        }
-     }
-  }
-  return res;
-}
-
 
 /**
  * Refactor a compilation unit to use VarArgs. 

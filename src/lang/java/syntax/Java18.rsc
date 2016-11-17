@@ -130,7 +130,7 @@ syntax PackageDeclaration = PackageModifier* "package" {Identifier "."}+ ";" ;
 
 syntax PackageModifier = Annotation ;
 
-syntax ImportDeclaration = SingleTypeImportDeclaration       // import Class; 
+syntax ImportDeclaration = importDeclaration: SingleTypeImportDeclaration       // import Class; 
                          | TypeImportOnDemandDeclaration     // import br.unb.rascal.*;
                          | SingleStaticImportDeclaration     // import static br.unb.rascal.Foo.m;
                          | StaticImportOnDemandDeclaration   // import static br.unb.rascal.Foo.*;
@@ -186,7 +186,7 @@ syntax ClassMemberDeclaration = FieldDeclaration
                               //| ";"
                               ;
                               
-syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ";"+ ;
+syntax FieldDeclaration = fieldDeclaration: FieldModifier* UnannType VariableDeclaratorList ";"+ ;
 
 syntax FieldModifier = Annotation 
                      | "public" 
@@ -198,9 +198,9 @@ syntax FieldModifier = Annotation
                      | "volatile"
                      ;
 
-syntax VariableDeclaratorList = {VariableDeclarator ","}+ ; 
+syntax VariableDeclaratorList = variableDeclaratorList: {VariableDeclarator ","}+ ; 
 
-syntax VariableDeclarator = VariableDeclaratorId ("=" VariableInitializer)? ;
+syntax VariableDeclarator = variableDeclarator: VariableDeclaratorId ("=" VariableInitializer)? ;
 
 syntax VariableDeclaratorId = Identifier Dims? ;
 
