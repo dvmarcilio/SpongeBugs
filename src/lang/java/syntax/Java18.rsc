@@ -530,7 +530,9 @@ syntax AssertStatement = "assert" Expression ";"
                       
 syntax SwitchStatement = "switch" "(" Expression ")" SwitchBlock ; 
 
-syntax SwitchBlock = "{" SwitchBlockStatementGroup* SwitchLabel* "}" ;
+syntax SwitchBlock = "{" SwitchBlockStatementGroups SwitchLabel* "}" ;
+
+syntax SwitchBlockStatementGroups = SwitchBlockStatementGroup* ;
 
 syntax SwitchBlockStatementGroup = SwitchLabels BlockStatements ;
 
@@ -866,7 +868,7 @@ lexical EscEscChar =
 lexical DeciNumeral =
   "0"
   | [1-9]
-  > [1-9] [0-9 _]* [0-9];
+  | [1-9] [0-9 _]* [0-9];
  
  
 keyword HexaSignificandKeywords =
