@@ -130,7 +130,7 @@ syntax PackageDeclaration = PackageModifier* "package" {Identifier "."}+ ";" ;
 
 syntax PackageModifier = Annotation ;
 
-syntax ImportDeclaration = SingleTypeImportDeclaration       // import Class; 
+syntax ImportDeclaration = importDeclaration: SingleTypeImportDeclaration       // import Class; 
                          | TypeImportOnDemandDeclaration     // import br.unb.rascal.*;
                          | SingleStaticImportDeclaration     // import static br.unb.rascal.Foo.m;
                          | StaticImportOnDemandDeclaration   // import static br.unb.rascal.Foo.*;
@@ -171,7 +171,7 @@ syntax Superclass = "extends" ClassType ;
 
 syntax Superinterfaces = "implements" {InterfaceType ","}+ ;
 
-syntax ClassBody = classBody : "{" ClassBodyDeclaration* "}" ;
+syntax ClassBody = classBody : "{" ClassBodyDeclaration* decls "}" ;
 
 syntax ClassBodyDeclaration = ClassMemberDeclaration 
                             | InstanceInitializer 
@@ -186,7 +186,7 @@ syntax ClassMemberDeclaration = FieldDeclaration
                               //| ";"
                               ;
                               
-syntax FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ";"+ ;
+syntax FieldDeclaration = fieldDeclaration: FieldModifier* UnannType VariableDeclaratorList ";"+ ;
 
 syntax FieldModifier = Annotation 
                      | "public" 
@@ -198,9 +198,9 @@ syntax FieldModifier = Annotation
                      | "volatile"
                      ;
 
-syntax VariableDeclaratorList = {VariableDeclarator ","}+ ; 
+syntax VariableDeclaratorList = variableDeclaratorList: {VariableDeclarator ","}+ ; 
 
-syntax VariableDeclarator = VariableDeclaratorId ("=" VariableInitializer)? ;
+syntax VariableDeclarator = variableDeclarator: VariableDeclaratorId ("=" VariableInitializer)? ;
 
 syntax VariableDeclaratorId = Identifier Dims? ;
 
@@ -251,7 +251,7 @@ syntax MethodModifier = Annotation
                       | "strictfp"
                       ;
 
-syntax MethodHeader = Result MethodDeclarator Throws?
+syntax MethodHeader = methodHeader: Result MethodDeclarator Throws?
                     |  TypeParameters Annotation* Result MethodDeclarator Throws?
                     ;
                     
@@ -260,7 +260,12 @@ syntax Result = UnannType
               ;
 
 
-syntax MethodDeclarator = methodDeclarator: Identifier "(" FormalParameterList? ")" Dims? ;
+// syntax MethodDeclarator = methodDeclarator: Identifier "(" FormalParameterList? pmts ")" Dims? ;
+
+syntax MethodDeclarator = Identifier "(" ")" Dims?
+                        | Identifier "(" LastFormalParameter ")" Dims?
+                        | Identifier "(" {FormalParameter ","}+ ("," LastFormalParameter)?")" Dims?
+                        ; 
             
 syntax FormalParameterList = FormalParameters ;
                             
@@ -269,7 +274,7 @@ syntax FormalParameters = formalParameter : FormalParameter ("," FormalParameter
                         | lastFormalParameter: LastFormalParameter
                         ;                                   
 
-syntax FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
+syntax FormalParameter = VariableModifier* mds UnannType atype VariableDeclaratorId vdid;
 
                         
 syntax LastFormalParameter = VariableModifier* UnannType Annotation* "..." VariableDeclaratorId 
@@ -525,7 +530,9 @@ syntax AssertStatement = "assert" Expression ";"
                       
 syntax SwitchStatement = "switch" "(" Expression ")" SwitchBlock ; 
 
-syntax SwitchBlock = "{" SwitchBlockStatementGroup* SwitchLabel* "}" ;
+syntax SwitchBlock = "{" SwitchBlockStatementGroups SwitchLabel* "}" ;
+
+syntax SwitchBlockStatementGroups = SwitchBlockStatementGroup* ;
 
 syntax SwitchBlockStatementGroup = SwitchLabels BlockStatements ;
 
@@ -538,7 +545,7 @@ syntax SwitchLabel = "case" ConstantExpression ":"
                    
 syntax EnumConstantName = Identifier ;  
 
-syntax WhileStatement = "while" "(" Expression ")" Statement ; 
+syntax WhileStatement = whileStatement: "while" "(" Expression ")" Statement ; 
 
 syntax WhileStatementNoShortIf = "while" "(" Expression ")" StatementNoShortIf ;
 
@@ -564,7 +571,7 @@ syntax  ForUpdate = StatementExpressionList ;
                
 syntax StatementExpressionList = {StatementExpression ","} + ;
 
-syntax EnhancedForStatement = "for" "(" VariableModifier* UnannType VariableDeclaratorId ":" Expression ")" Statement ;
+syntax EnhancedForStatement = enhancedForStatement: "for" "(" VariableModifier* UnannType VariableDeclaratorId ":" Expression ")" Statement ;
 
 syntax EnhancedForStatementNoShortIf = "for" "(" VariableModifier* UnannType VariableDeclaratorId ":" Expression ")" StatementNoShortIf ;
 
@@ -632,9 +639,10 @@ syntax ClassInstanceCreationExpression = UnqualifiedClassInstanceCreationExpress
                                        | Primary "." UnqualifiedClassInstanceCreationExpression
                                        ; 
 
-syntax UnqualifiedClassInstanceCreationExpression = "new" TypeArguments? ClassOrInterfaceTypeToInstantiate "(" ArgumentList? ")" ClassBody? ;
-
-// syntax ClassOrInterfaceTypeToInstantiate = Annotation? Identifier ("." Annotation* Identifier)* TypeArgumentsOrDiamond? ;
+syntax UnqualifiedClassInstanceCreationExpression = "new" TypeArguments? ClassOrInterfaceTypeToInstantiate "(" ArgumentList? ")" 
+                                                  | AIC ;
+                                                  
+syntax AIC = "new" TypeArguments? ClassOrInterfaceTypeToInstantiate "(" ArgumentList? ")" ClassBody ; 
 
 syntax ClassOrInterfaceTypeToInstantiate = {AnnotatedType "."}* TypeArgumentsOrDiamond? ;
 
@@ -861,7 +869,7 @@ lexical EscEscChar =
 lexical DeciNumeral =
   "0"
   | [1-9]
-  > [1-9] [0-9 _]* [0-9];
+  | [1-9] [0-9 _]* [0-9];
  
  
 keyword HexaSignificandKeywords =
