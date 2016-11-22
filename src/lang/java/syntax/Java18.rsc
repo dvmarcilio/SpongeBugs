@@ -639,9 +639,10 @@ syntax ClassInstanceCreationExpression = UnqualifiedClassInstanceCreationExpress
                                        | Primary "." UnqualifiedClassInstanceCreationExpression
                                        ; 
 
-syntax UnqualifiedClassInstanceCreationExpression = "new" TypeArguments? ClassOrInterfaceTypeToInstantiate "(" ArgumentList? ")" ClassBody? ;
-
-// syntax ClassOrInterfaceTypeToInstantiate = Annotation? Identifier ("." Annotation* Identifier)* TypeArgumentsOrDiamond? ;
+syntax UnqualifiedClassInstanceCreationExpression = "new" TypeArguments? ClassOrInterfaceTypeToInstantiate "(" ArgumentList? ")" 
+                                                  | AIC ;
+                                                  
+syntax AIC = "new" TypeArguments? ClassOrInterfaceTypeToInstantiate "(" ArgumentList? ")" ClassBody ; 
 
 syntax ClassOrInterfaceTypeToInstantiate = {AnnotatedType "."}* TypeArgumentsOrDiamond? ;
 
