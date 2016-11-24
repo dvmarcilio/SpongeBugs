@@ -14,8 +14,25 @@ void findAnonymousInnerClass(CompilationUnit unit) {
 
 
 CompilationUnit refactorAnonymousInnerClass(CompilationUnit unit) =  visit(unit) {
-    case (Expression)`new <ClassOrInterfaceTypeToInstantiate id>() {<MethodModifier m> <Result res> <Identifier methodName> () <Block bl>}` => (Expression)`()-\><Block bl>`
+    case (Expression)`new <ClassOrInterfaceTypeToInstantiate id>() {<MethodModifier m> <Result res> <Identifier methodName> () { <Statement stmt> } }`  
+      => (Expression)`()-\> { <Statement stmt >}`
+    when !checkConstraints(stmt, methodName)  
     
-    case (Expression)`new <ClassOrInterfaceTypeToInstantiate id>() {<MethodModifier m> <Result res> <Identifier methodName> (<FormalParameter fp>) <Block bl>}` => (Expression)`(<FormalParameter fp>)-\><Block bl>`
+    case (Expression)`new <ClassOrInterfaceTypeToInstantiate id>() {<MethodModifier m> <Result res> <Identifier methodName> (<FormalParameter fp>) {<Statement stmt>}}` 
+      => (Expression)`(<FormalParameter fp>)-\>{ <Statement stmt>}`
+    when !checkConstraints(stmt, methodName)  
+      
     
 };
+
+bool checkConstraints(Statement stmt, Identifier methodName)  {
+  res = false; 
+  top-down-break visit(stmt) { 
+    case (Expression)`this` : res = true;
+    case (FieldAccess)`super.<Identifier id>` : res = true;
+    case (MethodInvocation)`super.<TypeArguments args><Identifier id>(<ArgumentList args>)` : res = true;
+    case (MethodInvocation)`methodName(<ArgumentList args>)` : res = true;  
+
+  };
+  return res; 
+}
