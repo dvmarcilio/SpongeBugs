@@ -21,15 +21,19 @@ set[str] findCheckedExceptions(list[loc] locs) {
 				
 				if (superClass.present) {
 					subClassName = retrieveClassNameFromUnit(unit);
+					
+					// If class extends Exception or class that is a subclass of Exception
 				 	if (superClass.name in checkedExceptionClasses) {
 						checkedExceptionClasses += subClassName;
 						
+						
 						if (subClassName in superClassesBySubClasses) {
+							// All subClasses of class extends Exception indirectly
 							checkedExceptionClasses += superClassesBySubClasses[subClassName];
 							delete(superClassesBySubClasses, subClassName);
 						}
 						
-					} else {
+					} else { // Class has a superClass that we don't know yet if it's a sub class of Exception
 						if (superClass.name in superClassesBySubClasses) {
 							superClassesBySubClasses[superClass.name] += {subClassName};
 						} else {
