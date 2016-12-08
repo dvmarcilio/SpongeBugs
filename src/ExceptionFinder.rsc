@@ -4,9 +4,10 @@ import IO;
 import lang::java::m3::M3Util;
 import lang::java::\syntax::Java18;
 import ParseTree;
+import Map;
 
 set[str] findCheckedExceptions(list[loc] locs) {
-	set[str] classesToBeVerified = {};
+	map[str, set[str]] superClassesBySubClasses = ();
 	set[str] checkedExceptionClasses = {"Exception"};
 	for(int i <- [0 .. size(locs) - 1]) {
 		location = locs[i];
@@ -24,10 +25,25 @@ set[str] findCheckedExceptions(list[loc] locs) {
 					}
 				}
 				
-			 	if (superClassName in checkedExceptionClasses) {
-					className = retrieveClassNameFromUnit(unit);
-					checkedExceptionClasses = checkedExceptionClasses + className;
+				if (unitHasSuperClass) {
+					subClassName = retrieveClassNameFromUnit(unit);
+				 	if (superClassName in checkedExceptionClasses) {
+						checkedExceptionClasses += subClassName;
+						
+						if (subClassName in superClassesBySubClasses) {
+							checkedExceptionClasses += superClassesBySubClasses[subClassName];
+							delete(superClassesBySubClasses, subClassName);
+						}
+						
+					} else {
+						if (superClassName in superClassesBySubClasses) {
+							superClassesBySubClasses[superClassName] += {subClassName};
+						} else {
+							superClassesBySubClasses[superClassName] = {subClassName};
+						}
+					}
 				}
+				
 		} catch: 
 			continue;
 		
