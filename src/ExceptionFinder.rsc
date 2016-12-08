@@ -6,28 +6,22 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import Map;
 
+private map[str, set[str]] superClassesBySubClasses = ();
+private set[str] checkedExceptionClasses = {"Exception"};
+
 set[str] findCheckedExceptions(list[loc] locs) {
-	map[str, set[str]] superClassesBySubClasses = ();
-	set[str] checkedExceptionClasses = {"Exception"};
 	for(int i <- [0 .. size(locs) - 1]) {
 		location = locs[i];
 		content = readFile(location);
 		
 		try {
 				unit = parse(#CompilationUnit, content);
+
+				superClass = retrieveSuperClass(unit);
 				
-				bool unitHasSuperClass = false;
-				str superClassName = "";
-				visit(unit) {
-					case(Superclass) `extends <Identifier id>`: {
-						unitHasSuperClass = true;
-						superClassName = unparse(id);
-					}
-				}
-				
-				if (unitHasSuperClass) {
+				if (superClass.present) {
 					subClassName = retrieveClassNameFromUnit(unit);
-				 	if (superClassName in checkedExceptionClasses) {
+				 	if (superClass.name in checkedExceptionClasses) {
 						checkedExceptionClasses += subClassName;
 						
 						if (subClassName in superClassesBySubClasses) {
@@ -36,10 +30,10 @@ set[str] findCheckedExceptions(list[loc] locs) {
 						}
 						
 					} else {
-						if (superClassName in superClassesBySubClasses) {
-							superClassesBySubClasses[superClassName] += {subClassName};
+						if (superClass.name in superClassesBySubClasses) {
+							superClassesBySubClasses[superClass.name] += {subClassName};
 						} else {
-							superClassesBySubClasses[superClassName] = {subClassName};
+							superClassesBySubClasses[superClass.name] = {subClassName};
 						}
 					}
 				}
@@ -52,7 +46,19 @@ set[str] findCheckedExceptions(list[loc] locs) {
 	return checkedExceptionClasses;
 }
 
-str retrieveClassNameFromUnit(unit) {
+private tuple[bool present, str name] retrieveSuperClass(unit) {
+	tuple[bool present, str name] SuperClass = <false, "">;
+	visit(unit) {
+		case(Superclass) `extends <Identifier id>`: {
+			SuperClass.present = true;
+			SuperClass.name = unparse(id);
+		}
+	}
+	return SuperClass;
+}
+
+
+private str retrieveClassNameFromUnit(unit) {
 	visit(unit) {
 		case(NormalClassDeclaration) `<ClassModifier _> class <Identifier id> <TypeParameters? _> <Superclass? _> <Superinterfaces? _> <ClassBody _>`:
 			return unparse(id);
