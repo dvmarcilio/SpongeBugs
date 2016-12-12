@@ -346,7 +346,7 @@ syntax ExplicitConstructorInvocation = TypeArguments? "this" "(" ArgumentList? "
                                      | Primary "." TypeArguments? "super" "(" ArgumentList? ")" ";"
                                      ;
 
-syntax EnumDeclaration = ClassModifier* "enum" Identifier Superinterfaces? EnumBody ;
+syntax EnumDeclaration = enumDeclaration : ClassModifier* "enum" Identifier Superinterfaces? EnumBody ;
 
 syntax EnumBody = "{" EnumConstantList? ","? EnumBodyDeclarations? "}" ";"?;
 
@@ -362,7 +362,7 @@ syntax InterfaceDeclaration = NormalInterfaceDeclaration
                             | AnnotationTypeDeclaration
                             ;
                             
-syntax NormalInterfaceDeclaration = InterfaceModifier* "interface" Identifier TypeParameters? ExtendsInterfaces? InterfaceBody ;
+syntax NormalInterfaceDeclaration = normalInterfaceDeclaration : InterfaceModifier* "interface" Identifier TypeParameters? ExtendsInterfaces? InterfaceBody ;
 
 syntax InterfaceModifier = Annotation 
                          | "public" 
