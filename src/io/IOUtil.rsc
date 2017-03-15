@@ -9,7 +9,7 @@ list[loc] findAllFiles(loc location, str ext) {
   res = [];
   list[loc] allFiles; 
   
-  if((isDirectory(location)) || (location.extension == "jar") || (location.extension == "zip")) {
+  if(isDirectory(location) || (location.extension == "jar") || (location.extension == "zip")) {
      allFiles = location.ls;
   }
   else {
