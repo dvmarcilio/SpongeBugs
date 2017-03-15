@@ -47,7 +47,7 @@ private tuple[bool present, str name] retrieveSuperClass(unit) {
 
 private str retrieveClassNameFromUnit(unit) {
 	visit(unit) {
-		case(NormalClassDeclaration) `<ClassModifier _> class <Identifier id> <TypeParameters? _> <Superclass? _> <Superinterfaces? _> <ClassBody _>`:
+		case(NormalClassDeclaration) `<ClassModifier* _> class <Identifier id> <TypeParameters? _> <Superclass? _> <Superinterfaces? _> <ClassBody _>`:
 			return unparse(id);
 	}
 	// Not the best solution. quick workaround
@@ -57,7 +57,7 @@ private str retrieveClassNameFromUnit(unit) {
 private void handleIfClassIsAnException(str className, str superClassName) {
  	if (superClassName in checkedExceptionClasses)
 		addClassAndItsSubClassesAsExceptions(className);
-	else			   
+	else    
 		addClassAsASubClassOfItsSuperClass(className, superClassName);
 }
 

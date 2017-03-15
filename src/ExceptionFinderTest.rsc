@@ -43,3 +43,7 @@ public test bool shouldNotReturnUncheckedExceptions() {
 		"UncheckedLevelThreeRuntimeException" notin checkedExceptions &&
 		"UncheckedLevelTwoRuntimeException" notin checkedExceptions;
 }
+
+public test bool shouldReturnAbstractCheckedException() {
+	return "AbstractCheckedException" in checkedExceptions;
+}
