@@ -22,26 +22,16 @@ set[str] findCheckedExceptions(list[loc] locs) {
 				
 				if (superClass.present) {
 					subClassName = retrieveClassNameFromUnit(unit);
-					
-					//println("Current class (subClass): " + subClassName);
-					//println("Super class: " + superClass.name);
-					//println("checkedExceptionClasses: " + toString(checkedExceptionClasses));
-					//println("superClassesBySubClasses: " + toString(superClassesBySubClasses));
-					//println();
-					
+
 					// If class extends Exception or class that is a subclass of Exception
 				 	if (superClass.name in checkedExceptionClasses) {
 						checkedExceptionClasses += subClassName;
 						
 						if (subClassName in superClassesBySubClasses) {
-							println();
 							addAllSubClassesOf(subClassName);
 						}
 						
-					} else { // Class has a superClass that we don't know yet if it's a sub class of Exception
-						
-						// TODO: check if superClass is already a sub class mapped to another superclass
-						   
+					} else { // Class has a superClass that we don't know yet if it's a sub class of Exception			   
 						if (superClass.name in superClassesBySubClasses) {
 							superClassesBySubClasses[superClass.name] += {subClassName};
 						} else {
@@ -55,7 +45,6 @@ set[str] findCheckedExceptions(list[loc] locs) {
 		
 		
 	}
-	println(checkedExceptionClasses);
 	return checkedExceptionClasses;
 }
 
@@ -82,40 +71,21 @@ private str retrieveClassNameFromUnit(unit) {
 
 private void addAllSubClassesOf(str className) {
 	set[str] allSubClasses = {};
-	allSubClasses += superClassesBySubClasses[className];
-	println("className: " + className);
-	println("allSubClasses (pre-while): " + toString(allSubClasses)); 
-	println("checkedExceptionClasses (pre-while): " + toString(checkedExceptionClasses));
+	allSubClasses += retrieveDirectSubClasses(className);
 	while(!isEmpty(allSubClasses)) {
-		println();
 		currentClass = getOneFrom(allSubClasses);
-		println("currentClass: " + currentClass);
+
 		checkedExceptionClasses += currentClass;
-		println("checkedExceptionClasses: " + toString(checkedExceptionClasses));
+
 		allSubClasses -= currentClass;
-		println("allSubClasses (removing current): " + toString(allSubClasses));
 		
 		if (currentClass in superClassesBySubClasses) {
-			directSubClasses = superClassesBySubClasses[currentClass];
-			println("directSubClasses: " + toString(directSubClasses));
+			directSubClasses = retrieveDirectSubClasses(currentClass);
 			allSubClasses += directSubClasses;
-			println("allSubClasses (adding direct sub: " + toString(allSubClasses)); 
 		}
 		
 		superClassesBySubClasses = delete(superClassesBySubClasses, currentClass);
 	}
-	
-	
-	////println();
-	//println("subClassName: " + subClassName);
-	////println("directSubClasses: " + toString(directSubClasses));
-	////println();
-	//
-	//list[str] directSubClassesList = toList(directSubClasses);
-	//println("directSubClasses: " + toString(directSubClassesList));
-	//for(int i <- [0 .. size(directSubClassesList)]) {
-	//	addAllSubClassesOf(directSubClassesList[i]);	
-	//}
 }
 
 private set[str] retrieveDirectSubClasses(str className) {
