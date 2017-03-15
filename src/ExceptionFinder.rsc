@@ -10,54 +10,40 @@ import Map;
 private map[str, set[str]] superClassesBySubClasses = ();
 private set[str] checkedExceptionClasses = {"Exception"};
 
-set[str] findCheckedExceptions(list[loc] locations) {
-	for(location <- locations) {
-		content = readFile(location);
-		
-		try {
-				unit = parse(#CompilationUnit, content);
-
-				superClass = retrieveSuperClass(unit);
-				
-				if (superClass.present) {
-					subClassName = retrieveClassNameFromUnit(unit);
-
-					// If class extends Exception or class that is a subclass of Exception
-				 	if (superClass.name in checkedExceptionClasses) {
-						checkedExceptionClasses += subClassName;
-						
-						if (subClassName in superClassesBySubClasses) {
-							addAllSubClassesOf(subClassName);
-						}
-						
-					} else { // Class has a superClass that we don't know yet if it's a sub class of Exception			   
-						if (superClass.name in superClassesBySubClasses) {
-							superClassesBySubClasses[superClass.name] += {subClassName};
-						} else {
-							superClassesBySubClasses[superClass.name] = {subClassName};
-						}
-					}
-				}
-				
-		} catch: 
-			continue;
-		
-		
+set[str] findCheckedExceptions(list[loc] javaFilesLocations) {
+	for(javaFileLocation <- javaFilesLocations) {
+		javaFileContent = readFile(javaFileLocation);
+		tryToNavigateClassesFindingSubClassesOfException(javaFileContent);
 	}
 	return checkedExceptionClasses;
 }
 
-private tuple[bool present, str name] retrieveSuperClass(unit) {
-	tuple[bool present, str name] SuperClass = <false, "">;
-	visit(unit) {
-		case(Superclass) `extends <Identifier id>`: {
-			SuperClass.present = true;
-			SuperClass.name = unparse(id);
-		}
-	}
-	return SuperClass;
+private void tryToNavigateClassesFindingSubClassesOfException(str javaFileContent) {
+	try {
+			compilationUnit = parse(#CompilationUnit, javaFileContent);
+			handleIfClassHasASuperClass(compilationUnit);
+		} catch: 
+			continue;
 }
 
+private void handleIfClassHasASuperClass(unit) {
+	superClass = retrieveSuperClass(unit);
+	if (superClass.present) {
+		className = retrieveClassNameFromUnit(unit);
+		handleIfClassIsAnException(className, superClass.name);
+	}
+}
+
+private tuple[bool present, str name] retrieveSuperClass(unit) {
+	tuple[bool present, str name] superClass = <false, "">;
+	visit(unit) {
+		case(Superclass) `extends <Identifier id>`: {
+			superClass.present = true;
+			superClass.name = unparse(id);
+		}
+	}
+	return superClass;
+}
 
 private str retrieveClassNameFromUnit(unit) {
 	visit(unit) {
@@ -66,6 +52,26 @@ private str retrieveClassNameFromUnit(unit) {
 	}
 	// Not the best solution. quick workaround
 	throw "Could not find class name";
+}
+
+private void handleIfClassIsAnException(str className, str superClassName) {
+ 	if (superClassName in checkedExceptionClasses)
+		addClassAndItsSubClassesAsExceptions(className);
+	else			   
+		addClassAsASubClassOfItsSuperClass(className, superClassName);
+}
+
+private void addClassAndItsSubClassesAsExceptions(str className) {
+	checkedExceptionClasses += className;				
+	if (className in superClassesBySubClasses)
+		addAllSubClassesOf(className);
+}
+
+private void addClassAsASubClassOfItsSuperClass(str className, str superClassName) {
+	if (superClassName in superClassesBySubClasses)
+		superClassesBySubClasses[superClassName] += {className};
+ 	else 
+		superClassesBySubClasses[superClassName] = {className};
 }
 
 private void addAllSubClassesOf(str className) {
