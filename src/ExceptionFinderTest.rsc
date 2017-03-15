@@ -29,7 +29,8 @@ public test bool shouldReturnLevelFourHierarchyClasses() {
 }
 
 public test bool shouldReturnLevelFiveHierarchyClasses() {
-	return "GException" in checkedExceptions && "KException" in checkedExceptions;
+	return "GException" in checkedExceptions && "KException" in checkedExceptions &&
+		"NException" in checkedExceptions;
 }
 
 public test bool shouldReturnLevelSixHierarchyClasses() {
