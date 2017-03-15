@@ -10,9 +10,8 @@ import Map;
 private map[str, set[str]] superClassesBySubClasses = ();
 private set[str] checkedExceptionClasses = {"Exception"};
 
-set[str] findCheckedExceptions(list[loc] locs) {
-	for(int i <- [0 .. size(locs)]) {
-		location = locs[i];
+set[str] findCheckedExceptions(list[loc] locations) {
+	for(location <- locations) {
 		content = readFile(location);
 		
 		try {
@@ -70,24 +69,17 @@ private str retrieveClassNameFromUnit(unit) {
 }
 
 private void addAllSubClassesOf(str className) {
-	set[str] allSubClasses = {};
-	allSubClasses += retrieveDirectSubClasses(className);
-	while(!isEmpty(allSubClasses)) {
-		currentClass = getOneFrom(allSubClasses);
+	directSubClasses = getAllDirectSubClassesOf(className);
+	checkedExceptionClasses += directSubClasses;
+	superClassesBySubClasses = delete(superClassesBySubClasses, className);
 
-		checkedExceptionClasses += currentClass;
-
-		allSubClasses -= currentClass;
-		
-		if (currentClass in superClassesBySubClasses) {
-			directSubClasses = retrieveDirectSubClasses(currentClass);
-			allSubClasses += directSubClasses;
-		}
-		
-		superClassesBySubClasses = delete(superClassesBySubClasses, currentClass);
-	}
+	for (str className <- directSubClasses)
+		addAllSubClassesOf(className); 
 }
 
-private set[str] retrieveDirectSubClasses(str className) {
-	return superClassesBySubClasses[className];
+private set[str] getAllDirectSubClassesOf(str className) {
+	directSubClasses = {};
+	if (className in superClassesBySubClasses)
+		directSubClasses = superClassesBySubClasses[className];
+	return directSubClasses;
 }
