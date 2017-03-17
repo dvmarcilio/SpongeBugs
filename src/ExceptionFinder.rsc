@@ -6,6 +6,7 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import Set;
 import Map;
+import util::Math;
 
 private map[str, set[str]] superClassesBySubClasses = ();
 private set[str] checkedExceptionClasses = {"Exception"};
@@ -13,12 +14,14 @@ private list[loc] fileLocationsThatCouldNotBeParsed = [];
 
 private data ClassAndSuperClass = classAndSuperClass(str className, str superClassName);
 
+private bool printAllFileNamesThatCouldNotBeParsed = false;
+
 set[str] findCheckedExceptions(list[loc] javaFilesLocations) {
 	initializeClassesFound();
 	for(javaFileLocation <- javaFilesLocations)
 		tryToVisitFileLookingForClassesWithSubClasses(javaFileLocation);
 	
-	printJavaFileLocationsThatCouldNotBeParsed();
+	printJavaFilesThatCouldNotBeParsed();
 	return checkedExceptionClasses;
 }
 
@@ -88,7 +91,15 @@ private set[str] getAllDirectSubClassesOf(str className) {
 	return directSubClasses;
 }
 
-private void printJavaFileLocationsThatCouldNotBeParsed() {
-	println("Java File Locations that could not be parsed: ");
-	println(fileLocationsThatCouldNotBeParsed);
+private void printJavaFilesThatCouldNotBeParsed() {
+	str filesNotParsedCount = toString(size(fileLocationsThatCouldNotBeParsed));
+	println(filesNotParsedCount + " Java File Locations that could not be parsed. ");
+	
+	if (printAllFileNamesThatCouldNotBeParsed) {
+		for(fileLoc <- fileLocationsThatCouldNotBeParsed)
+			print(fileLoc.file + ", ");
+		println();
+	}
+	
+	println();
 }
