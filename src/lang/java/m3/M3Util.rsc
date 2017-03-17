@@ -37,6 +37,8 @@ list[str] classesFromClassPath(list[loc] classPath) {
  */ 
 list[str] interfacesFromClassPath(list[loc] classPath) {
    list[M3] models = createM3FromClassPath(classPath);
+   println([e | m <- models, e <- m@extends]);
+   println("*******************");
    return [ replaceFirst(replaceAll(N.path, "/", "."), ".", "") | m <- models, <N, S> <- m@declarations, N.scheme == "java+interface"];
 }
 
