@@ -27,7 +27,7 @@ list[CompilationUnit] listCompilations(loc location){
 	   	return listCompilations;
 	}
 	catch: {
-    	println("Sorry, an error occurred while to load the compilations unit."); 
+    	println("Sorry, an error occurred while loading the compilations unit."); 
     }
 }
 
