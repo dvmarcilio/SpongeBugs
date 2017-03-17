@@ -7,8 +7,8 @@ import ParseTree;
 import Set;
 import Map;
 
-private map[str, set[str]] superClassesBySubClasses;
-private set[str] checkedExceptionClasses;
+private map[str, set[str]] superClassesBySubClasses = ();
+private set[str] checkedExceptionClasses = {"Exception"};
 
 set[str] findCheckedExceptions(list[loc] javaFilesLocations) {
 	initializeClassesFound();
