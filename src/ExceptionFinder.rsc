@@ -9,25 +9,34 @@ import Map;
 
 private map[str, set[str]] superClassesBySubClasses = ();
 private set[str] checkedExceptionClasses = {"Exception"};
+private list[loc] fileLocationsThatCouldNotBeParsed = [];
 
 private data ClassAndSuperClass = classAndSuperClass(str className, str superClassName);
 
 set[str] findCheckedExceptions(list[loc] javaFilesLocations) {
 	initializeClassesFound();
-	for(javaFileLocation <- javaFilesLocations) {
-		javaFileContent = readFile(javaFileLocation);
-		visitJavaFilesLookingForClassesWithSubClasses(javaFileContent);
-		
-	}
+	for(javaFileLocation <- javaFilesLocations)
+		tryToVisitFileLookingForClassesWithSubClasses(javaFileLocation);
+	
+	printJavaFileLocationsThatCouldNotBeParsed();
 	return checkedExceptionClasses;
 }
 
 private void initializeClassesFound() {
 	superClassesBySubClasses = ();
 	checkedExceptionClasses = {"Exception"};
+	fileLocationsThatCouldNotBeParsed = [];
 }
 
-private void visitJavaFilesLookingForClassesWithSubClasses(str javaFileContent) {
+private void tryToVisitFileLookingForClassesWithSubClasses(loc javaFileLocation) {
+	javaFileContent = readFile(javaFileLocation);
+	try
+		visitFileLookingForClassesWithSubClasses(javaFileContent);
+	catch:
+		fileLocationsThatCouldNotBeParsed += javaFileLocation;
+}
+
+private void visitFileLookingForClassesWithSubClasses(str javaFileContent) {
 	compilationUnit = parse(#CompilationUnit, javaFileContent);
 	classesAndSuperClasses = retrieveClassesAndSuperClassesFromCompilationUnit(compilationUnit);
 	for(classAndSuperClass <- classesAndSuperClasses)
@@ -77,4 +86,9 @@ private set[str] getAllDirectSubClassesOf(str className) {
 	if (className in superClassesBySubClasses)
 		directSubClasses = superClassesBySubClasses[className];
 	return directSubClasses;
+}
+
+private void printJavaFileLocationsThatCouldNotBeParsed() {
+	println("Java File Locations that could not be parsed: ");
+	println(fileLocationsThatCouldNotBeParsed);
 }
