@@ -3,8 +3,15 @@ module ForLoop
 import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
+import ExceptionFinder;
+import util::Math;
 
-public void findForLoops(list[loc] locs) {
+// TODO maybe return set[Identifier]
+// avoids unparse()
+private set[str] checkedExceptionClasses;
+
+public void findForLoops(list[loc] locs, set[str] checkedExceptions) {
+	checkedExceptionClasses = checkedExceptions;
 	for(fileLoc <- locs) {
 		javaFileContent = readFile(fileLoc);
 		try {
@@ -18,9 +25,9 @@ public void findForLoops(list[loc] locs) {
 private void lookForForStatements(CompilationUnit unit) {
 	visit(unit) {
 		case (BasicForStatement) `for ( <ForInit? _> ; <Expression? _> ; <ForUpdate? _> ) <Statement stmt>`:
-			lookForBreakingPreConditions(stmt);
+			isLoopEligibleForRefactor(stmt);
 		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _> ) <Statement stmt>`: 
-			lookForBreakingPreConditions(stmt);
+			isLoopEligibleForRefactor(stmt);
 		case (BasicForStatementNoShortIf) `for ( <ForInit? _> ; <Expression? _> ; <ForUpdate? _> ) <StatementNoShortIf stmt>`:
 			println("TODO");
 		case (EnhancedForStatementNoShortIf) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _> ) <StatementNoShortIf stmt>`:
@@ -40,13 +47,30 @@ private void lookForForStatements(CompilationUnit unit) {
 // syntax Identifier = id: [$ A-Z _ a-z] !<< ID \ IDKeywords !>> [$ 0-9 A-Z _ a-z];
 // syntax UnqualifiedClassInstanceCreationExpression = "new" TypeArguments? ClassOrInterfaceTypeToInstantiate "(" ArgumentList? ")" 
 
-private void lookForBreakingPreConditions(Statement stmt) {
+// TODO extract module and test it
+private bool isLoopEligibleForRefactor(Statement stmt) {
+	returnCount = 0;
 	visit(stmt) {
 		case (ThrowStatement) `throw new <TypeArguments? _> <ClassOrInterfaceTypeToInstantiate className> ( <ArgumentList? _>);`: {
-			println(className);
+			classNameStr = unparse(className);
+			if (classNameStr in checkedExceptionClasses) {
+				println("found checked exception (" + classNameStr + ") thrown inside a for statement.");
+				return false;
+			}
 		}
 		case (BreakStatement) `break <Identifier? _>;`: {
-			println("break");
+			println("found break statement inside a for statement.");
+			return false;
+		}
+		case (ReturnStatement) `return <Expression? _>;`: {
+			returnCount += 1;
 		}
 	}
+	if (returnCount > 1) {
+		println("returnCount: " + toString(returnCount)); 
+		println(stmt);
+		println();
+		return false;
+	}
+	return true;
 }
