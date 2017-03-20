@@ -67,6 +67,7 @@ private bool isLoopEligibleForRefactor(Statement stmt) {
 		}
 		// LambdaFicator restructures code to eliminate 'continue'
 		// if we don't do this, we should not allow 'continue'
+		// Even if we do it, no labeled 'continue' are allowed
 		case (ContinueStatement) `continue <Identifier? _>;`: {
 			println("found continue statement inside a for statement.");
 			return false;
