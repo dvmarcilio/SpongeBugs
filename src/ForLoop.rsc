@@ -65,11 +65,16 @@ private bool isLoopEligibleForRefactor(Statement stmt) {
 		case (ReturnStatement) `return <Expression? _>;`: {
 			returnCount += 1;
 		}
+		// LambdaFicator restructures code to eliminate 'continue'
+		// if we don't do this, we should not allow 'continue'
+		case (ContinueStatement) `continue <Identifier? _>;`: {
+			println("found continue statement inside a for statement.");
+			return false;
+		}
 	}
 	if (returnCount > 1) {
-		println("returnCount: " + toString(returnCount)); 
-		println(stmt);
-		println();
+		println("more than one (" + toString(returnCount) + " total) return statements inside a for statement."); 
+		// println(stmt);
 		return false;
 	}
 	return true;
