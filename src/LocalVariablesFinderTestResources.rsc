@@ -9,3 +9,9 @@ public MethodBody enhancedForLoopFinalVarDecl() {
 	content = readFile(fileLoc);
 	return parse(#MethodBody, content);
 }
+
+public MethodBody enhancedForLoopWithException() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/EnhancedForLoopWithException|;
+	content = readFile(fileLoc);
+	return parse(#MethodBody, content);
+}

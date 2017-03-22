@@ -1,0 +1,24 @@
+{
+    final Map<K, V> map;
+    final Set<Entry<K, V>> entrySet;
+    try {
+      map = makePopulatedMap();
+    } catch (UnsupportedOperationException e) {
+      return;
+    }
+    assertInvariants(map);
+
+    entrySet = map.entrySet();
+    final K unmappedKey;
+    final V unmappedValue;
+    try {
+      unmappedKey = getKeyNotInPopulatedMap();
+      unmappedValue = getValueNotInPopulatedMap();
+    } catch (UnsupportedOperationException e) {
+      return;
+    }
+    for (Entry<K, V> entry : entrySet) {
+      assertFalse(unmappedKey.equals(entry.getKey()));
+      assertFalse(unmappedValue.equals(entry.getValue()));
+    }
+  }
