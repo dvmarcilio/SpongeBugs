@@ -23,7 +23,7 @@ private set[MethodVar] findVariablesAsParameters(MethodHeader methodHeader) {
 	set[MethodVar] methodVars = {};
 	visit(methodHeader) {
 		case (FormalParameter) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorId varId>`:
-			methodVars += createNonLocalMethodVar(figureIfIsFinal(varMod), varId, varType);
+			methodVars += createParameterMethodVar(figureIfIsFinal(varMod), varId, varType);
 	}
 	return methodVars;
 }
@@ -49,16 +49,16 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 	return methodVars;
 }
 
-private MethodVar createNonLocalMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
+private MethodVar createParameterMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
 	name = trim(unparse(varId));
 	varTypeStr = trim(unparse(varType));
-	return methodVar(isFinal, name, varTypeStr, false);
+	return methodVar(isFinal, name, varTypeStr, true);
 }
 
 private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
 	name = trim(unparse(varId));
 	varTypeStr = trim(unparse(varType));
-	return methodVar(isFinal, name, varTypeStr, true);
+	return methodVar(isFinal, name, varTypeStr, false);
 }
 
 private MethodVar createLocalMethodVar(bool isFinal, Identifier varId, UnannType varType, Dims? dims) {
@@ -70,13 +70,13 @@ private MethodVar createLocalMethodVar(bool isFinal, Identifier varId, UnannType
 	if(dimsStr == "[]")
 		varTypeStr += "[]";
 		
-	return methodVar(isFinal, name, varTypeStr, true);
+	return methodVar(isFinal, name, varTypeStr, false);
 }
 
 private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId, CatchType varType) {
 	name = trim(unparse(varId));
 	varTypeStr = trim(unparse(varType));
-	return methodVar(isFinal, name, varTypeStr, true);
+	return methodVar(isFinal, name, varTypeStr, false);
 }
 
 private bool figureIfIsFinal(VariableModifier* varMod) {

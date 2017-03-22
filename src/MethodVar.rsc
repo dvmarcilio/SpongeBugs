@@ -4,14 +4,14 @@ import Set;
 import String;
 
 // TODO Review if using a Set is the best choice. Probably not.
-public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isLocal);
+public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter);
 
 public bool isArray(MethodVar methodVar) {
 	return methodVar.varType == "array";
 }
 
 public bool isParameter(MethodVar methodVar) {
-	return !methodVar.isLocal;
+	return !methodVar.isParameter;
 } 
 
 public set[MethodVar] retrieveFinals(set[MethodVar] methodVars) {
@@ -34,20 +34,20 @@ public MethodVar findByName(set[MethodVar] methodVars, str name) {
 	return getOneFrom({ var | MethodVar var <- methodVars, var.name == name });
 }
 
-public set[MethodVar] retrieveLocals(set[MethodVar] methodVars) {
-	return { var | MethodVar var <- methodVars, var.isLocal };
+public set[MethodVar] retrieveParameters(set[MethodVar] methodVars) {
+	return { var | MethodVar var <- methodVars, var.isParameter };
 }
 
-public set[MethodVar] retrieveNonLocals(set[MethodVar] methodVars) {
-	return { var | MethodVar var <- methodVars, !var.isLocal };
+public set[MethodVar] retrieveNonParameters(set[MethodVar] methodVars) {
+	return { var | MethodVar var <- methodVars, !var.isParameter };
 }
 
-public set[str] retrieveLocalNames(set[MethodVar] methodVars) {
-	return { var.name | MethodVar var <- methodVars, var.isLocal };
+public set[str] retrieveParametersNames(set[MethodVar] methodVars) {
+	return { var.name | MethodVar var <- methodVars, var.isParameter };
 }
 
-public set[str] retrieveNonLocalNames(set[MethodVar] methodVars) {
-	return { var.name | MethodVar var <- methodVars, !var.isLocal };
+public set[str] retrieveNonParametersNames(set[MethodVar] methodVars) {
+	return { var.name | MethodVar var <- methodVars, !var.isParameter };
 }
 
 public bool isTypePlainArray(MethodVar methodVar) {
