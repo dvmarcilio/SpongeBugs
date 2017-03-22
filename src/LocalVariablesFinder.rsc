@@ -21,8 +21,8 @@ public set[MethodVar] findLocalVariables(MethodBody methodBody) {
 		
 		case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: {
 			visit(vdl) {
-				case (VariableDeclaratorId) `<Identifier varId> <Dims? _>`:
-					methodVars += createMethodVar(figureIfIsFinal(varMod), varId, varType);
+				case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`:
+					methodVars += createMethodVar(figureIfIsFinal(varMod), varId, varType, dims);
 			}
 		}
 		
@@ -39,9 +39,14 @@ private MethodVar createMethodVar(bool isFinal, VariableDeclaratorId varId, Unan
 	return methodVar(isFinal, name, varTypeStr, true);
 }
 
-private MethodVar createMethodVar(bool isFinal, Identifier varId, UnannType varType) {
+private MethodVar createMethodVar(bool isFinal, Identifier varId, UnannType varType, Dims? dims) {
 	name = trim(unparse(varId));
 	varTypeStr = trim(unparse(varType));
+	dimsStr = trim(unparse(dims));
+	
+	if(dimsStr == "[]")
+		varTypeStr += "[]";
+		
 	return methodVar(isFinal, name, varTypeStr, true);
 }
 
