@@ -92,10 +92,10 @@ private set[str] getAllDirectSubClassesOf(str className) {
 }
 
 private void printJavaFilesThatCouldNotBeParsed() {
-	str filesNotParsedCount = toString(size(fileLocationsThatCouldNotBeParsed));
-	println(filesNotParsedCount + " Java File Locations that could not be parsed. ");
-	
 	if (printAllFileNamesThatCouldNotBeParsed) {
+		str filesNotParsedCount = toString(size(fileLocationsThatCouldNotBeParsed));
+		println(filesNotParsedCount + " Java File Locations that could not be parsed. ");
+	
 		for(fileLoc <- fileLocationsThatCouldNotBeParsed)
 			print(fileLoc.file + ", ");
 		println();
