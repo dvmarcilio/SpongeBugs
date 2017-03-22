@@ -34,6 +34,22 @@ public MethodVar findByName(set[MethodVar] methodVars, str name) {
 	return getOneFrom({ var | MethodVar var <- methodVars, var.name == name });
 }
 
+public set[MethodVar] retrieveLocals(set[MethodVar] methodVars) {
+	return { var | MethodVar var <- methodVars, var.isLocal };
+}
+
+public set[MethodVar] retrieveNonLocals(set[MethodVar] methodVars) {
+	return { var | MethodVar var <- methodVars, !var.isLocal };
+}
+
+public set[str] retrieveLocalNames(set[MethodVar] methodVars) {
+	return { var.name | MethodVar var <- methodVars, var.isLocal };
+}
+
+public set[str] retrieveNonLocalNames(set[MethodVar] methodVars) {
+	return { var.name | MethodVar var <- methodVars, !var.isLocal };
+}
+
 public bool isTypePlainArray(MethodVar methodVar) {
 	return endsWith(methodVar.varType, "[]");
 }
