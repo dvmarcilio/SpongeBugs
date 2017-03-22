@@ -44,6 +44,7 @@ private MethodVar createMethodVar(bool isFinal, Identifier varId, UnannType varT
 	varTypeStr = trim(unparse(varType));
 	dimsStr = trim(unparse(dims));
 	
+	// Standarizing arrays to have varType ==  <UnannType varType>[] 
 	if(dimsStr == "[]")
 		varTypeStr += "[]";
 		
