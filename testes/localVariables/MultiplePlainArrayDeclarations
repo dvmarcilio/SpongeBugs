@@ -1,0 +1,15 @@
+{
+	int[] intArray;
+	intArray = new int[5];
+	String[] strArray = {"a", "b", "c"};
+	Object[] objArray;
+	final Object[] finalObjArray;
+	final String[] finalStrArray = {"c", "b", "a"};
+	
+	// discouraged syntax
+	Object objDiscouraged[];
+	String strDiscouraged[] = {"a", "b", "c"};
+	final Object finalObjDiscouraged[];
+	final int finalIntDiscouraged[];
+	finalIntDiscouraged = new int[5];
+}
