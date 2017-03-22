@@ -4,37 +4,46 @@ import IO;
 import LocalVariablesFinderTestResources;
 import LocalVariablesFinder;
 import Set;
+import MethodVar;
 
 public test bool shouldHaveTheEnhancedDeclaredVarAsFinal() {
 	methodBody = enhancedForLoopFinalVarDecl();
 	vars = findLocalVariables(methodBody);
-	return "listenable" in vars.finals;
+	finalsNames = retrieveFinalsNames(vars);
+	return "listenableFinal" in finalsNames;
 }
 
 public test bool shouldHaveAllFinalVarsInTheEnhancedDeclaredVarAsFinal() {
 	methodBody = enhancedForLoopFinalVarDecl();
 	vars = findLocalVariables(methodBody);
-	return "index" in vars.finals && "listenable" in vars.finals && 
-		size(vars.finals) == 2;
+	finalsNames = retrieveFinalsNames(vars);
+	return "index" in finalsNames && "listenableFinal" in finalsNames && 
+		size(finalsNames) == 2;
 }
 
 public test bool shouldHaveTheNonFinalVarsInEnhancedDeclaredVarAsFinal() {
 	methodBody = enhancedForLoopFinalVarDecl();
 	vars = findLocalVariables(methodBody);
-	return "i" in vars.nonFinals && size(vars.nonFinals) == 1;
+	nonFinalsNames = retrieveNonFinalsNames(vars);
+	println(vars);
+	println(nonFinalsNames);
+	return "i" in nonFinalsNames && "listenableNonFinal" in nonFinalsNames && 
+		size(nonFinalsNames) == 2;
 }
 
 public test bool shouldHaveAllFinalVarsInEnhancedWithException() {
 	methodBody = enhancedForLoopWithException();
 	vars = findLocalVariables(methodBody);
-	return "map" in vars.finals && "entrySet" in vars.finals &&
-		"unmappedKey" in vars.finals && "unmappedValue" in vars.finals && 
-			size(vars.finals) == 4;
+	finalsNames = retrieveFinalsNames(vars);
+	return "map" in finalsNames && "entrySet" in finalsNames &&
+		"unmappedKey" in finalsNames && "unmappedValue" in finalsNames && 
+			size(finalsNames) == 4;
 }
 
 public test bool shouldHaveAllNonFinalVarsIncludingExceptionInEnhancedWithException() {
 	methodBody = enhancedForLoopWithException();
 	vars = findLocalVariables(methodBody);
-	return "e" in vars.nonFinals && "entry" in vars.nonFinals &&
-		size(vars.nonFinals) == 2;
+	nonFinalsNames = retrieveNonFinalsNames(vars);
+	return "e" in nonFinalsNames && "entry" in nonFinalsNames &&
+		size(nonFinalsNames) == 2;
 }

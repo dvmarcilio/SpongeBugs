@@ -19,7 +19,7 @@
         // This is not actually a problem, since the foreach only needs this.futures to be non-null
         // at the beginning of the loop.
         int i = 0;
-        for (final ListenableFuture<? extends InputT> listenable : futures) {
+        for (final ListenableFuture<? extends InputT> listenableFinal : futures) {
           final int index = i++;
           listenable.addListener(
               new Runnable() {
@@ -37,7 +37,7 @@
       } else {
         // We'll only call the callback when all futures complete, regardless of whether some failed
         // Hold off on calling setOneValue until all complete, so we can share the same listener
-        for (ListenableFuture<? extends InputT> listenable : futures) {
+        for (ListenableFuture<? extends InputT> listenableNonFinal : futures) {
           listenable.addListener(this, directExecutor());
         }
       }

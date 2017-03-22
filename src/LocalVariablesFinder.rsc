@@ -5,28 +5,54 @@ import lang::java::\syntax::Java18;
 import String;
 import ParseTree;
 import IO;
+import MethodVar;
 
 // syntax LocalVariableDeclarationStatement = LocalVariableDeclaration ";"+ ;
 // syntax LocalVariableDeclaration = VariableModifier* UnannType VariableDeclaratorList ;
 // syntax VariableDeclaratorList = variableDeclaratorList: {VariableDeclarator ","}+ ; 
 // syntax VariableDeclarator = variableDeclarator: VariableDeclaratorId ("=" VariableInitializer)? ;
 
-public tuple[set[str] finals, set[str] nonFinals] findLocalVariables(MethodBody methodBody) {
-	set[str] finals = {};
-	set[str] nonFinals = {};
+public set[MethodVar] findLocalVariables(MethodBody methodBody) {
+	set[MethodVar] methodVars = {};
 	visit(methodBody) {
-		case (EnhancedForStatement) `for ( final <UnannType _> <VariableDeclaratorId varId> : <Expression _> ) <Statement stmt>`:
-			 finals += trim(unparse(varId));
-		case (LocalVariableDeclaration) `final <UnannType _> <VariableDeclaratorList vdl>`: {
+
+		case (EnhancedForStatement) `for (<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorId varId> : <Expression _> ) <Statement _>`:
+			 methodVars += createMethodVar(figureIfIsFinal(varMod), varId, varType);
+		
+		case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: {
 			visit(vdl) {
 				case (VariableDeclaratorId) `<Identifier varId> <Dims? _>`:
-					finals += trim(unparse(varId));
+					methodVars += createMethodVar(figureIfIsFinal(varMod), varId, varType);
 			}
 		}
-		// finding all variables declared, including ones in loop declaration
-		case VariableDeclaratorId varId: nonFinals += trim(unparse(varId));	
+		
+		case(CatchFormalParameter) `<VariableModifier* varMod> <CatchType varType> <VariableDeclaratorId varId>`:
+			methodVars += createMethodVar(figureIfIsFinal(varMod), varId, varType);	
+		
 	}
-	// nonFinals must not have finals
-	nonFinals -= finals;
-	return <finals, nonFinals>;
+	return methodVars;
+}
+
+private MethodVar createMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
+	name = trim(unparse(varId));
+	varTypeStr = trim(unparse(varType));
+	return methodVar(isFinal, name, varTypeStr, true);
+}
+
+private MethodVar createMethodVar(bool isFinal, Identifier varId, UnannType varType) {
+	name = trim(unparse(varId));
+	varTypeStr = trim(unparse(varType));
+	return methodVar(isFinal, name, varTypeStr, true);
+}
+
+private MethodVar createMethodVar(bool isFinal, VariableDeclaratorId varId, CatchType varType) {
+	name = trim(unparse(varId));
+	varTypeStr = trim(unparse(varType));
+	return methodVar(isFinal, name, varTypeStr, true);
+}
+
+private bool figureIfIsFinal(VariableModifier* varMod) {
+	if ("<varMod>" := "final")
+		return true;
+	return false;
 }
