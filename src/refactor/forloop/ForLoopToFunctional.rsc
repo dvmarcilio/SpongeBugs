@@ -15,7 +15,7 @@ public data ComposableProspectiveOperation = composableProspectiveOperation(Pros
 
 private set[MethodVar] methodAvailableVars;
 
-public list[ComposableProspectiveOperation]  refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt) {	
+public list[ComposableProspectiveOperation] refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt) {	
 	prospectiveOperations = retrieveProspectiveOperations(methodVars, forStmt);
 	composablePrOps = createComposableProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
 	
@@ -42,8 +42,7 @@ private set[str] retrieveNeededVars(ProspectiveOperation prOp, set[str] availabl
 }
 
 private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[ComposableProspectiveOperation] composablePrOps) {
-		
-	// we don't want the curr element (index 0)
+	// exclude first, since we iterate index and index-1
 	listIndexes = [1 .. size(composablePrOps)];
 	// iterating bottom-up
 	for (int i <- reverse(listIndexes)) {
@@ -156,7 +155,6 @@ private list[str] retrieveAllStatementsFromBlock(str blockStr) {
 	return blockStatements;	
 }
 
-// XXX probably not this
 private list[str] retrieveAllExpressionStatementsFromStatement(str statement) {
 	list[str] stmts = [];
 	Statement stmt = parse(#Statement, statement);
@@ -164,7 +162,7 @@ private list[str] retrieveAllExpressionStatementsFromStatement(str statement) {
 		case ExpressionStatement expStmt:
 			stmts += unparse(expStmt);
 		case (IfThenStatement) `if (<Expression exp>) <Statement thenStmt>`:
-			stmts += "if (" + unparse(exp) + ")";
+			stmts += "if (<exp>)";
 	}
 	return stmts;
 }

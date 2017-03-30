@@ -24,7 +24,6 @@ public void findForLoops(list[loc] locs, set[str] checkedExceptions) {
 }
 
 private void lookForForStatements(CompilationUnit unit) {
-	iteratedVariable = "";
 	visit(unit) {
 		case MethodDeclaration methodDeclaration:
 			lookForEnhancedForStatementsInMethod(methodDeclaration);
@@ -72,8 +71,9 @@ private bool loopBodyPassConditions(Statement stmt) {
 		case (BreakStatement) `break <Identifier? _>;`: return false;
 
 		case (ReturnStatement) `return <Expression? _>;`: returnCount += 1;
-
-		case (ContinueStatement) `continue <Identifier? _>;`: return false;
+	
+		// labeled continue. 
+		case (ContinueStatement) `continue <Identifier _>;`: return false;
 	}
 	
 	if (returnCount > 1) return false;
