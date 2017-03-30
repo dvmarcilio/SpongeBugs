@@ -1,8 +1,8 @@
 module refactor::forloop::AvailableVariables
 
-import refactor::forloop::ProspectiveOperation;
-import MethodVar;
 import Set;
+import MethodVar;
+import refactor::forloop::ProspectiveOperation;
 
 // XXX assess the necessity to verify these others conditions:
 	// fields declared in class, inherited and visible from imported classes ??

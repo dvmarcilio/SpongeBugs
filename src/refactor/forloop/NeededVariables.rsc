@@ -1,13 +1,13 @@
 module refactor::forloop::NeededVariables
 
+import IO;
+import String;
+import Set;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import IO;
-import refactor::forloop::ProspectiveOperation;
 import MethodVar;
-import Set;
+import refactor::forloop::ProspectiveOperation;
 import refactor::forloop::OperationType;
-import String;
 
 public set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
 	set[str] neededVariables = {};
@@ -20,6 +20,13 @@ public set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
 		neededVariables += retrieveNeededVarsFromStatement(prOp.stmt);
 	
 	return neededVariables;
+}
+
+public bool isLocalVariableDeclarationStatement(str stmt) {
+	try {
+		parse(#LocalVariableDeclarationStatement, stmt);
+		return true;
+	} catch: return false;
 }
 
 // XXX Parsing twice (isLocal... and this method) the stmt
