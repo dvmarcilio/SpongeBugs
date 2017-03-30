@@ -22,13 +22,6 @@ public set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
 	return neededVariables;
 }
 
-private bool isLocalVariableDeclarationStatement(str stmt) {
-	try {
-		parse(#LocalVariableDeclarationStatement, stmt);
-		return true;
-	} catch: return false;
-}
-
 // XXX Parsing twice (isLocal... and this method) the stmt
 // should not be a big deal since it's only a stmt from a prospective operation.
 // Using this pattern (parsing to check if a stmt is of the type #Something) and then parsing again

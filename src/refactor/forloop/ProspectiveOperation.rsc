@@ -9,15 +9,11 @@ import util::Math;
 import MethodVar;
 import String;
 import Set;
+import refactor::forloop::OperationType;
+import refactor::forloop::NeededVariables;
+import refactor::forloop::AvailableVariables;
 
 public data ProspectiveOperation = prospectiveOperation(str stmt, str operation);
-
-str FILTER = "filter";
-str MAP = "map";
-str FOR_EACH = "forEach";
-str REDUCE = "reduce";
-str ANY_MATCH = "anyMatch";
-str NONE_MATCH = "noneMatch";
 
 private list[MethodVar] methodLocalVars;
 
@@ -222,7 +218,7 @@ private list[str] retrieveAllStatementsFromBlock(str blockStr) {
 	return blockStatements;	
 }
 
-private bool isLocalVariableDeclarationStatement(str stmt) {
+public bool isLocalVariableDeclarationStatement(str stmt) {
 	try {
 		parse(#LocalVariableDeclarationStatement, stmt);
 		return true;
@@ -240,47 +236,6 @@ private list[str] retrieveAllExpressionStatementsFromStatement(str statement) {
 			stmts += "if (" + unparse(exp) + ")";
 	}
 	return stmts;
-}
-
-private set[str] retrieveAvailableVars(ProspectiveOperation prOp, set[MethodVar] methodVars) {
-	// fields declared in class, inherited and visible from imported classes ??
-	// variables declared in the Prospective Operation ??
-	withinMethod = retrieveNotDeclaredWithinLoopNames(methodVars); 
-	withinLoop = retrieveDeclaredWithinLoopNames(methodVars);
-	return withinMethod - withinLoop;
-}
-
-private set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
-	if (prOp.operation == FILTER)
-		return {};
-	
-	set[str] neededVariables = {};
-	set[str] declaredVariables = {};
-	set[str] methodsNames = {};
-	
-	if (isLocalVariableDeclarationStatement(prOp.stmt)) {
-		lvdlStmt = parse(#LocalVariableDeclarationStatement, prOp.stmt);
-		visit(lvdlStmt) {
-			case (VariableDeclaratorId) `<Identifier id>`: declaredVariables += unparse(id);
-		}
-	} else {
-		stmt = parse(#Statement, prOp.stmt);
-		// If a var has the same name as a called method, this will fail
-		visit (stmt) {
-			case LocalVariableDeclaration lvdl: {
-				visit(lvdl) {
-					case (VariableDeclaratorId) `<Identifier id>`: declaredVariables += unparse(id);
-				}
-			}
-			case (MethodInvocation) `<Identifier methodName> ( <ArgumentList? _> )`: methodsNames += unparse(methodName); 
-			case Identifier id: neededVariables = {};
-		}
-	}
-
-	neededVariables -= declaredVariables;
-	neededVariables -= methodsNames;
-	
-	return neededVariables;
 }
 
 private Block transformStatementsInBlock(list[str] stmts) {
