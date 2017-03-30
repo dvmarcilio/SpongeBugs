@@ -11,66 +11,74 @@ import refactor::forloop::UsedVariables;
 import refactor::forloop::AvailableVariables;
 import refactor::forloop::OperationType;
 
-public data ComposibleProspectiveOperation = composibleProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
+public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
-public list[ComposibleProspectiveOperation]  refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt) {	
+private set[MethodVar] methodAvailableVars;
+
+public list[ComposableProspectiveOperation]  refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt) {	
 	prospectiveOperations = retrieveProspectiveOperations(methodVars, forStmt);
-	composiblePrOps = createComposibleProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
+	composablePrOps = createComposableProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
 	
-	return mergeIntoComposableOperations(composiblePrOps);
+	methodAvailableVars = methodVars;
+	
+	return mergeIntoComposableOperations(composablePrOps);
 }
 
-private list[ComposibleProspectiveOperation] createComposibleProspectiveOperationsWithVariableAvailability(list[ProspectiveOperation] prOps, set[MethodVar] methodVars) {
-	composiblePrOps = [];
+private list[ComposableProspectiveOperation] createComposableProspectiveOperationsWithVariableAvailability(list[ProspectiveOperation] prOps, set[MethodVar] methodVars) {
+	composablePrOps = [];
 	for (prOp <- prOps) {
 		availableVars = retrieveAvailableVariables(prOp, methodVars);
-		neededVars = retrieveUsedVariables(prOp);
-		neededVars -= availableVars;
-		
-		composiblePrOps += composibleProspectiveOperation(prOp, neededVars, availableVars);
+		neededVars = retrieveNeededVars(prOp, availableVars);
+		composablePrOps += composableProspectiveOperation(prOp, neededVars, availableVars);
 	}
 	
-	return composiblePrOps;
+	return composablePrOps;
 }
 
-private list[ComposibleProspectiveOperation] mergeIntoComposableOperations(list[ComposibleProspectiveOperation] composiblePrOps) {
+private set[str] retrieveNeededVars(ProspectiveOperation prOp, set[str] availableVars) {
+	neededVars = retrieveUsedVariables(prOp);
+	neededVars -= availableVars;
+	return neededVars;
+}
+
+private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[ComposableProspectiveOperation] composablePrOps) {
 		
 	// we don't want the curr element (index 0)
-	listIndexes = [1 .. size(composiblePrOps)];
+	listIndexes = [1 .. size(composablePrOps)];
 	// iterating bottom-up
 	for (int i <- reverse(listIndexes)) {
-		curr = composiblePrOps[i];
-		prev = composiblePrOps[i - 1];
+		curr = composablePrOps[i];
+		prev = composablePrOps[i - 1];
 		if (!areComposable(curr, prev)) {
 			if (isMergeable(prev) && isMergeable(curr)) {
-				opsSize = size(composiblePrOps); 
+				opsSize = size(composablePrOps); 
 				
 				if (isFilter(prev.prOp) || isFilter(curr.prOp)) {
 					while(opsSize > i) {
-						ComposibleProspectiveOperation last = composiblePrOps[opsSize - 1];
-						ComposibleProspectiveOperation beforeLast = composiblePrOps[opsSize - 2];
+						ComposableProspectiveOperation last = composablePrOps[opsSize - 1];
+						ComposableProspectiveOperation beforeLast = composablePrOps[opsSize - 2];
 						
-						merged = mergeComposiblePrOps(beforeLast, last);
-						composiblePrOps = slice(composiblePrOps, 0, opsSize - 2) + merged;
+						merged = mergeComposablePrOps(beforeLast, last);
+						composablePrOps = slice(composablePrOps, 0, opsSize - 2) + merged;
 						
-						opsSize = size(composiblePrOps);
+						opsSize = size(composablePrOps);
 					}
 				} else {
-					merged = mergeComposiblePrOps(prev, curr);
-					composiblePrOps = slice(composiblePrOps, 0, opsSize - 2) + merged;
+					merged = mergeComposablePrOps(prev, curr);
+					composablePrOps = slice(composablePrOps, 0, opsSize - 2) + merged;
 				}
 			}
 		}
 	}
-	return composiblePrOps;
+	return composablePrOps;
 }
 
-public bool areComposable(ComposibleProspectiveOperation curr, ComposibleProspectiveOperation prev) {
+public bool areComposable(ComposableProspectiveOperation curr, ComposableProspectiveOperation prev) {
 	currNeededInPrevAvailable = isCurrNeededVarsInPrevAvailableVars(curr.neededVars, prev.availableVars);
 	return size(curr.neededVars) <= 1 && currNeededInPrevAvailable;
 }
 
-public bool isMergeable(ComposibleProspectiveOperation cPrOp) {
+public bool isMergeable(ComposableProspectiveOperation cPrOp) {
 	operation = cPrOp.prOp.operation;
 	return operation == FILTER || operation == MAP || operation == FOR_EACH;
 }
@@ -81,15 +89,17 @@ private bool isCurrNeededVarsInPrevAvailableVars(set[str] currNeededVars, set[st
 	return true;
 }
 
-public ComposibleProspectiveOperation mergeComposiblePrOps(ComposibleProspectiveOperation curr, ComposibleProspectiveOperation prev) {
+public ComposableProspectiveOperation mergeComposablePrOps(ComposableProspectiveOperation curr, ComposableProspectiveOperation prev) {
 	if (isFilter(curr.prOp)) {
 		prOp = mergeTwoOpsInAnIfThenStmt(curr.prOp, prev.prOp);
-		return mergeComposibleProspectiveOperation(prOp, curr, prev);
+		availableVars = retrieveAvailableVariables(prOp, methodAvailableVars);
+		neededVars = retrieveNeededVars(prOp, availableVars);
+		return composableProspectiveOperation(prOp, neededVars, availableVars);
 	} else {
 		list[str] statements = retrieveAllStatements(curr.prOp) + retrieveAllStatements(prev.prOp);
 		Block statementsAsOneBlock = transformStatementsInBlock(statements);
 		prOp = prospectiveOperation(unparse(statementsAsOneBlock), prev.prOp.operation);
-		return mergeComposibleProspectiveOperation(prOp, curr, prev);	
+		return mergeComposableProspectiveOperation(prOp, curr, prev);	
 	}
 }
 
@@ -100,10 +110,10 @@ private ProspectiveOperation mergeTwoOpsInAnIfThenStmt(ProspectiveOperation curr
 	return prospectiveOperation(unparse(ifThenStmt), prev.operation);
 }
 
-private ComposibleProspectiveOperation mergeComposibleProspectiveOperation(ProspectiveOperation prOp, ComposibleProspectiveOperation curr, ComposibleProspectiveOperation prev) {
+private ComposableProspectiveOperation mergeComposableProspectiveOperation(ProspectiveOperation prOp, ComposableProspectiveOperation curr, ComposableProspectiveOperation prev) {
 	mergedAvailableVars = mergeAvailableVars(curr.availableVars, prev.availableVars);
 	mergedNeededVars = mergeNeededVars(curr.neededVars, prev.neededVars, mergedAvailableVars);
-	return composibleProspectiveOperation(prOp, mergedNeededVars, mergedAvailableVars);
+	return composableProspectiveOperation(prOp, mergedNeededVars, mergedAvailableVars);
 }
 
 private set[str] mergeAvailableVars(set[str] currAvailableVars, prevAvailableVars) {
@@ -111,8 +121,10 @@ private set[str] mergeAvailableVars(set[str] currAvailableVars, prevAvailableVar
 }
 
 private set[str] mergeNeededVars(set[str] currNeededVars, set[str] prevNeededVars, set[str] mergedAvailableVars) {
-	neededVars = currNeededVars + prevNeededVars;
-	return neededVars - mergedAvailableVars;
+	neededVars = currNeededVars;
+	neededVars -= mergedAvailableVars;
+	neededVars += prevNeededVars; 
+	return neededVars ;
 }
 
 private list[str] retrieveAllStatements(ProspectiveOperation prOp) {
