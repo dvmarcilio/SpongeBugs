@@ -2,6 +2,7 @@ module refactor::forloop::ProspectiveOperationsTest
 
 import refactor::forloop::ProspectiveOperation;
 import refactor::forloop::ProspectiveOperationsTestResources;
+import refactor::forloop::OperationType;
 import MethodVar;
 import lang::java::\syntax::Java18;
 import IO;
@@ -14,7 +15,7 @@ public test bool shouldReturnAForEachOnSimpleShortExample() {
 	
 	return size(prospectiveOperations) == 1 &&
 		prospectiveOperations[0].stmt == "writer.write(thing);" &&
-		prospectiveOperations[0].operation == "forEach";
+		prospectiveOperations[0].operation == FOR_EACH;
 }
 
 public test bool shouldReturnCorrectlyOnFilterMapReduceExample() {
@@ -24,9 +25,9 @@ public test bool shouldReturnCorrectlyOnFilterMapReduceExample() {
 	
 	return size(prospectiveOperations) == 2 && 
 		prospectiveOperations[0].stmt == "rule.hasErrors()" &&
-		prospectiveOperations[0].operation == "filter" &&
+		prospectiveOperations[0].operation == FILTER &&
 		prospectiveOperations[1].stmt == "count += rule.getErrors().size();" &&
-		prospectiveOperations[1].operation == "reduce";
+		prospectiveOperations[1].operation == REDUCE;
 }
 
 //public test bool shouldReturnXOnContinueAndReturnEnhancedLoop() {
@@ -43,11 +44,11 @@ public test bool shouldReturnXOnFilterAndMergedForEach() {
 	
 	return size(prospectiveOperations) == 4 &&
 		prospectiveOperations[0].stmt == "isValid(entry)" &&
-		prospectiveOperations[0].operation == "filter" &&
+		prospectiveOperations[0].operation == FILTER &&
 		prospectiveOperations[1].stmt == "ClassLoader cl = entry.getKey();" &&
-		prospectiveOperations[1].operation == "map" &&
+		prospectiveOperations[1].operation == MAP &&
 		prospectiveOperations[2].stmt == "!((WebappClassLoader)cl).isStart()" &&
-		prospectiveOperations[2].operation == "filter" &&
+		prospectiveOperations[2].operation == FILTER &&
 		prospectiveOperations[3].stmt == "result.add(entry.getValue());" &&
-		prospectiveOperations[3].operation == "forEach";
+		prospectiveOperations[3].operation == FOREACH;
 }
