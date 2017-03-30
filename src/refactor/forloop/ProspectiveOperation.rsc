@@ -8,6 +8,7 @@ import List;
 import util::Math;
 import MethodVar;
 import String;
+import Set;
 
 public data ProspectiveOperation = prospectiveOperation(str stmt, str operation);
 
@@ -20,7 +21,7 @@ str NONE_MATCH = "noneMatch";
 
 private list[MethodVar] methodLocalVars;
 
-public list[ProspectiveOperation] retrievePotentialOperations(set[MethodVar] localVars, EnhancedForStatement forStmt) {
+public list[ProspectiveOperation] retrieveProspectiveOperations(set[MethodVar] localVars, EnhancedForStatement forStmt) {
 	methodLocalVars = localVars;
 	list[ProspectiveOperation] prospectiveOperations = [];
 	top-down visit(forStmt) {
@@ -133,4 +134,135 @@ private list[ProspectiveOperation] markLastStmtAsEager(list[ProspectiveOperation
 	
 	// all elements but the last + the last one (eagerized or not)
 	return prefix(prOps) + lastPrOp;
+}
+
+public bool isMergeable(ProspectiveOperation prOp) {
+	operation = prOp.operation;
+	return operation == FILTER || operation == MAP || operation == FOR_EACH;
+}
+
+public bool isFilter(ProspectiveOperation prOp) {
+	return prOp.operation == FILTER;
+}
+
+// TODO needed and available called more than once. good idea to extract it.
+public bool areComposable(ProspectiveOperation first, ProspectiveOperation second, set[MethodVar] methodVars) {
+	firstNeededVars = retrieveNeededVariables(first);
+	// second's available has to be in first's needed 
+	secondAvailableVars = retrieveAvaliableVars(second, methodVars);
+	secondAvailableVarsInFirstNeeded = isSecondAvailableInFirstNeeded(firstNeededVars, secondAvailableVars);
+	return size(firstNeededVars) <= 1 && secondAvailableVarsInFirstNeeded;
+}
+
+private bool isSecondAvailableInFirstNeeded(set[str] firstNeededVars, set[str] secondAvailableVars) {
+	for(secondAvailable <- secondAvailableVars)
+		if(secondAvailable notin firstNeededVars) return false;
+	return true;
+}
+
+public ProspectiveOperation mergeOps(ProspectiveOperation first, ProspectiveOperation second, set[MethodVar] methodVars) {
+	if (isFilter(first)) {
+		return mergeTwoOpsInAnIfThenStmt(first, second);
+	} else {
+		list[str] statements = retrieveAllStatements(first) + retrieveAllStatements(second);
+		
+		set[str] firstAvailableVars = retrieveAvaliableVars(first, methodVars);
+		set[str] availableVars = firstAvailableVars;
+		availableVars += retrieveAvailableVars(second, methodVars);
+		
+		set[str] neededVars = retrieveNeededVariables(second);
+		neededVars -= firstAvailableVars;
+		neededVars += retrieveNeededVariables(first);
+		
+		neederVars -= retrieveNotDeclaredWithinLoop(methodVars);
+		
+		Block statementsAsOneBlock = transformStatementsInBlock(statements);
+		
+		return prospectiveOperation(unparse(statementsAsOneBlock), second.operation); 	
+	}
+}
+
+private ProspectiveOperation mergeTwoOpsInAnIfThenStmt(ProspectiveOperation first, ProspectiveOperation second) {
+	Expression exp = parse(#Expression, first.stmt);
+	Statement thenStmt = parse(#Statement, second.stmt);
+	ifThenStmt = [IfThenStatement] "if (<exp>) <themStmt>;";
+	return prospectiveOperation(unparse(ifThenStmt), second.operation);
+}
+
+private list[str] retrieveAllStatements(ProspectiveOperation prOp) {
+	list[str] allStatements = [];
+	if (isBlock(prOp.stmt))
+		return retrieveAllStatementsFromBlock(prOp.stmt); 
+	 else
+		return retrieveAllExpressionStatementsFromStatement(prOp.stmt);
+}
+
+private bool isBlock(str stmt) {
+	try {
+		parse(#Block, stmt);
+		return true;
+	} catch: return false;
+}
+
+private list[str] retrieveAllStatementsFromBlock(str blockStr) {
+	list[str] blockStatements = [];
+	block = parse(#Block, blockStr);
+	top-down visit(block) {
+		case BlockStatement blockStmt:
+			blockStatements += unparse(blockStmt);
+	}
+	return blockStatements;	
+}
+
+// XXX probably not this
+private list[str] retrieveAllExpressionStatementsFromStatement(str statement) {
+	list[str] stmts = [];
+	Statement stmt = parse(#Statement, statement);
+	top-down visit(stmt) {
+		case ExpressionStatement expStmt:
+			blockStatements += unparse(expStmt);
+	}
+	return stmts;
+}
+
+private set[str] retrieveAvaliableVars(ProspectiveOperation prOp, set[MethodVar] methodVars) {
+	// fields declared in class, inherited and visible from imported classes ??
+	// variables declared in the Prospective Operation ??
+	withinMethod = retrieveNotDeclaredWithinLoopNames(methodVars); 
+	withinLoop = retrieveDeclaredWithinLoopNames(methodVars);
+	return withinMethod - withinLoop;
+}
+
+private set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
+	if (prOp.operation == FILTER)
+		return {};
+	
+	set[str] neededVariables = {};
+	set[str] declaredVariables = {};
+	set[str] methodsNames = {};
+
+	stmt = parse(#Statement, prOp.stmt);
+	// If a var has the same name as a called method, this will fail
+	visit (stmt) {
+		case LocalVariableDeclaration lvdl: {
+			visit(lvdl) {
+				case (VariableDeclaratorId) `<Identifier id>`: declaredVariables += id;
+			}
+		}
+		case (MethodInvocation) `<Identifier methodName> ( <ArgumentList? _> )`: methodsNames += methodName; 
+		case Identifier id: neededVariables = {};
+	}
+	
+	neededVariables -= declaredVariables;
+	neededVariables -= methodsNames;
+	
+	return neededVariables;
+}
+
+private Block transformStatementsInBlock(list[Statement] stmts) {
+	str joined = "{\n";
+	for(stmt <- stmts)
+		joined += (stmts + "\n");
+	joined +=  "\n}";
+	return parse(#Block, stmts);
 }
