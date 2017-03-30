@@ -12,25 +12,28 @@ public void refactorEnhancedToFunctional(EnhancedForStatement forStmt, set[Metho
 	println(mergeOperations(prospectiveOperations, methodVars));
 }
 
-private list[ProspectiveOperation] mergeOperations(list[ProspectiveOperation] prOps, set[MethodVar] methodVars) {
-	println("mergeOperations()");
-	listIndexes = [0 .. size(prOps)];
+private list[ProspectiveOperation] mergeOperations(list[ProspectiveOperation] prOps, set[MethodVar] methodVars) {	
+	// we don't want the first element (index 0)
+	listIndexes = [1 .. size(prOps)];
 	// iterating bottom-up
 	for (int i <- reverse(listIndexes)) {
 		curr = prOps[i];
 		prev = prOps[i - 1];
 		if (!areComposable(curr, prev, methodVars)) {
 			if (isMergeable(prev) && isMergeable(curr)) {
+				opsSize = size(prOps); 
+				
 				if (isFilter(prev) || isFilter(curr)) {
-					opsSize = size(prOps); 
 					while(opsSize > i) {
-						last = prOps[opsSize - 1];
-						beforeLast = prOps[opsSize - 2];
+						ProspectiveOperation last = prOps[opsSize - 1];
+						ProspectiveOperation beforeLast = prOps[opsSize - 2];
 						merged = mergeOps(beforeLast, last, methodVars);
 						prOps = slice(prOps, 0, opsSize - 2) + merged;
+						
+						opsSize = size(prOps);
 					}
 				} else {
-					merged = mergeOps(prev, curr);
+					merged = mergeOps(prev, curr, methodVars);
 					prOps = slice(prOps, 0, opsSize - 2) + merged;
 				}
 			}
