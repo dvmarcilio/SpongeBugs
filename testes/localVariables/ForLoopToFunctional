@@ -1,0 +1,49 @@
+class SimpleForEach {
+
+	public void test1(List<String> things, PrintWriter writer) {
+        for (String thing: things) {
+            writer.write(thing);
+        }
+    }
+}
+
+class GrammarEngineImpl {
+  
+  boolean isEngineExisting(String grammarName) {
+    for(GrammarEngine e : importedEngines) {
+      if(e.getGrammarName() == null) continue;
+      if(e.getGrammarName().equals(grammarName))
+        return true;
+    }
+    return false;
+  }
+
+}
+
+class StandardHost {
+  
+  List<String> findReloadedContextMemoryLeaks(){
+    List<String> result = new ArrayList<String>();
+    for (Map.Entry<ClassLoader, String> entry :
+        childClassLoaders.entrySet())
+      if(isValid(entry)) {
+        ClassLoader cl = entry.getKey();
+        if (!((WebappClassLoader)cl).isStart())
+          result.add(entry.getValue());
+      }
+    return result;
+  }
+}
+
+class EditorGutterColumnManager {
+  
+  int getNumberOfErrors() {
+    int count = 0;
+    for (ElementRule rule : getRules()) {
+      if(rule.hasErrors())
+        count += rule.getErrors().size();
+    }
+    return count;
+  }
+
+}

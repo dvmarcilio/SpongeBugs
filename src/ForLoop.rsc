@@ -5,6 +5,9 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import LocalVariablesFinder;
 import EnhancedLoopExpression;
+import refactor::forloop::ForLoopBodyReferences;
+import refactor::forloop::ProspectiveOperation;
+import MethodVar;
 
 private set[str] checkedExceptionClasses;
 
@@ -37,22 +40,24 @@ private void lookForEnhancedForStatementsInMethod(MethodDeclaration methodDeclar
 
 private void lookForEnhancedForStatementsInMethodBody(MethodHeader methodHeader, MethodBody methodBody) {
 	visit(methodBody) {
-		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression exp> ) <Statement stmt>`:
-			checkLoopEligibilityForRefactor(methodBody, exp, stmt);
+		case EnhancedForStatement forStmt: {
+			visit(forStmt) {
+				case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression exp> ) <Statement stmt>`: {
+					methodLocalVariables = findLocalVariables(methodHeader, methodBody);
+					checkLoopEligibilityForRefactor(methodLocalVariables, exp, stmt);
+					retrievePotentialOperations(methodLocalVariables, forStmt);
+				}
+			}		
+		}
+		
 		case (EnhancedForStatementNoShortIf) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _> ) <StatementNoShortIf stmt>`:
 			println("TODO");
 	}
 }
 
-private void checkLoopEligibilityForRefactor(MethodBody methodBody, Expression exp, Statement stmt) {
-	if(loopBodyPassConditions(stmt)) {
-		localVariables = findLocalVariables(methodBody);
-		if (isIteratingOnCollection(exp, localVariables)) {
-			println("iterating on collection");
-			println(methodBody);
-			println();
-		}
-	}
+private bool checkLoopEligibilityForRefactor(set[MethodVar] methodLocalVariables, Expression exp, Statement stmt) {
+	return loopBodyPassConditions(stmt) && isIteratingOnCollection(exp, methodLocalVariables) &&
+		atMostOneReferenceToNonEffectiveFinalVar(methodLocalVariables, stmt);
 }
 
 // TODO extract module and test it
