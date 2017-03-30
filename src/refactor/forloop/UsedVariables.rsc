@@ -14,11 +14,57 @@ public set[str] retrieveUsedVariables(ProspectiveOperation prOp) {
 	if (isReduce(prOp))
 		return {};
 	else if(isFilter(prOp))
-		usedVariables += retrieveUsedVarsFromExpression(prOp.stmt);	
+		usedVariables += retrieveUsedVarsFromFilter(prOp.stmt);	
 	else if (isLocalVariableDeclarationStatement(prOp.stmt))
 		usedVariables += retrieveUsedVarsFromLocalVariableDeclarationStmt(prOp.stmt);	
  	else
 		usedVariables += retrieveUsedVarsFromStatement(prOp.stmt);
+	
+	return usedVariables;
+}
+
+
+private set[str] retrieveUsedVarsFromFilter(str stmt) {
+	if(isIfThenStatement(stmt))
+		return retrieveUsedVarsFromIfThenStmt(stmt);
+	else 
+		return retrieveUsedVarsFromExpression(stmt);
+}
+
+public bool isIfThenStatement(str stmt) {
+	try {
+		parse(#IfThenStatement, stmt);
+		return true;
+	} catch: return false;
+}
+
+// XXX pretty redundant lookups for 'ExpressionName' around this module
+private set[str] retrieveUsedVarsFromIfThenStmt(str stmt) {
+	set[str] usedVariables = {};
+	ifThenStmt = parse(#IfThenStatement, stmt);
+	
+	visit(ifThenStmt) {
+		case ExpressionName expName: {
+			visit(expName) {
+				case Identifier id: usedVariables += unparse(id);
+			}
+		}
+	}
+	
+	return usedVariables;
+}
+
+private set[str] retrieveUsedVarsFromExpression(str stmt) {
+	set[str] usedVariables = {};
+	exp = parse(#Expression, stmt);
+	
+	visit(exp) {
+		case ExpressionName expName: {
+			visit(expName) {
+				case Identifier id: usedVariables += unparse(id);
+			}
+		}
+	}
 	
 	return usedVariables;
 }
@@ -38,24 +84,6 @@ private set[str] retrieveUsedVarsFromLocalVariableDeclarationStmt(str stmt) {
 				case Identifier id: usedVariables += unparse(id);
 			}
 		}	
-	}
-	
-	return usedVariables;
-}
-
-// TODO verify if visit(Tree) works for a more generic traversal
-// maybe it's possible to traverse only once
-private set[str] retrieveUsedVarsFromExpression(str stmt) {
-	set[str] usedVariables = {};
-	
-	exp = parse(#Expression, stmt);
-	
-	visit(exp) {
-		case ExpressionName expName: {
-			visit(expName) {
-				case Identifier id: usedVariables += unparse(id);
-			}
-		}
 	}
 	
 	return usedVariables;

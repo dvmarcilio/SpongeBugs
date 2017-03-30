@@ -63,6 +63,17 @@ public test bool expressionIsNotAStatement() {
 		"cl" in usedVars;
 }
 
+public test bool ifThenStatement() {
+	prOp = prospectiveOperation("if (!((WebappClassLoader)cl).isStart()) result.add(entry.getValue());", FILTER);
+	
+	usedVars = retrieveUsedVariables(prOp);
+	
+	return size(usedVars) == 3 &&
+		"cl" in usedVars &&
+		"result" in usedVars &&
+		"entry" in usedVars;
+}
+
 public test bool reduceShouldReturnEmpty() {
 	prOp = prospectiveOperation("count += rule.getErrors().size();", REDUCE);
 	
