@@ -185,7 +185,7 @@ public ProspectiveOperation mergeOps(ProspectiveOperation first, ProspectiveOper
 private ProspectiveOperation mergeTwoOpsInAnIfThenStmt(ProspectiveOperation first, ProspectiveOperation second) {
 	Expression exp = parse(#Expression, first.stmt);
 	Statement thenStmt = parse(#Statement, second.stmt);
-	ifThenStmt = [IfThenStatement] "if (<exp>) <themStmt>;";
+	ifThenStmt = [IfThenStatement] "if (<exp>) <thenStmt>";
 	return prospectiveOperation(unparse(ifThenStmt), second.operation);
 }
 
