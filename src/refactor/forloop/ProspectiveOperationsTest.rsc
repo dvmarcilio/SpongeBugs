@@ -16,8 +16,10 @@ public test bool shouldReturnAForEachOnSimpleShortExample() {
 public test bool shouldReturnCorrectlyOnFilterMapReduceExample() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] filterMapReduce = filterMapReduce();
 	prospectiveOperations = retrievePotentialOperations(filterMapReduce.vars, filterMapReduce.loop);
-	println(prospectiveOperations);
-	return false;
+	return prospectiveOperations[0].stmt == "rule.hasErrors()" &&
+		prospectiveOperations[0].operation == "filter" &&
+		prospectiveOperations[1].stmt == "count += rule.getErrors().size();" &&
+		prospectiveOperations[1].operation == "reduce";
 }
 
 //public test bool shouldReturnXOnContinueAndReturnEnhancedLoop() {
