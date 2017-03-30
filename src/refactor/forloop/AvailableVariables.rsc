@@ -1,6 +1,8 @@
 module refactor::forloop::AvailableVariables
 
 import Set;
+import lang::java::\syntax::Java18;
+import ParseTree;
 import MethodVar;
 import refactor::forloop::ProspectiveOperation;
 
@@ -8,8 +10,34 @@ import refactor::forloop::ProspectiveOperation;
 	// fields declared in class, inherited and visible from imported classes ??
 	// variables declared in the Prospective Operation ??
 // Right now they are being verified by elimination.
-public set[str] retrieveAvailableVars(ProspectiveOperation prOp, set[MethodVar] methodVars) {
+public set[str] retrieveAvailableVariables(ProspectiveOperation prOp, set[MethodVar] methodVars) {
+	availableVars = retrieveLocalVariableDeclarations(prOp);
 	withinMethod = retrieveNotDeclaredWithinLoopNames(methodVars); 
 	withinLoop = retrieveDeclaredWithinLoopNames(methodVars);
-	return withinMethod - withinLoop;
+	
+	availableVars += withinMethod;
+	availableVars -= withinLoop;
+	
+	return availableVars;
+}
+
+private set[str] retrieveLocalVariableDeclarations(ProspectiveOperation prOp) {
+	if (isFilter(prOp)) return {};
+
+	localVars = {};
+	Tree stmt;	
+	
+	if (isLocalVariableDeclarationStatement(prOp.stmt))
+		stmt = parse(#LocalVariableDeclarationStatement, prOp.stmt);
+	else
+		stmt = parse(#Statement, prOp.stmt);
+		
+	visit(stmt) {
+		case LocalVariableDeclaration lvdl: {
+			visit(lvdl) {
+				case (VariableDeclaratorId) `<Identifier id>`: localVars += unparse(id);
+			}
+		}
+	}
+	return localVars;
 }

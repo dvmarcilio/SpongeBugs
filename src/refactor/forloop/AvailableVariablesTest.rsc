@@ -1,0 +1,48 @@
+module refactor::forloop::AvailableVariablesTest
+
+import refactor::forloop::AvailableVariables;
+import refactor::forloop::ProspectiveOperation;
+import refactor::forloop::OperationType;
+import MethodVar;
+import Set;
+import IO;
+
+public test bool methodParamShouldBeAvailableVar() {
+	prOp = prospectiveOperation("writer.write(thing);", FOR_EACH);	
+	methodVars = {methodVar(false, "thing", "String", false, true), 
+		methodVar(false, "writer", "PrintWriter", true, false)};
+	
+	availableVars = retrieveAvailableVariables(prOp, methodVars);
+	
+	return size(availableVars) == 1 &&
+		"writer" in availableVars;
+}
+
+public test bool varWithinLoopShouldNotBeAvailable() {
+	prOp = prospectiveOperation("rule.hasErrors()", FILTER);
+	methodVars = {methodVar(false, "count", "int", false, false), 
+		methodVar(false, "rule", "ElementRule", false, true)};
+		
+	availableVars = retrieveAvailableVariables(prOp, methodVars);
+	
+	return "rule" notin availableVars;
+}
+
+public test bool varNotWithinLoopShouldBeAvailable() {
+	prOp = prospectiveOperation("rule.hasErrors()", FILTER);
+	methodVars = {methodVar(false, "count", "int", false, false), 
+		methodVar(false, "rule", "ElementRule", false, true)};
+		
+	availableVars = retrieveAvailableVariables(prOp, methodVars);
+	
+	return "count" in availableVars;
+}
+
+public test bool localVariableDeclarationShouldBeAvailableVar() {
+	prOp = prospectiveOperation("ClassLoader cl = entry.getKey(argNeeded);", MAP);
+	methodVars = {}; // Independent in this case
+	
+	availableVars = retrieveAvailableVariables(prOp, methodVars);
+	
+	return "cl" in availableVars;
+}

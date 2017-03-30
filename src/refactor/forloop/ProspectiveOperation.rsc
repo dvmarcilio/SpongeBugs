@@ -140,3 +140,10 @@ public bool isFilter(ProspectiveOperation prOp) {
 public bool isReduce(ProspectiveOperation prOp) {
 	return prOp.operation == REDUCE;
 }
+
+public bool isLocalVariableDeclarationStatement(str stmt) {
+	try {
+		parse(#LocalVariableDeclarationStatement, stmt);
+		return true;
+	} catch: return false;
+}

@@ -26,15 +26,6 @@ public test bool simpleMethodInvocationWithoutEndingSemiCollon() {
 		"rule" in neededVars;
 }
 
-public test bool simpleMethodInvocationWithtEndingSemiCollon() {
-	prOp = prospectiveOperation("rule.hasErrors()", FILTER);
-	
-	neededVars = retrieveNeededVariables(prOp);
-	
-	return size(neededVars) == 1 &&
-		"rule" in neededVars;
-}
-
 public test bool variableAssignmentWithInitializer() {
 	prOp = prospectiveOperation("count = rule.getErrors().size();", MAP);
 	
@@ -45,14 +36,21 @@ public test bool variableAssignmentWithInitializer() {
 		"rule" in neededVars;
 }
 
-public test bool localVariableDeclarationShouldReturnItselfWithInitializer() {
+public test bool localVariableDeclarationShouldNotReturnItself() {
 	prOp = prospectiveOperation("ClassLoader cl = entry.getKey(argNeeded);", MAP);
 	
 	neededVars = retrieveNeededVariables(prOp);
 	
-	return size(neededVars) == 3 &&
-		"cl" in neededVars &&
-		"entry" in neededVars && 
+	return "cl" notin neededVars;
+}
+
+public test bool localVariableDeclarationShouldReturnVarsUsedInInitializer() {
+	prOp = prospectiveOperation("ClassLoader cl = entry.getKey(argNeeded);", MAP);
+	
+	neededVars = retrieveNeededVariables(prOp);
+	
+	return size(neededVars) == 2 &&
+		"entry" in neededVars &&
 		"argNeeded" in neededVars;
 }
 
