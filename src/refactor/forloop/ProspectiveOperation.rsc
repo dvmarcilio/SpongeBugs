@@ -4,13 +4,12 @@ import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import ParseTreeVisualization;
-import Set;
+import List;
 import util::Math;
 import MethodVar;
 import String;
 
-public data ProspectiveOperation = prospectiveOperation(Statement stmt, str operation);
-public data ProspectiveOperation = prospectiveOperation(ExpressionStatement stmt2, str operation);
+public data ProspectiveOperation = prospectiveOperation(str stmt, str operation);
 
 str FILTER = "filter";
 str MAP = "map";
@@ -19,73 +18,96 @@ str REDUCE = "reduce";
 str ANY_MATCH = "anyMatch";
 str NONE_MATCH = "noneMatch";
 
-private set[MethodVar] methodLocalVars;
+private list[MethodVar] methodLocalVars;
 
-public void retrievePotentialOperations(set[MethodVar] localVars, EnhancedForStatement forStmt) {
+public list[ProspectiveOperation] retrievePotentialOperations(set[MethodVar] localVars, EnhancedForStatement forStmt) {
 	methodLocalVars = localVars;
-	visit(forStmt) {
-		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression exp> ) <Statement stmt>`: {
-			r = retrieveProspectiveOperationsFromStatement(stmt);
-			println("prospective operations: " + toString(size(r)));
-			for (prOp <- r) {
-				println();
-				println(prOp.operation);
-				println(unparse(prOp.stmt2));
-			}
+	list[ProspectiveOperation] prospectiveOperations = [];
+	top-down visit(forStmt) {
+		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _> ) <Statement stmt>`: {
+			prospectiveOperations = retrieveProspectiveOperationsFromStatement(stmt);
+			prospectiveOperations = markLastStmtAsEager(prospectiveOperations);
 		}
 	}
+	return prospectiveOperations;
 }
 
-private set[ProspectiveOperation] retrieveProspectiveOperationsFromStatement(Statement stmt) {
-	set[ProspectiveOperation] prOps = {};
+private list[ProspectiveOperation] retrieveProspectiveOperationsFromStatement(Statement stmt) {
+	list[ProspectiveOperation] prOps = [];
 	top-down-break visit(stmt) {
-		case Block blockStmt: {
-			println("blockStatement");
-			println(blockStmt);
-			println();
-			prOps += retrieveProspectiveOperationsFromBlock(blockStmt);
+		case Block block: {
+			prOps += retrieveProspectiveOperationsFromBlock(block);
 		}
 		case IfThenStatement ifStmt: {
-			println("ifThenStatement");
-			println(ifStmt);
-			println();
+			prOps += retrieveProspectiveOperationsFromIfThenStatement(ifStmt);
 		}
 		case IfThenElseStatement ifElseStmt: {
-			println("ifThenElseStatement");
+			println("IfThenElseStatement");
 			println(ifElseStmt);
 			println();
 		}
-		case ExpressionStatement stmt: prOps += retrieveProspectiveOperationFromSingleStatement(stmt);
+		case ExpressionStatement expStmt: {
+			statement = parse(#Statement, unparse(expStmt));
+			prOps += retrieveProspectiveOperationFromSingleStatement(statement);
+		}
 	}
 	return prOps;
 }
 
-private set[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block blockStmt) {
-	set[ProspectiveOperation] prOps = {};
-	top-down visit(blockStmt) {
-		case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
-			prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block block) {
+	list[ProspectiveOperation] prOps = [];
+	top-down visit(block) {
+		case BlockStatement blockStatement: {
+			top-down visit(blockStatement) {
+				case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
+					prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+				}
+				case (IfThenElseStatement) `if ( <Expression exp> ) <StatementNoShortIf thenStmt> else <Statement elseStmt>`: {
+					//retrieveProspectiveOperationsFromStatement(thenStmt);
+					println("if else");
+				}
+				case StatementWithoutTrailingSubstatement otherStmt: {
+					statement = parse(#Statement, unparse(otherStmt));
+					prOps += retrieveProspectiveOperationFromSingleStatement(statement);
+				}
+			}
 		}
-		case (IfThenElseStatement) `if ( <Expression exp> ) <StatementNoShortIf thenStmt> else <Statement elseStmt>`: {
-			//retrieveProspectiveOperationsFromStatement(thenStmt);
-			println("if else");
-		}
-		case ExpressionStatement stmt: prOps += retrieveProspectiveOperationFromSingleStatement(stmt);
 	}
 	println();
 	return prOps;
 }
 
-private set[ProspectiveOperation] retrieveProspectiveOperationFromSingleStatement(ExpressionStatement stmt) {
-	//visualize(stmt);
-	if (isReducer(stmt))
-		return {prospectiveOperation(stmt, REDUCE)};
-	else
-		return {prospectiveOperation(stmt, MAP)};
+private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatement(IfThenStatement ifStmt) {
+	list[ProspectiveOperation] prOps = [];
+	top-down visit (ifStmt) {
+		case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
+			visit (thenStmt) {
+				case (ReturnStatement) `return <Expression returnExp>;`: {
+					if ("<returnExp>" == true)
+						prOps += prospectiveOperation(unparse(ifStmt), ANY_MATCH);
+					else if ("<returnExp>" == false)
+						prOps += prospectiveOperation(unparse(ifStmt), NONE_MATCH);
+				}
+				case Statement statement: {
+					// ifStmt ou exp ?
+					prOps += prospectiveOperation(unparse(exp), FILTER);
+					prOps += retrieveProspectiveOperationsFromStatement(statement);
+				}
+			}
+		}
+	}
+	return prOps;
 }
 
-private bool isReducer(ExpressionStatement stmt) {
-	visit (stmt) {
+private list[ProspectiveOperation] retrieveProspectiveOperationFromSingleStatement(Statement statement) {
+	if (isReducer(statement))
+		return [prospectiveOperation(unparse(statement), REDUCE)];
+	else
+		return [prospectiveOperation(unparse(statement), MAP)];
+}
+
+private bool isReducer(Statement statement) {
+	visit (statement) {
 		case (Assignment) `<LeftHandSide lhs> <AssignmentOperator assignmentOp> <Expression _>`: {
 			return isCompoundAssignmentOperator(assignmentOp) && isReferenceToNonFinalLocalVar(lhs);
 		}
@@ -102,5 +124,14 @@ private bool isCompoundAssignmentOperator(AssignmentOperator assignmentOp) {
 private bool isReferenceToNonFinalLocalVar(LeftHandSide lhs) {
 	varName = trim(unparse(lhs));
 	var = findByName(methodLocalVars, varName);
-	return !var.isFinal;
+	return isEffectiveFinal(var);
+}
+
+private list[ProspectiveOperation] markLastStmtAsEager(list[ProspectiveOperation] prOps) {
+	lastPrOp = prOps[-1];
+	if(lastPrOp.operation == MAP)
+		lastPrOp.operation = FOR_EACH;
+	
+	// all elements but the last + the last one (eagerized or not)
+	return prefix(prOps) + lastPrOp;
 }

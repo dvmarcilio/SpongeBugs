@@ -1,0 +1,3 @@
+for (String thing: things) {
+    writer.write(thing);
+}
