@@ -55,9 +55,11 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromStatement(St
 	return prOps;
 }
 
+
+// XXX we might need to save `if (exp)` when a filter is added
 private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block block) {
 	list[ProspectiveOperation] prOps = [];
-	top-down visit(block) {
+	top-down-break visit(block) {
 		case BlockStatement blockStatement: {
 			top-down-break visit(blockStatement) {
 				case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
@@ -68,6 +70,10 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 					//retrieveProspectiveOperationsFromStatement(thenStmt);
 					println("if else");
 				}
+				case LocalVariableDeclarationStatement lvdlStmt: {
+					// not an if, so it's a map
+					prOps += prospectiveOperation(unparse(lvdlStmt), MAP);
+				} 
 				case StatementWithoutTrailingSubstatement otherStmt: {
 					statement = parse(#Statement, unparse(otherStmt));
 					prOps += retrieveProspectiveOperationFromSingleStatement(statement);
@@ -80,18 +86,18 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 
 private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatement(IfThenStatement ifStmt) {
 	list[ProspectiveOperation] prOps = [];
-	top-down visit (ifStmt) {
+	top-down-break visit (ifStmt) {
 		case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
-			visit (thenStmt) {
+			top-down-break visit (thenStmt) {
 				case (ReturnStatement) `return <Expression returnExp>;`: {
 					if ("<returnExp>" == true)
 						prOps += prospectiveOperation(unparse(ifStmt), ANY_MATCH);
 					else if ("<returnExp>" == false)
 						prOps += prospectiveOperation(unparse(ifStmt), NONE_MATCH);
 				}
-				case Statement statement: {
+				default: {
 					prOps += prospectiveOperation(unparse(exp), FILTER);
-					prOps += retrieveProspectiveOperationsFromStatement(statement);
+					prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
 				}
 			}
 		}
@@ -99,11 +105,11 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatem
 	return prOps;
 }
 
-private list[ProspectiveOperation] retrieveProspectiveOperationFromSingleStatement(Statement statement) {
+private ProspectiveOperation retrieveProspectiveOperationFromSingleStatement(Statement statement) {
 	if (isReducer(statement))
-		return [prospectiveOperation(unparse(statement), REDUCE)];
+		return prospectiveOperation(unparse(statement), REDUCE);
 	else
-		return [prospectiveOperation(unparse(statement), MAP)];
+		return prospectiveOperation(unparse(statement), MAP);
 }
 
 private bool isReducer(Statement statement) {
@@ -193,7 +199,9 @@ private list[str] retrieveAllStatements(ProspectiveOperation prOp) {
 	list[str] allStatements = [];
 	if (isBlock(prOp.stmt))
 		return retrieveAllStatementsFromBlock(prOp.stmt); 
-	 else
+	else if(isLocalVariableDeclarationStatement(prOp.stmt))
+		return [prOp.stmt];
+ 	else
 		return retrieveAllExpressionStatementsFromStatement(prOp.stmt);
 }
 
@@ -212,6 +220,13 @@ private list[str] retrieveAllStatementsFromBlock(str blockStr) {
 			blockStatements += unparse(blockStmt);
 	}
 	return blockStatements;	
+}
+
+private bool isLocalVariableDeclarationStatement(str stmt) {
+	try {
+		parse(#LocalVariableDeclarationStatement, stmt);
+		return true;
+	} catch: return false;
 }
 
 // XXX probably not this
@@ -240,19 +255,26 @@ private set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
 	set[str] neededVariables = {};
 	set[str] declaredVariables = {};
 	set[str] methodsNames = {};
-
-	stmt = parse(#Statement, prOp.stmt);
-	// If a var has the same name as a called method, this will fail
-	visit (stmt) {
-		case LocalVariableDeclaration lvdl: {
-			visit(lvdl) {
-				case (VariableDeclaratorId) `<Identifier id>`: declaredVariables += unparse(id);
-			}
-		}
-		case (MethodInvocation) `<Identifier methodName> ( <ArgumentList? _> )`: methodsNames += unparse(methodName); 
-		case Identifier id: neededVariables = {};
-	}
 	
+	if (isLocalVariableDeclarationStatement(prOp.stmt)) {
+		lvdlStmt = parse(#LocalVariableDeclarationStatement, prOp.stmt);
+		visit(lvdlStmt) {
+			case (VariableDeclaratorId) `<Identifier id>`: declaredVariables += unparse(id);
+		}
+	} else {
+		stmt = parse(#Statement, prOp.stmt);
+		// If a var has the same name as a called method, this will fail
+		visit (stmt) {
+			case LocalVariableDeclaration lvdl: {
+				visit(lvdl) {
+					case (VariableDeclaratorId) `<Identifier id>`: declaredVariables += unparse(id);
+				}
+			}
+			case (MethodInvocation) `<Identifier methodName> ( <ArgumentList? _> )`: methodsNames += unparse(methodName); 
+			case Identifier id: neededVariables = {};
+		}
+	}
+
 	neededVariables -= declaredVariables;
 	neededVariables -= methodsNames;
 	

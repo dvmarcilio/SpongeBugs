@@ -1,0 +1,7 @@
+for (Map.Entry<ClassLoader, String> entry :
+        childClassLoaders.entrySet())
+      if(isValid(entry)) {
+        ClassLoader cl = entry.getKey();
+        if (!((WebappClassLoader)cl).isStart())
+          result.add(entry.getValue());
+      }

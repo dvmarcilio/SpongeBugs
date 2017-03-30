@@ -7,7 +7,7 @@ import refactor::forloop::ProspectiveOperation;
 import List;
 import MethodVar;
 
-public void refactorEnhancedToFunctional(EnhancedForStatement forStmt, set[MethodVar] methodVars) {
+public void refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt) {
 	prospectiveOperations = retrieveProspectiveOperations(methodVars, forStmt);
 	println(mergeOperations(prospectiveOperations, methodVars));
 }

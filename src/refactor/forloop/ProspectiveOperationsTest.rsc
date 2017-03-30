@@ -22,7 +22,7 @@ public test bool shouldReturnCorrectlyOnFilterMapReduceExample() {
 	
 	prospectiveOperations = retrieveProspectiveOperations(filterMapReduce.vars, filterMapReduce.loop);
 	
-	return	size(prospectiveOperations) == 2 && 
+	return size(prospectiveOperations) == 2 && 
 		prospectiveOperations[0].stmt == "rule.hasErrors()" &&
 		prospectiveOperations[0].operation == "filter" &&
 		prospectiveOperations[1].stmt == "count += rule.getErrors().size();" &&
@@ -35,3 +35,19 @@ public test bool shouldReturnCorrectlyOnFilterMapReduceExample() {
 //	println(prospectiveOperations);
 //	return false;
 //}
+
+public test bool shouldReturnXOnFilterAndMergedForEach() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] filterAndMergedForEach = filterAndMergedForEach();
+	
+	prospectiveOperations = retrieveProspectiveOperations(filterAndMergedForEach.vars, filterAndMergedForEach.loop);
+	
+	return size(prospectiveOperations) == 4 &&
+		prospectiveOperations[0].stmt == "isValid(entry)" &&
+		prospectiveOperations[0].operation == "filter" &&
+		prospectiveOperations[1].stmt == "ClassLoader cl = entry.getKey();" &&
+		prospectiveOperations[1].operation == "map" &&
+		prospectiveOperations[2].stmt == "!((WebappClassLoader)cl).isStart()" &&
+		prospectiveOperations[2].operation == "filter" &&
+		prospectiveOperations[3].stmt == "result.add(entry.getValue());" &&
+		prospectiveOperations[3].operation == "forEach";
+}

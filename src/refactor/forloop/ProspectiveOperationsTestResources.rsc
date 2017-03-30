@@ -35,3 +35,15 @@ private set[MethodVar] filterMapReduceVars() {
 	methodBody = parse(#MethodBody, "{\n    int count = 0;\n    for (ElementRule rule : getRules()) {\n      if(rule.hasErrors())\n        count += rule.getErrors().size();\n    }\n    return count;\n  }");
 	return findLocalVariables(methodHeader, methodBody);
 }
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] filterAndMergedForEach() {
+	fileLoc = |project://rascal-Java8//testes/ProspectiveOperation/FilterAndMergedForEach|;
+	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileLoc));
+	return <filterAndMergedForEachVars(), enhancedForLoop>; 
+}
+
+private set[MethodVar] filterAndMergedForEachVars() {
+	methodHeader = parse(#MethodHeader, "List\<String\> findReloadedContextMemoryLeaks()");
+	methodBody = parse(#MethodBody, "{\n    List\<String\> result = new ArrayList\<String\>();\n    for (Map.Entry\<ClassLoader, String\> entry :\n        childClassLoaders.entrySet())\n      if(isValid(entry)) {\n        ClassLoader cl = entry.getKey();\n        if (!((WebappClassLoader)cl).isStart())\n          result.add(entry.getValue());\n      }\n   return result;\n  }");
+	return findLocalVariables(methodHeader, methodBody);
+}
