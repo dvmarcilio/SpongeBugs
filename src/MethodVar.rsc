@@ -55,6 +55,10 @@ public bool isTypePlainArray(MethodVar methodVar) {
 	return endsWith(methodVar.varType, "[]");
 }
 
+// FIXME
 public bool isEffectiveFinal(MethodVar methodVar) {
-	return methodVar.isFinal || methodVar.isEffectiveFinal;
+	try
+		return methodVar.isFinal || methodVar.isEffectiveFinal;
+	catch NoSuchField("isEffectiveFinal"):
+		return methodVar.isFinal;
 }

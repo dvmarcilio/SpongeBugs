@@ -1,0 +1,4 @@
+for (ElementRule rule : getRules()) {
+      if(rule.hasErrors())
+        count += rule.getErrors().size();
+    }

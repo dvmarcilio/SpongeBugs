@@ -1,0 +1,5 @@
+for(GrammarEngine e : importedEngines) {
+      if(e.getGrammarName() == null) continue;
+      if(e.getGrammarName().equals(grammarName))
+        return true;
+    }

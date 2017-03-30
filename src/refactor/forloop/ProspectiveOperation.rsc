@@ -58,8 +58,9 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 	list[ProspectiveOperation] prOps = [];
 	top-down visit(block) {
 		case BlockStatement blockStatement: {
-			top-down visit(blockStatement) {
+			top-down-break visit(blockStatement) {
 				case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
+					prOps += prospectiveOperation(unparse(exp), FILTER);
 					prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
 				}
 				case (IfThenElseStatement) `if ( <Expression exp> ) <StatementNoShortIf thenStmt> else <Statement elseStmt>`: {
@@ -73,7 +74,6 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 			}
 		}
 	}
-	println();
 	return prOps;
 }
 
@@ -89,7 +89,6 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatem
 						prOps += prospectiveOperation(unparse(ifStmt), NONE_MATCH);
 				}
 				case Statement statement: {
-					// ifStmt ou exp ?
 					prOps += prospectiveOperation(unparse(exp), FILTER);
 					prOps += retrieveProspectiveOperationsFromStatement(statement);
 				}
@@ -108,10 +107,10 @@ private list[ProspectiveOperation] retrieveProspectiveOperationFromSingleStateme
 
 private bool isReducer(Statement statement) {
 	visit (statement) {
-		case (Assignment) `<LeftHandSide lhs> <AssignmentOperator assignmentOp> <Expression _>`: {
+		case (Assignment) `<LeftHandSide lhs> <AssignmentOperator assignmentOp> <Expression _>`:
 			return isCompoundAssignmentOperator(assignmentOp) && isReferenceToNonFinalLocalVar(lhs);
-		}
 	}
+	
 	return false;
 }
 
@@ -124,7 +123,7 @@ private bool isCompoundAssignmentOperator(AssignmentOperator assignmentOp) {
 private bool isReferenceToNonFinalLocalVar(LeftHandSide lhs) {
 	varName = trim(unparse(lhs));
 	var = findByName(methodLocalVars, varName);
-	return isEffectiveFinal(var);
+	return !isEffectiveFinal(var);
 }
 
 private list[ProspectiveOperation] markLastStmtAsEager(list[ProspectiveOperation] prOps) {
