@@ -98,9 +98,7 @@ private ComposableProspectiveOperation mergeComposablePrOps(ComposableProspectiv
 
 private ComposableProspectiveOperation mergeIntoAnIfThenStmt(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
 	prOp = mergeTwoOpsInAnIfThenStmt(prev.prOp, curr.prOp);
-	availableVars = retrieveAvailableVariables(prOp, methodAvailableVars);
-	neededVars = retrieveNeededVars(prOp, availableVars);
-	return composableProspectiveOperation(prOp, neededVars, availableVars);
+	return mergeComposableProspectiveOperations(prOp, prev, curr);
 }
 
 private ProspectiveOperation mergeTwoOpsInAnIfThenStmt(ProspectiveOperation prev, ProspectiveOperation curr) {
@@ -110,14 +108,7 @@ private ProspectiveOperation mergeTwoOpsInAnIfThenStmt(ProspectiveOperation prev
 	return prospectiveOperation(unparse(ifThenStmt), curr.operation);
 }
 
-private ComposableProspectiveOperation mergeIntoABlock(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
-	list[str] statements = retrieveAllStatements(prev.prOp) + retrieveAllStatements(curr.prOp);
-	Block statementsAsOneBlock = transformStatementsInBlock(statements);
-	prOp = prospectiveOperation(unparse(statementsAsOneBlock), curr.prOp.operation);
-	return mergeComposableProspectiveOperation(prOp, prev, curr);
-}
-
-private ComposableProspectiveOperation mergeComposableProspectiveOperation(ProspectiveOperation prOp, ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
+private ComposableProspectiveOperation mergeComposableProspectiveOperations(ProspectiveOperation prOp, ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
 	mergedAvailableVars = mergeAvailableVars(curr.availableVars, prev.availableVars);
 	mergedNeededVars = mergeNeededVars(curr.neededVars, prev.neededVars, mergedAvailableVars);
 	return composableProspectiveOperation(prOp, mergedNeededVars, mergedAvailableVars);
@@ -130,6 +121,13 @@ private set[str] mergeAvailableVars(set[str] currAvailableVars, prevAvailableVar
 private set[str] mergeNeededVars(set[str] currNeededVars, set[str] prevNeededVars, set[str] mergedAvailableVars) {
 	neededVars = currNeededVars + prevNeededVars;
 	return neededVars - mergedAvailableVars;
+}
+
+private ComposableProspectiveOperation mergeIntoABlock(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
+	list[str] statements = retrieveAllStatements(prev.prOp) + retrieveAllStatements(curr.prOp);
+	Block statementsAsOneBlock = transformStatementsInBlock(statements);
+	prOp = prospectiveOperation(unparse(statementsAsOneBlock), curr.prOp.operation);
+	return mergeComposableProspectiveOperations(prOp, prev, curr);
 }
 
 private list[str] retrieveAllStatements(ProspectiveOperation prOp) {
