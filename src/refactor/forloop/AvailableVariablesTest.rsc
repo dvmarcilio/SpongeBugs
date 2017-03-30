@@ -39,10 +39,32 @@ public test bool varNotWithinLoopShouldBeAvailable() {
 }
 
 public test bool localVariableDeclarationShouldBeAvailableVar() {
+	prOp = prospectiveOperation("ClassLoader cl = entry.getKey();", MAP);
+	methodVars = {}; // Independent in this case
+	
+	availableVars = retrieveAvailableVariables(prOp, methodVars);
+	
+	return size(availableVars) == 1 && 
+		"cl" in availableVars;
+}
+
+public test bool LocalVariableDeclAlongWithVarNotWithinLoopShouldBeAvailableVars() {
+	prOp = prospectiveOperation("ClassLoader cl = entry.getKey();", MAP);
+	methodVars = {methodVar(false, "result", "List\<String\>", false, false)};
+	
+	availableVars = retrieveAvailableVariables(prOp, methodVars);
+	
+	return size(availableVars) == 2 && 
+		"cl" in availableVars &&
+		"result" in availableVars;
+}
+
+public test bool localVariableDeclarationWithArgsInInitializerShouldBeAvailableVar() {
 	prOp = prospectiveOperation("ClassLoader cl = entry.getKey(argNeeded);", MAP);
 	methodVars = {}; // Independent in this case
 	
 	availableVars = retrieveAvailableVariables(prOp, methodVars);
 	
-	return "cl" in availableVars;
+	return size(availableVars) == 1 && 
+		"cl" in availableVars;
 }

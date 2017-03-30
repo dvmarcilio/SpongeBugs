@@ -11,12 +11,15 @@ import refactor::forloop::ProspectiveOperation;
 	// variables declared in the Prospective Operation ??
 // Right now they are being verified by elimination.
 public set[str] retrieveAvailableVariables(ProspectiveOperation prOp, set[MethodVar] methodVars) {
-	availableVars = retrieveLocalVariableDeclarations(prOp);
+	availableVars = {};
+	
 	withinMethod = retrieveNotDeclaredWithinLoopNames(methodVars); 
 	withinLoop = retrieveDeclaredWithinLoopNames(methodVars);
 	
 	availableVars += withinMethod;
 	availableVars -= withinLoop;
+	// Probably redundant somehow. This will catch some withinLoop. 
+	availableVars += retrieveLocalVariableDeclarations(prOp);
 	
 	return availableVars;
 }
