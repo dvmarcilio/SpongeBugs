@@ -50,5 +50,5 @@ public test bool shouldReturnXOnFilterAndMergedForEach() {
 		prospectiveOperations[2].stmt == "!((WebappClassLoader)cl).isStart()" &&
 		prospectiveOperations[2].operation == FILTER &&
 		prospectiveOperations[3].stmt == "result.add(entry.getValue());" &&
-		prospectiveOperations[3].operation == FOREACH;
+		prospectiveOperations[3].operation == FOR_EACH;
 }
