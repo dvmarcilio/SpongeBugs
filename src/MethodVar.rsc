@@ -63,6 +63,14 @@ public set[str] retrieveDeclaredWithinLoopNames(set[MethodVar] methodVars) {
 	return { var.name | MethodVar var <- methodVars, var.isDeclaredWithinLoop };
 }
 
+public set[MethodVar] retrieveNotDeclaredWithinLoop(set[MethodVar] methodVars) {
+	return { var | MethodVar var <- methodVars, !var.isDeclaredWithinLoop };
+}
+
+public set[str] retrieveNotDeclaredWithinLoopNames(set[MethodVar] methodVars) {
+	return { var.name | MethodVar var <- methodVars, !var.isDeclaredWithinLoop };
+}
+
 // FIXME
 public bool isEffectiveFinal(MethodVar methodVar) {
 	try

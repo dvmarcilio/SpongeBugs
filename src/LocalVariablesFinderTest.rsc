@@ -176,3 +176,19 @@ public test bool shouldReturnCorrectVarsDeclaredWithinLoop() {
 		"insideBody" in withinLoopNames &&
 		"insideBodyStr" in withinLoopNames;
 }
+
+public test bool shouldReturnCorrectVarsNotDeclaredWithinLoop() {
+	methodHeader = varsWithinTheLoopMethodHeader();
+	methodBody = varsWithinTheLoopMethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	varsNotWithinLoop = retrieveNotDeclaredWithinLoop(vars);
+	notWithinLoopNames = retrieveNotDeclaredWithinLoopNames(vars);
+	
+	return size(varsNotWithinLoop) == 5 &&
+		"notWithinLoop" in notWithinLoopNames &&
+		"notWithinLoopAgain" in notWithinLoopNames &&
+		"localVarNotWithinLoop" in notWithinLoopNames &&
+		"localVarNotWithinLoopAgain" in notWithinLoopNames &&
+		"notWithinLoopAfterLoop" in notWithinLoopNames;
+}

@@ -29,28 +29,40 @@ private set[MethodVar] findVariablesAsParameters(MethodHeader methodHeader) {
 	return methodVars;
 }
 
+private MethodVar createParameterMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
+	name = trim(unparse(varId));
+	varTypeStr = trim(unparse(varType));
+	return methodVar(isFinal, name, varTypeStr, true, false);
+}
+
+// XXX probably incorrect, ugly and not really DRY way of checking for vars within loop
 private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 	set[MethodVar] methodVars = {};
-	visit(methodBody) {
-		
+	set[str] varsWithinLoopNames = {};
+	
+	top-down visit(methodBody) {
+	
 		case EnhancedForStatement enhancedForStmt: {
 			visit(enhancedForStmt) {	
 				case (EnhancedForStatement) `for (<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorId varId> : <Expression _> ) <Statement _>`:
 					 methodVars += createLocalMethodVarWithinLoop(figureIfIsFinal(varMod), varId, varType);
 				
-				// TODO maybe there is a better way besides checking this two times.
 				case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: 
 					visit(vdl) {
-						case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`:
-							methodVars += createLocalMethodVarWithinLoop(figureIfIsFinal(varMod), varId, varType, dims);
+						case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
+								varsWithinLoopNames += unparse(varId);
+								methodVars += createLocalMethodVarWithinLoop(figureIfIsFinal(varMod), varId, varType, dims);
+							}
 					}		
 			}
 		}
 
 		case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: {
 			visit(vdl) {
-				case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`:
-					methodVars += createLocalMethodVar(figureIfIsFinal(varMod), varId, varType, dims);
+				case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
+						if(unparse(varId) notin varsWithinLoopNames)
+							methodVars += createLocalMethodVar(figureIfIsFinal(varMod), varId, varType, dims);
+					}
 			}
 		}
 		
@@ -59,12 +71,6 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 		
 	}
 	return methodVars;
-}
-
-private MethodVar createParameterMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
-	name = trim(unparse(varId));
-	varTypeStr = trim(unparse(varType));
-	return methodVar(isFinal, name, varTypeStr, true, false);
 }
 
 private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
