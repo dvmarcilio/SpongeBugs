@@ -149,7 +149,7 @@ public bool isFilter(ProspectiveOperation prOp) {
 public bool areComposable(ProspectiveOperation first, ProspectiveOperation second, set[MethodVar] methodVars) {
 	firstNeededVars = retrieveNeededVariables(first);
 	// second's available has to be in first's needed 
-	secondAvailableVars = retrieveAvaliableVars(second, methodVars);
+	secondAvailableVars = retrieveAvailableVars(second, methodVars);
 	secondAvailableVarsInFirstNeeded = isSecondAvailableInFirstNeeded(firstNeededVars, secondAvailableVars);
 	return size(firstNeededVars) <= 1 && secondAvailableVarsInFirstNeeded;
 }
@@ -166,7 +166,7 @@ public ProspectiveOperation mergeOps(ProspectiveOperation first, ProspectiveOper
 	} else {
 		list[str] statements = retrieveAllStatements(first) + retrieveAllStatements(second);
 		
-		set[str] firstAvailableVars = retrieveAvaliableVars(first, methodVars);
+		set[str] firstAvailableVars = retrieveAvailableVars(first, methodVars);
 		set[str] availableVars = firstAvailableVars;
 		availableVars += retrieveAvailableVars(second, methodVars);
 		
@@ -174,7 +174,7 @@ public ProspectiveOperation mergeOps(ProspectiveOperation first, ProspectiveOper
 		neededVars -= firstAvailableVars;
 		neededVars += retrieveNeededVariables(first);
 		
-		neederVars -= retrieveNotDeclaredWithinLoop(methodVars);
+		neededVars -= retrieveNotDeclaredWithinLoopNames(methodVars);
 		
 		Block statementsAsOneBlock = transformStatementsInBlock(statements);
 		
@@ -220,12 +220,12 @@ private list[str] retrieveAllExpressionStatementsFromStatement(str statement) {
 	Statement stmt = parse(#Statement, statement);
 	top-down visit(stmt) {
 		case ExpressionStatement expStmt:
-			blockStatements += unparse(expStmt);
+			stmts += unparse(expStmt);
 	}
 	return stmts;
 }
 
-private set[str] retrieveAvaliableVars(ProspectiveOperation prOp, set[MethodVar] methodVars) {
+private set[str] retrieveAvailableVars(ProspectiveOperation prOp, set[MethodVar] methodVars) {
 	// fields declared in class, inherited and visible from imported classes ??
 	// variables declared in the Prospective Operation ??
 	withinMethod = retrieveNotDeclaredWithinLoopNames(methodVars); 
@@ -246,10 +246,10 @@ private set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
 	visit (stmt) {
 		case LocalVariableDeclaration lvdl: {
 			visit(lvdl) {
-				case (VariableDeclaratorId) `<Identifier id>`: declaredVariables += id;
+				case (VariableDeclaratorId) `<Identifier id>`: declaredVariables += unparse(id);
 			}
 		}
-		case (MethodInvocation) `<Identifier methodName> ( <ArgumentList? _> )`: methodsNames += methodName; 
+		case (MethodInvocation) `<Identifier methodName> ( <ArgumentList? _> )`: methodsNames += unparse(methodName); 
 		case Identifier id: neededVariables = {};
 	}
 	
@@ -259,10 +259,10 @@ private set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
 	return neededVariables;
 }
 
-private Block transformStatementsInBlock(list[Statement] stmts) {
+private Block transformStatementsInBlock(list[str] stmts) {
 	str joined = "{\n";
 	for(stmt <- stmts)
-		joined += (stmts + "\n");
-	joined +=  "\n}";
-	return parse(#Block, stmts);
+		joined += (stmt + "\n");
+	joined +=  "}";
+	return parse(#Block, joined);
 }
