@@ -7,6 +7,7 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import MethodVar;
 import refactor::forloop::OperationType;
+import ParseTreeVisualization;
 
 public data ProspectiveOperation = prospectiveOperation(str stmt, str operation);
 
@@ -54,8 +55,8 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 		case BlockStatement blockStatement: {
 			top-down-break visit(blockStatement) {
 				case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
-					prOps += prospectiveOperation(unparse(exp), FILTER);
-					prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+					ifThenStmt = [IfThenStatement] "if (<exp>) <thenStmt>";
+					prOps += retrieveProspectiveOperationsFromIfThenStatement(ifThenStmt);
 				}
 				case (IfThenElseStatement) `if ( <Expression exp> ) <StatementNoShortIf thenStmt> else <Statement elseStmt>`: {
 					//retrieveProspectiveOperationsFromStatement(thenStmt);
@@ -77,18 +78,25 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 
 private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatement(IfThenStatement ifStmt) {
 	list[ProspectiveOperation] prOps = [];
+	foundReturn = false;
 	top-down-break visit (ifStmt) {
 		case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
 			top-down-break visit (thenStmt) {
-				case (ReturnStatement) `return <Expression returnExp>;`: {
-					if ("<returnExp>" == true)
-						prOps += prospectiveOperation(unparse(ifStmt), ANY_MATCH);
-					else if ("<returnExp>" == false)
-						prOps += prospectiveOperation(unparse(ifStmt), NONE_MATCH);
-				}
-				default: {
-					prOps += prospectiveOperation(unparse(exp), FILTER);
-					prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+				case Statement stmt: {
+					visit(stmt) {
+						case (ReturnStatement) `return <Expression returnExp>;`: {
+							foundReturn = true;
+							if ("<returnExp>" == "true")
+								prOps += prospectiveOperation(unparse(exp), ANY_MATCH);
+							else if ("<returnExp>" == "false")
+								prOps += prospectiveOperation(unparse(exp), NONE_MATCH);
+						}
+					}
+						
+					if (!foundReturn) {
+						prOps += prospectiveOperation(unparse(exp), FILTER);
+						prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+					}
 				}
 			}
 		}

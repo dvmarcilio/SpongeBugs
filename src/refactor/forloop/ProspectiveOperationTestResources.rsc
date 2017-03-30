@@ -1,4 +1,4 @@
-module refactor::forloop::ProspectiveOperationsTestResources
+module refactor::forloop::ProspectiveOperationTestResources
 
 import IO;
 import lang::java::\syntax::Java18;
