@@ -56,6 +56,15 @@ public test bool localVariableDeclarationShouldReturnItselfWithInitializer() {
 		"argNeeded" in neededVars;
 }
 
+public test bool expressionIsNotAStatement() {
+	prOp = prospectiveOperation("!((WebappClassLoader)cl).isStart()", FILTER);
+	
+	neededVars = retrieveNeededVariables(prOp);
+	
+	return size(neededVars) == 1 &&
+		"cl" in neededVars;
+}
+
 public test bool reduceShouldReturnEmpty() {
 	prOp = prospectiveOperation("count += rule.getErrors().size();", REDUCE);
 	

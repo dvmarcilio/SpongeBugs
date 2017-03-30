@@ -133,11 +133,10 @@ private list[ProspectiveOperation] markLastStmtAsEager(list[ProspectiveOperation
 	return prefix(prOps) + lastPrOp;
 }
 
-public bool isMergeable(ProspectiveOperation prOp) {
-	operation = prOp.operation;
-	return operation == FILTER || operation == MAP || operation == FOR_EACH;
-}
-
 public bool isFilter(ProspectiveOperation prOp) {
 	return prOp.operation == FILTER;
+}
+
+public bool isReduce(ProspectiveOperation prOp) {
+	return prOp.operation == REDUCE;
 }

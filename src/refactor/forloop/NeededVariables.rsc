@@ -7,15 +7,16 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import MethodVar;
 import refactor::forloop::ProspectiveOperation;
-import refactor::forloop::OperationType;
 
 public set[str] retrieveNeededVariables(ProspectiveOperation prOp) {
 	set[str] neededVariables = {};
 	
-	if (prOp.operation == REDUCE)
+	if (isReduce(prOp))
 		return {};
+	else if(isFilter(prOp))
+		neededVariables += retrieveNeededVarsFromExpression(prOp.stmt);	
 	else if (isLocalVariableDeclarationStatement(prOp.stmt))
-		neededVariables += retrieveNeededVarsFromLocalVariableDeclarationStmt(prOp.stmt);		
+		neededVariables += retrieveNeededVarsFromLocalVariableDeclarationStmt(prOp.stmt);	
  	else
 		neededVariables += retrieveNeededVarsFromStatement(prOp.stmt);
 	
@@ -51,9 +52,27 @@ private set[str] retrieveNeededVarsFromLocalVariableDeclarationStmt(str stmt) {
 	return neededVariables;
 }
 
+// TODO verify if visit(Tree) works for a more generic traversal
+// maybe it's possible to traverse only once
+private set[str] retrieveNeededVarsFromExpression(str stmt) {
+	set[str] neededVariables = {};
+	
+	exp = parse(#Expression, stmt);
+	
+	visit(exp) {
+		case ExpressionName expName: {
+			visit(expName) {
+				case Identifier id: neededVariables += unparse(id);
+			}
+		}
+	}
+	
+	return neededVariables;
+}
+
 private set[str] retrieveNeededVarsFromStatement(str stmt) {
 	set[str] neededVariables = {};
-
+	
 	stmt = parse(#Statement, getCorrectStatementAsString(stmt));
 	
 	visit (stmt) {
