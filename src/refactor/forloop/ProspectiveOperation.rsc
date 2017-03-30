@@ -236,6 +236,8 @@ private list[str] retrieveAllExpressionStatementsFromStatement(str statement) {
 	top-down visit(stmt) {
 		case ExpressionStatement expStmt:
 			stmts += unparse(expStmt);
+		case (IfThenStatement) `if (<Expression exp>) <Statement thenStmt>`:
+			stmts += "if (" + unparse(exp) + ")";
 	}
 	return stmts;
 }
