@@ -30,28 +30,28 @@ public test bool shouldHandleReduce() {
 		prospectiveOperations[1].operation == REDUCE;
 }
 
-public test bool shouldHandleAnyMatchAndIfWithContinue() {
-	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
-	
-	prospectiveOperations = retrieveProspectiveOperations(continueAndReturn.vars, continueAndReturn.loop);
-	println(prospectiveOperations);
-	
-	return size(prospectiveOperations) == 2 && 
-		prospectiveOperations[0].stmt == "e.getGrammarName() != null" &&
-		prospectiveOperations[0].operation == FILTER &&
-		prospectiveOperations[1].stmt == "e.getGrammarName().equals(grammarName)" &&
-		prospectiveOperations[1].operation == ANY_MATCH;
-}
-
-public test bool shouldHandleIfWithContinue() {
-	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
-	
-	prospectiveOperations = retrieveProspectiveOperations(continueAndReturn.vars, continueAndReturn.loop);
-	println(prospectiveOperations);
-	
-	return prospectiveOperations[0].stmt == "e.getGrammarName() != null" &&
-		prospectiveOperations[0].operation == FILTER;
-}
+//public test bool shouldHandleAnyMatchAndIfWithContinue() {
+//	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
+//	
+//	prospectiveOperations = retrieveProspectiveOperations(continueAndReturn.vars, continueAndReturn.loop);
+//	println(prospectiveOperations);
+//	
+//	return size(prospectiveOperations) == 2 && 
+//		prospectiveOperations[0].stmt == "e.getGrammarName() != null" &&
+//		prospectiveOperations[0].operation == FILTER &&
+//		prospectiveOperations[1].stmt == "e.getGrammarName().equals(grammarName)" &&
+//		prospectiveOperations[1].operation == ANY_MATCH;
+//}
+//
+//public test bool shouldHandleIfWithContinue() {
+//	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
+//	
+//	prospectiveOperations = retrieveProspectiveOperations(continueAndReturn.vars, continueAndReturn.loop);
+//	println(prospectiveOperations);
+//	
+//	return prospectiveOperations[0].stmt == "e.getGrammarName() != null" &&
+//		prospectiveOperations[0].operation == FILTER;
+//}
 
 public test bool shouldHandleAnyMatch() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
