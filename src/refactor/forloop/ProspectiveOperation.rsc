@@ -154,15 +154,15 @@ public bool isFilter(ProspectiveOperation prOp) {
 // TODO needed and available called more than once. good idea to extract it.
 public bool areComposable(ProspectiveOperation first, ProspectiveOperation second, set[MethodVar] methodVars) {
 	firstNeededVars = retrieveNeededVariables(first);
-	// second's available has to be in first's needed 
+	// firsts' needed has to be available from second
 	secondAvailableVars = retrieveAvailableVars(second, methodVars);
-	secondAvailableVarsInFirstNeeded = isSecondAvailableInFirstNeeded(firstNeededVars, secondAvailableVars);
-	return size(firstNeededVars) <= 1 && secondAvailableVarsInFirstNeeded;
+	firstNeededInSecondAvailable = isFirstNeededVarsInSecondAvailableVars(firstNeededVars, secondAvailableVars);
+	return size(firstNeededVars) <= 1 && firstNeededInSecondAvailable;
 }
 
-private bool isSecondAvailableInFirstNeeded(set[str] firstNeededVars, set[str] secondAvailableVars) {
-	for(secondAvailable <- secondAvailableVars)
-		if(secondAvailable notin firstNeededVars) return false;
+private bool isFirstNeededVarsInSecondAvailableVars(set[str] firstNeededVars, set[str] secondAvailableVars) {
+	for(firstNeededVar <- firstNeededVars)
+		if(firstNeededVar notin secondAvailableVars) return false;
 	return true;
 }
 
