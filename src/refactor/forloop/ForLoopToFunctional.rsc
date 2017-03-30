@@ -49,7 +49,7 @@ private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[
 	for (int i <- reverse(listIndexes)) {
 		curr = composablePrOps[i];
 		prev = composablePrOps[i - 1];
-		if (!areComposable(prev, curr)) {
+		if (!canBeChained(prev, curr)) {
 			if (isMergeable(prev) && isMergeable(curr)) {
 				opsSize = size(composablePrOps); 
 				
@@ -73,9 +73,9 @@ private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[
 	return composablePrOps;
 }
 
-public bool areComposable(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
-	currNeededInPrevAvailable = isCurrNeededVarsInPrevAvailableVars(curr.neededVars, prev.availableVars);
-	return size(curr.neededVars) <= 1 && currNeededInPrevAvailable;
+public bool canBeChained(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
+	currNeededVarsInPrevAvailabilitySet = isCurrNeededVarsInPrevAvailabilitySet(curr.neededVars, prev);
+	return size(curr.neededVars) <= 1 && currNeededVarsInPrevAvailabilitySet;
 }
 
 public bool isMergeable(ComposableProspectiveOperation cPrOp) {
@@ -83,9 +83,10 @@ public bool isMergeable(ComposableProspectiveOperation cPrOp) {
 	return operation == FILTER || operation == MAP || operation == FOR_EACH;
 }
 
-private bool isCurrNeededVarsInPrevAvailableVars(set[str] currNeededVars, set[str] prevAvailableVars) {
+private bool isCurrNeededVarsInPrevAvailabilitySet(set[str] currNeededVars, ComposableProspectiveOperation prev) {
+	prevAvailabilitySet = prev.availableVars + prev.neededVars;
 	for(currNeededVar <- currNeededVars)
-		if(currNeededVar notin prevAvailableVars) return false;
+		if(currNeededVar notin prevAvailabilitySet) return false;
 	return true;
 }
 
