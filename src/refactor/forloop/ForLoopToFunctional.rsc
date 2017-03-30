@@ -49,7 +49,7 @@ private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[
 	for (int i <- reverse(listIndexes)) {
 		curr = composablePrOps[i];
 		prev = composablePrOps[i - 1];
-		if (!areComposable(curr, prev)) {
+		if (!areComposable(prev, curr)) {
 			if (isMergeable(prev) && isMergeable(curr)) {
 				opsSize = size(composablePrOps); 
 				
@@ -73,7 +73,7 @@ private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[
 	return composablePrOps;
 }
 
-public bool areComposable(ComposableProspectiveOperation curr, ComposableProspectiveOperation prev) {
+public bool areComposable(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
 	currNeededInPrevAvailable = isCurrNeededVarsInPrevAvailableVars(curr.neededVars, prev.availableVars);
 	return size(curr.neededVars) <= 1 && currNeededInPrevAvailable;
 }
@@ -89,28 +89,29 @@ private bool isCurrNeededVarsInPrevAvailableVars(set[str] currNeededVars, set[st
 	return true;
 }
 
-public ComposableProspectiveOperation mergeComposablePrOps(ComposableProspectiveOperation curr, ComposableProspectiveOperation prev) {
-	if (isFilter(curr.prOp)) {
-		prOp = mergeTwoOpsInAnIfThenStmt(curr.prOp, prev.prOp);
+public ComposableProspectiveOperation mergeComposablePrOps(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
+	if (isFilter(prev.prOp)) {
+		prOp = mergeTwoOpsInAnIfThenStmt(prev.prOp, curr.prOp);
 		availableVars = retrieveAvailableVariables(prOp, methodAvailableVars);
 		neededVars = retrieveNeededVars(prOp, availableVars);
 		return composableProspectiveOperation(prOp, neededVars, availableVars);
+		
 	} else {
-		list[str] statements = retrieveAllStatements(curr.prOp) + retrieveAllStatements(prev.prOp);
+		list[str] statements = retrieveAllStatements(prev.prOp) + retrieveAllStatements(curr.prOp);
 		Block statementsAsOneBlock = transformStatementsInBlock(statements);
-		prOp = prospectiveOperation(unparse(statementsAsOneBlock), prev.prOp.operation);
-		return mergeComposableProspectiveOperation(prOp, curr, prev);	
+		prOp = prospectiveOperation(unparse(statementsAsOneBlock), curr.prOp.operation);
+		return mergeComposableProspectiveOperation(prOp, prev, curr);	
 	}
 }
 
-private ProspectiveOperation mergeTwoOpsInAnIfThenStmt(ProspectiveOperation curr, ProspectiveOperation prev) {
-	Expression exp = parse(#Expression, curr.stmt);
-	Statement thenStmt = parse(#Statement, prev.stmt);
+private ProspectiveOperation mergeTwoOpsInAnIfThenStmt(ProspectiveOperation prev, ProspectiveOperation curr) {
+	Expression exp = parse(#Expression, prev.stmt);
+	Statement thenStmt = parse(#Statement, curr.stmt);
 	ifThenStmt = [IfThenStatement] "if (<exp>) <thenStmt>";
-	return prospectiveOperation(unparse(ifThenStmt), prev.operation);
+	return prospectiveOperation(unparse(ifThenStmt), curr.operation);
 }
 
-private ComposableProspectiveOperation mergeComposableProspectiveOperation(ProspectiveOperation prOp, ComposableProspectiveOperation curr, ComposableProspectiveOperation prev) {
+private ComposableProspectiveOperation mergeComposableProspectiveOperation(ProspectiveOperation prOp, ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
 	mergedAvailableVars = mergeAvailableVars(curr.availableVars, prev.availableVars);
 	mergedNeededVars = mergeNeededVars(curr.neededVars, prev.neededVars, mergedAvailableVars);
 	return composableProspectiveOperation(prOp, mergedNeededVars, mergedAvailableVars);
