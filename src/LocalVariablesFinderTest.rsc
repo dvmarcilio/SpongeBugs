@@ -162,3 +162,17 @@ public test bool shouldReturnCorrectParamsWithLastOneNonFinal() {
 		!strParam.isFinal && strParam.isParameter &&
 		!nonFinalLastParam.isFinal && nonFinalLastParam.isParameter;
 }
+
+public test bool shouldReturnCorrectVarsDeclaredWithinLoop() {
+	methodHeader = varsWithinTheLoopMethodHeader();
+	methodBody = varsWithinTheLoopMethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	varsWithinLoop = retrieveDeclaredWithinLoop(vars);
+	withinLoopNames = retrieveDeclaredWithinLoopNames(vars);
+	
+	return size(varsWithinLoop) == 3 &&
+		"insideDecl" in withinLoopNames &&
+		"insideBody" in withinLoopNames &&
+		"insideBodyStr" in withinLoopNames;
+}

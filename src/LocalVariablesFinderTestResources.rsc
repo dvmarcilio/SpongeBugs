@@ -93,3 +93,14 @@ public set[MethodVar] getAllNonFinalArrays(set[MethodVar] vars) {
 public set[MethodVar] getAllFinalArrays(set[MethodVar] vars) {
 	return getFinalEncouragedArrays(vars) + getFinalDiscouragedArrays(vars);
 }
+
+public MethodHeader varsWithinTheLoopMethodHeader() {
+	header = "void method(int notWithinLoop, String notWithinLoopAgain)";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody varsWithinTheLoopMethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/EnhancedForLoopVarsWithinLoop|;
+	content = readFile(fileLoc);
+	return parse(#MethodBody, content);
+}

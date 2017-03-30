@@ -1,0 +1,9 @@
+{
+	int localVarNotWithinLoop;
+	Object localVarNotWithinLoopAgain;
+	for (String insideDecl : strings) {
+		final int insideBody = 50;
+		String insideBodyStr = "insideBody";
+	}
+	Object notWithinLoopAfterLoop = null;
+}

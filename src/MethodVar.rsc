@@ -4,8 +4,8 @@ import Set;
 import String;
 
 // TODO Review if using a Set is the best choice. Probably not.
-public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter);
-public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, bool isEffectiveFinal);
+public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, bool isDeclaredWithinLoop);
+public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, bool isDeclaredWithinLoop, bool isEffectiveFinal);
 
 public bool isArray(MethodVar methodVar) {
 	return methodVar.varType == "array";
@@ -53,6 +53,14 @@ public set[str] retrieveNonParametersNames(set[MethodVar] methodVars) {
 
 public bool isTypePlainArray(MethodVar methodVar) {
 	return endsWith(methodVar.varType, "[]");
+}
+
+public set[MethodVar] retrieveDeclaredWithinLoop(set[MethodVar] methodVars) {
+	return { var | MethodVar var <- methodVars, var.isDeclaredWithinLoop };
+}
+
+public set[str] retrieveDeclaredWithinLoopNames(set[MethodVar] methodVars) {
+	return { var.name | MethodVar var <- methodVars, var.isDeclaredWithinLoop };
 }
 
 // FIXME
