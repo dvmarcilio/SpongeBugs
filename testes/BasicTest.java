@@ -2,6 +2,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.sun.corba.se.impl.presentation.rmi.ExceptionHandlerImpl.ExceptionRWRMIImpl;
+
+import java.lang.Exception;
 public class BasicTest {
 	public int test(int a, int b, int c[]) {
 		return a + b;
@@ -101,4 +104,18 @@ public class BasicTest {
 			return false;
 		}
 	}
+	
+	public void testMulticatch()
+	{
+		try{
+			int x =0;
+		}
+		catch(ExceptionInInitializerError e){
+			System.out.println(e);
+		}
+		catch(ExceptionRWRMIImpl e){
+			System.out.println(e);
+		}
+	}
+	
 }
