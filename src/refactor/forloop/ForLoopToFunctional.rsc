@@ -3,6 +3,7 @@ module refactor::forloop::ForLoopToFunctional
 import IO;
 import List;
 import Set;
+import String;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import MethodVar;
@@ -13,14 +14,28 @@ import refactor::forloop::OperationType;
 
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
-private set[MethodVar] methodAvailableVars;
+public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody) {	
+	composablePrOps = retrieveComposableProspectiveOperations(methodVars, forStmt);
+	
+	Statement refactored = buildFunctionalStatement(composablePrOps, forStmt);
+	refactoredMethodBody = refactorToFunctional(methodBody, refactored);
+	
+	println("\n --- APPLYING REFACTOR ---");
+	println(methodBody);
+	println("refactored to:");
+	println(refactoredMethodBody);
+	
+	return refactoredMethodBody;
+}
 
-public list[ComposableProspectiveOperation] refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt) {	
+MethodBody refactorToFunctional(MethodBody methodBody, Statement refactored) = top-down-break visit(methodBody) {
+	case (Statement) `for (<VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _>) <Statement _>`
+	=> refactored
+};
+
+public list[ComposableProspectiveOperation] retrieveComposableProspectiveOperations(set[MethodVar] methodVars, EnhancedForStatement forStmt) {
 	prospectiveOperations = retrieveProspectiveOperations(methodVars, forStmt);
 	composablePrOps = createComposableProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
-	
-	methodAvailableVars = methodVars;
-	
 	return mergeIntoComposableOperations(composablePrOps);
 }
 
@@ -175,4 +190,29 @@ private Block transformStatementsInBlock(list[str] stmts) {
 		joined += (stmt + "\n");
 	joined +=  "}";
 	return parse(#Block, joined);
+}
+
+private Statement buildFunctionalStatement(list[ComposableProspectiveOperation] composablePrOps, EnhancedForStatement forStmt) {
+	visit(forStmt) {
+		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement stmt>`: {
+			if(size(composablePrOps) == 1 && composablePrOps[0].prOp.operation == FOR_EACH) {
+				prOp = composablePrOps[0].prOp;
+				stmtBlock = transformIntoBlock(prOp.stmt);
+				iteratedVarName = trimEndingBlankSpace(iteratedVarName);
+				return parse(#Statement, "<collectionId>.forEach((<iteratedVarName>) -\> <stmtBlock>);");
+			} 
+			
+		}
+	}
+	
+	return parse(#Statement, ";");
+}
+
+private Block transformIntoBlock(str stmt) {
+	if(isBlock(stmt)) return parse(#Block, stmt);
+	return parse(#Block, "{\n<stmt>\n}");
+}
+
+private VariableDeclaratorId trimEndingBlankSpace(VariableDeclaratorId varId) {
+	return parse(#VariableDeclaratorId, trim(unparse(varId)));
 }

@@ -6,7 +6,7 @@ import ParseTree;
 import LocalVariablesFinder;
 import EnhancedLoopExpression;
 import refactor::forloop::ForLoopBodyReferences;
-import refactor::forloop::ProspectiveOperation;
+import refactor::forloop::ForLoopToFunctional;
 import MethodVar;
 
 private set[str] checkedExceptionClasses;
@@ -41,10 +41,14 @@ private void lookForEnhancedForStatementsInMethodBody(MethodHeader methodHeader,
 	visit(methodBody) {
 		case EnhancedForStatement forStmt: {
 			visit(forStmt) {
-				case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression exp> ) <Statement stmt>`: {
-					methodLocalVariables = findLocalVariables(methodHeader, methodBody);
-					checkLoopEligibilityForRefactor(methodLocalVariables, exp, stmt);
-					retrievePotentialOperations(methodLocalVariables, forStmt);
+				case EnhancedForStatement enhancedForStmt: {
+					visit(enhancedForStmt) {
+						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression exp> ) <Statement stmt>`: {
+							methodLocalVariables = findLocalVariables(methodHeader, methodBody);
+							if(isLoopRefactorable(methodLocalVariables, exp, stmt))
+								refactorEnhancedToFunctional(methodLocalVariables, enhancedForStmt, methodBody);
+						}
+					}
 				}
 			}		
 		}
@@ -54,7 +58,7 @@ private void lookForEnhancedForStatementsInMethodBody(MethodHeader methodHeader,
 	}
 }
 
-private bool checkLoopEligibilityForRefactor(set[MethodVar] methodLocalVariables, Expression exp, Statement stmt) {
+private bool isLoopRefactorable(set[MethodVar] methodLocalVariables, Expression exp, Statement stmt) {
 	return loopBodyPassConditions(stmt) && isIteratingOnCollection(exp, methodLocalVariables) &&
 		atMostOneReferenceToNonEffectiveFinalVar(methodLocalVariables, stmt);
 }
