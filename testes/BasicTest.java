@@ -117,9 +117,9 @@ public class BasicTest {
 		catch(ExceptionRWRMIImpl e){
 			System.out.println(e);
 		}
-//		catch(IOException ioe) {
-//			ioe.printStackTrace();
-//		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }
