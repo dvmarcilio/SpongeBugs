@@ -43,10 +43,11 @@ private void lookForEnhancedForStatementsInMethodBody(MethodHeader methodHeader,
 			visit(forStmt) {
 				case EnhancedForStatement enhancedForStmt: {
 					visit(enhancedForStmt) {
-						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression exp> ) <Statement stmt>`: {
+						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement stmt>`: {
 							methodLocalVariables = findLocalVariables(methodHeader, methodBody);
-							if(isLoopRefactorable(methodLocalVariables, exp, stmt))
-								refactorEnhancedToFunctional(methodLocalVariables, enhancedForStmt, methodBody);
+							if(isLoopRefactorable(methodLocalVariables, collectionId, stmt))
+								// TODO Create data structure
+								refactorEnhancedToFunctional(methodLocalVariables, enhancedForStmt, methodBody, iteratedVarName, collectionId);
 						}
 					}
 				}

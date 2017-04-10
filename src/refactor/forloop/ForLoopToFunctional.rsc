@@ -14,11 +14,12 @@ import refactor::forloop::OperationType;
 
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
-public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody) {	
+public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {	
 	composablePrOps = retrieveComposableProspectiveOperations(methodVars, forStmt);
 	
-	Statement refactored = buildFunctionalStatement(composablePrOps, forStmt);
-	refactoredMethodBody = refactorToFunctional(methodBody, refactored);
+	Statement refactored = buildFunctionalStatement(composablePrOps, forStmt, iteratedVarName, collectionId);
+	forStatement = parse(#Statement, unparse(forStmt));
+	refactoredMethodBody = refactorToFunctional(methodBody, forStatement, refactored);
 	
 	println("\n --- APPLYING REFACTOR ---");
 	println(methodBody);
@@ -28,8 +29,8 @@ public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, Enhanc
 	return refactoredMethodBody;
 }
 
-MethodBody refactorToFunctional(MethodBody methodBody, Statement refactored) = top-down-break visit(methodBody) {
-	case (Statement) `for (<VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _>) <Statement _>`
+MethodBody refactorToFunctional(MethodBody methodBody, Statement forStmt, Statement refactored) = top-down-break visit(methodBody) {
+	case forStmt
 	=> refactored
 };
 
@@ -192,20 +193,16 @@ private Block transformStatementsInBlock(list[str] stmts) {
 	return parse(#Block, joined);
 }
 
-private Statement buildFunctionalStatement(list[ComposableProspectiveOperation] composablePrOps, EnhancedForStatement forStmt) {
-	visit(forStmt) {
-		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement stmt>`: {
-			if(size(composablePrOps) == 1 && composablePrOps[0].prOp.operation == FOR_EACH) {
-				prOp = composablePrOps[0].prOp;
-				stmtBlock = transformIntoBlock(prOp.stmt);
-				iteratedVarName = trimEndingBlankSpace(iteratedVarName);
-				return parse(#Statement, "<collectionId>.forEach((<iteratedVarName>) -\> <stmtBlock>);");
-			} 
-			
-		}
-	}
+private Statement buildFunctionalStatement(list[ComposableProspectiveOperation] composablePrOps, EnhancedForStatement forStmt, VariableDeclaratorId iteratedVarName, Expression collectionId) {
+	if(size(composablePrOps) == 1 && composablePrOps[0].prOp.operation == FOR_EACH) {
+		prOp = composablePrOps[0].prOp;
+		stmtBlock = transformIntoBlock(prOp.stmt);
+		iteratedVarName = trimEndingBlankSpace(iteratedVarName);
+		return parse(#Statement, "<collectionId>.forEach((<iteratedVarName>) -\> <stmtBlock>);");
+	} 
+
 	
-	return parse(#Statement, ";");
+	return parse(#Statement, unparse(forStmt));
 }
 
 private Block transformIntoBlock(str stmt) {
