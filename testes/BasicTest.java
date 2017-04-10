@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import com.sun.corba.se.impl.presentation.rmi.ExceptionHandlerImpl.ExceptionRWRMIImpl;
 
+import java.io.IOException;
 import java.lang.Exception;
 public class BasicTest {
 	public int test(int a, int b, int c[]) {
@@ -116,6 +117,9 @@ public class BasicTest {
 		catch(ExceptionRWRMIImpl e){
 			System.out.println(e);
 		}
+//		catch(IOException ioe) {
+//			ioe.printStackTrace();
+//		}
 	}
 	
 }
