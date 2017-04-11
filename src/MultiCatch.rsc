@@ -7,33 +7,51 @@ import Map;
 import Type; 
 import List;
 
-CompilationUnit refactorMultiCatch(CompilationUnit unit) =  visit(unit) {
+/**
+ * Refactor a try-catch statement to use the 
+ * MultiCatch construct of Java 7. 
+ */
+public CompilationUnit refactorMultiCatch(CompilationUnit unit) =  visit(unit) {
   case (TryStatement)`try <Block b1> <Catches c1>` 
   =>   (TryStatement)`try <Block b1> <Catches mc>`
-  when mc := buildMC(c1)
+  when mc := computeMultiCatches(c1)
 };
 
-Catches buildMC(cs){
-   map [Block, tuple[ list[CatchType], VariableDeclaratorId, Block] ] mCatches =();
-   bool verifier = false;
+/*
+ * Based on a simple notion of similarity, 
+ * this function calculates the possible 
+ * occurences of MultiCatch. 
+ */ 
+private Catches computeMultiCatches(cs){
+   map [Block, tuple[list[CatchType], VariableDeclaratorId, Block] ] mCatches =();
    visit(cs){
       case(CatchClause)`catch (<CatchType t> <VariableDeclaratorId vId>) <Block b>` :{
-         if (b  in mCatches){
+         if (b in mCatches){
             <ts, vId, blk> = mCatches[b];
             ts += t;
             mCatches[b] = <ts, vId, blk>;
-            verifier = true; 
          }
          else{
             mCatches[b] = <[t], vId, b>;
          }
       }
    }
-   if (verifier){
-      println("****");
-      list[str] res;
-      res = ["catch (" + intercalate("|", mCatches[c][0]) + " " + mCatches[c][1] + ")" + c | c <- mCatches];
-      //println(res);   
-   } 
-   return cs;
+   print("size: ");
+   println(size([mCatches[b] | b <- mCatches]));
+   return generateMultiCatches([mCatches[b] | b <- mCatches]); 
 }
+
+/*
+ * Creates a syntactic catch clause (either a simple one or 
+ * a multicatch). 
+ */
+Catches generateMultiCatches([<ts, vId, b>]) = {
+  types = parse(#CatchType, intercalate("| ", ts));
+  return (Catches)`catch(<CatchType types>  <VariableDeclaratorId vId>) <Block b>`; 
+};
+Catches generateMultiCatches([<ts, vId, b>, C*]) = {
+  catches = generateMultiCatches(C);
+  types = parse(#CatchType, intercalate("| ", ts));
+  return (Catches)`catch(<CatchType types> <VariableDeclaratorId vId>) <Block b> <CatchClause+ catches>`;
+};
+
