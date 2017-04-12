@@ -149,6 +149,22 @@ public bool isReduce(ProspectiveOperation prOp) {
 	return prOp.operation == REDUCE;
 }
 
+public bool isAnyMatch(ProspectiveOperation prOp) {
+	return prOp.operation == ANY_MATCH;
+}
+
+public bool isNoneMatch(ProspectiveOperation prOp) {
+	return prOp.operation == NONE_MATCH;
+}
+
+public bool isMap(ProspectiveOperation prOp) {
+	return prOp.operation == MAP;
+}
+
+public bool isForEach(ProspectiveOperation prOp) {
+	return prOp.operation == FOR_EACH;
+}
+
 public bool isLocalVariableDeclarationStatement(str stmt) {
 	try {
 		parse(#LocalVariableDeclarationStatement, stmt);

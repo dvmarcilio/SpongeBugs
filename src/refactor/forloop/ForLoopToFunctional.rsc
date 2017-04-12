@@ -21,10 +21,10 @@ public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, Enhanc
 	forStatement = parse(#Statement, unparse(forStmt));
 	refactoredMethodBody = refactorToFunctional(methodBody, forStatement, refactored);
 	
-	println("\n --- APPLYING REFACTOR ---");
-	println(methodBody);
-	println("refactored to:");
-	println(refactoredMethodBody);
+	//println("\n --- APPLYING REFACTOR ---");
+	//println(forStmt);
+	//println("refactored to:");
+	//println(refactored);
 	
 	return refactoredMethodBody;
 }
@@ -194,15 +194,19 @@ private Block transformStatementsInBlock(list[str] stmts) {
 }
 
 private Statement buildFunctionalStatement(list[ComposableProspectiveOperation] composablePrOps, EnhancedForStatement forStmt, VariableDeclaratorId iteratedVarName, Expression collectionId) {
-	if(size(composablePrOps) == 1 && composablePrOps[0].prOp.operation == FOR_EACH) {
-		prOp = composablePrOps[0].prOp;
-		stmtBlock = transformIntoBlock(prOp.stmt);
-		iteratedVarName = trimEndingBlankSpace(iteratedVarName);
-		return parse(#Statement, "<collectionId>.forEach((<iteratedVarName>) -\> <stmtBlock>);");
-	} 
-
+	if(size(composablePrOps) == 1 && isForEach(composablePrOps[0].prOp))
+		return buildStatementForOnlyOneForEach(composablePrOps[0].prOp, iteratedVarName, collectionId);                   
 	
-	return parse(#Statement, unparse(forStmt));
+	println();
+	println(forStmt);
+	println("\nrefactored to:");
+	return chainOperationsIntoStatement(composablePrOps, collectionId);
+}
+
+private Statement buildStatementForOnlyOneForEach(ProspectiveOperation prOp, VariableDeclaratorId iteratedVarName, Expression collectionId) {
+	stmtBlock = transformIntoBlock(prOp.stmt);
+	iteratedVarName = trimEndingBlankSpace(iteratedVarName);
+	return parse(#Statement, "<collectionId>.forEach((<iteratedVarName>) -\> <stmtBlock>);");
 }
 
 private Block transformIntoBlock(str stmt) {
@@ -212,4 +216,50 @@ private Block transformIntoBlock(str stmt) {
 
 private VariableDeclaratorId trimEndingBlankSpace(VariableDeclaratorId varId) {
 	return parse(#VariableDeclaratorId, trim(unparse(varId)));
+}
+
+private Statement chainOperationsIntoStatement(list[ComposableProspectiveOperation] composablePrOps, Expression collectionId) {
+	str chainStr = "<collectionId>.stream()";
+	
+	for(composablePrOp <- composablePrOps) {
+		chainStr = "<chainStr>." + buildChainableOperation(composablePrOp);
+	}
+	
+	println(chainStr);
+	return parse(#Statement, "<chainStr>;");
+}
+
+private str buildChainableOperation(ComposableProspectiveOperation cPrOp) {
+	prOp = cPrOp.prOp;
+	return prOp.operation + "(" + retrieveLambdaParameterName(cPrOp) + " -\> " +
+		retrieveLambdaBody(prOp) + ")";
+}
+
+private str retrieveLambdaParameterName(ComposableProspectiveOperation cPrOp) {
+	return isEmpty(cPrOp.neededVars) ? "_item" : getOneFrom(cPrOp.neededVars);
+}
+
+private str retrieveLambdaBody(ProspectiveOperation prOp) {
+	if(isFilter(prOp) || isAnyMatch(prOp) || isNoneMatch(prOp) || isBlock(prOp.stmt))
+		return prOp.stmt;
+	else if(isMap(prOp)) {
+		return getLambdaBodyForMap(prOp.stmt);	
+	}
+	else if(isReduce(prOp))
+		return getLambdaBodyForReduce(prOp.stmt);
+	else // isForEach(prOp)
+		return unparse(transformIntoBlock(prOp.stmt));
+}
+
+private str getLambdaBodyForMap(str stmt) {
+	// XXX Are other kind of statements maps?
+	lvdl = parse(#LocalVariableDeclaration, stmt);
+	visit(lvdl) {
+		case VariableInitializer vi: return unparse(vi);
+	}
+	throw "No variable initializer in MAP";
+}
+
+private str getLambdaBodyForReduce(str stmt) {
+	return "REDUCE_NOT_IMPLEMENTED_YET;";
 }
