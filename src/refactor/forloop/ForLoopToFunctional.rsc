@@ -253,6 +253,9 @@ private str retrieveLambdaBody(ProspectiveOperation prOp) {
 
 private str getLambdaBodyForMap(str stmt) {
 	// XXX Are other kind of statements maps?
+	if(endsWith(stmt, ";"))
+		stmt = substring(stmt, 0, size(stmt)-1);
+		
 	lvdl = parse(#LocalVariableDeclaration, stmt);
 	visit(lvdl) {
 		case VariableInitializer vi: return unparse(vi);
