@@ -17,7 +17,7 @@ public test bool x() {
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "testerClass");
 	Expression collectionId = parse(#Expression, "testers");
 	
-	println(refactorEnhancedToFunctional(methodVars, forStmt, methodBody, iteratedVarName, collectionId));
+	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	
-	return false;
+	return unparse(refactoredStatement) == "testers.stream().map(testerClass -\> makeSuiteForTesterClass((Class\<? extends AbstractTester\<?\>\>) testerClass)).filter(testerSuite -\> testerSuite.countTestCases() \> 0).forEach(testerSuite -\> {\nsuite.addTest(testerSuite);\n});";
 }

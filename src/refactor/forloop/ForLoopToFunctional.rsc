@@ -15,18 +15,21 @@ import refactor::forloop::OperationType;
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
 public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {	
-	composablePrOps = retrieveComposableProspectiveOperations(methodVars, forStmt);
 	
-	Statement refactored = buildFunctionalStatement(composablePrOps, forStmt, iteratedVarName, collectionId);
 	forStatement = parse(#Statement, unparse(forStmt));
+	refactored = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	refactoredMethodBody = refactorToFunctional(methodBody, forStatement, refactored);
-	
 	//println("\n --- APPLYING REFACTOR ---");
 	//println(forStmt);
 	//println("refactored to:");
 	//println(refactored);
 	
 	return refactoredMethodBody;
+}
+
+public Statement buildRefactoredEnhancedFor(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {
+	composablePrOps = retrieveComposableProspectiveOperations(methodVars, forStmt);
+	return buildFunctionalStatement(composablePrOps, forStmt, iteratedVarName, collectionId);
 }
 
 MethodBody refactorToFunctional(MethodBody methodBody, Statement forStmt, Statement refactored) = top-down-break visit(methodBody) {
