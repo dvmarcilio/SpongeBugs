@@ -4,7 +4,7 @@ import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import LocalVariablesFinder;
-import EnhancedLoopExpression;
+import refactor::forloop::EnhancedLoopExpression;
 import refactor::forloop::ForLoopBodyReferences;
 import refactor::forloop::ForLoopToFunctional;
 import MethodVar;

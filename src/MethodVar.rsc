@@ -20,6 +20,11 @@ public bool isInteger(MethodVar methodVar) {
 	return varType == "int" || varType == "Integer"; 
 }
 
+public bool isIterable(MethodVar methodVar) {
+	varType = methodVar.varType;
+	return startsWith(varType, "Iterable");
+}
+
 public bool isParameter(MethodVar methodVar) {
 	return !methodVar.isParameter;
 } 

@@ -1,16 +1,16 @@
-module EnhancedLoopExpression
+module refactor::forloop::EnhancedLoopExpression
 
 import lang::java::\syntax::Java18;
 import ParseTree;
 import MethodVar;
 import String;
 
-// XXX Only checking iterable variables defined in method (local and parameter(SOON) )
-// Need to verify class and instance variables too! (not that hard)
+// XXX Only checking iterable variables defined in method (local and parameter)
+// Need to verify class and instance variables too!
 // Doing the full check on a method call will be an entire new problem
 // example: for (Object rowKey : table.rowKeySet())
 
-// Relying on compiler to help finding if it an array or not
+// Relying on compiler to help finding if it's an array or not
 // Compiler gives error if expression is not Array/Collection
 // Therefore we only check if the expression is an Array
 public bool isIteratingOnCollection(Expression exp, set[MethodVar] localVariables) {
@@ -28,7 +28,7 @@ private bool isExpAnIdentifier(Expression exp) {
 private bool isIdentifierACollection(Expression exp, set[MethodVar] localVariables) {
 	varName = unparse(exp);
 	var = findByName(localVariables, varName);
-	return !isTypePlainArray(var);
+	return !isTypePlainArray(var) && !isIterable(var);
 }
 
 // FIXME
