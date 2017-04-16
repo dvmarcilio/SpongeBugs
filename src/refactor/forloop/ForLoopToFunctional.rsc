@@ -11,6 +11,7 @@ import refactor::forloop::ProspectiveOperation;
 import refactor::forloop::UsedVariables;
 import refactor::forloop::AvailableVariables;
 import refactor::forloop::OperationType;
+import ParseTreeVisualization;
 
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
@@ -35,7 +36,7 @@ private MethodBody buildRefactoredMethodBody(set[MethodVar] methodVars, Enhanced
 
 public Statement buildRefactoredEnhancedFor(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {
 	composablePrOps = retrieveComposableProspectiveOperations(methodVars, forStmt);
-	return buildFunctionalStatement(composablePrOps, forStmt, iteratedVarName, collectionId);
+	return buildFunctionalStatement(methodVars, composablePrOps, forStmt, iteratedVarName, collectionId);
 }
 
 MethodBody refactorToFunctional(MethodBody methodBody, Statement forStmt, Statement refactored) = top-down-break visit(methodBody) {
@@ -242,8 +243,8 @@ private ComposableProspectiveOperation rearrangeLocalVariableDeclarationMapBody(
 	}
 	
 	if (varName notin nextNeededVars)
-		return addReturnToMapBody(curr, nextNeededVars); 
-	
+		return addReturnToMapBody(curr, nextNeededVars);
+		 
 	return curr;
 }
 
@@ -258,7 +259,7 @@ private ComposableProspectiveOperation addReturnToMapBody(ComposableProspectiveO
 		stmts += retrieveAllStatementsFromBlock(curr.prOp.stmt);
 	else
 		stmts += curr.prOp.stmt;
-	
+		
 	varName = isEmpty(nextNeededVars) ? "_item" : getOneFrom(nextNeededVars);
 	stmts += "return <varName>;";
 	block = transformStatementsInBlock(stmts);
@@ -267,14 +268,14 @@ private ComposableProspectiveOperation addReturnToMapBody(ComposableProspectiveO
 	return curr;
 }
 
-private Statement buildFunctionalStatement(list[ComposableProspectiveOperation] composablePrOps, EnhancedForStatement forStmt, VariableDeclaratorId iteratedVarName, Expression collectionId) {
+private Statement buildFunctionalStatement(set[MethodVar] methodVars, list[ComposableProspectiveOperation] composablePrOps, EnhancedForStatement forStmt, VariableDeclaratorId iteratedVarName, Expression collectionId) {
 	if(size(composablePrOps) == 1 && isForEach(composablePrOps[0].prOp))
 		return buildStatementForOnlyOneForEach(composablePrOps[0].prOp, iteratedVarName, collectionId);                   
 	
 	println();
 	println(forStmt);
 	println("\nrefactored to:");
-	return chainOperationsIntoStatement(composablePrOps, collectionId);
+	return chainOperationsIntoStatement(methodVars, composablePrOps, collectionId);
 }
 
 private Statement buildStatementForOnlyOneForEach(ProspectiveOperation prOp, VariableDeclaratorId iteratedVarName, Expression collectionId) {
@@ -292,19 +293,22 @@ private VariableDeclaratorId trimEndingBlankSpace(VariableDeclaratorId varId) {
 	return parse(#VariableDeclaratorId, trim(unparse(varId)));
 }
 
-private Statement chainOperationsIntoStatement(list[ComposableProspectiveOperation] composablePrOps, Expression collectionId) {
+private Statement chainOperationsIntoStatement(set[MethodVar] methodVars, list[ComposableProspectiveOperation] composablePrOps, Expression collectionId) {
 	str chainStr = "<collectionId>.stream()";
 	
 	for(composablePrOp <- composablePrOps) {
-		chainStr = "<chainStr>." + buildChainableOperation(composablePrOp);
+		chainStr = "<chainStr>." + buildChainableOperation(methodVars, composablePrOp);
 	}
 	
 	println(chainStr);
 	return parse(#Statement, "<chainStr>;");
 }
 
-private str buildChainableOperation(ComposableProspectiveOperation cPrOp) {
+private str buildChainableOperation(set[MethodVar] methodVars, ComposableProspectiveOperation cPrOp) {
 	prOp = cPrOp.prOp;
+	if(isReduce(prOp))
+		return buildMapReduceOperation(methodVars, cPrOp);
+	
 	return prOp.operation + "(" + retrieveLambdaParameterName(cPrOp) + " -\> " +
 		retrieveLambdaBody(prOp) + ")";
 }
@@ -319,8 +323,6 @@ private str retrieveLambdaBody(ProspectiveOperation prOp) {
 	else if(isMap(prOp)) {
 		return getLambdaBodyForMap(prOp.stmt);	
 	}
-	else if(isReduce(prOp))
-		return getLambdaBodyForReduce(prOp.stmt);
 	else // isForEach(prOp)
 		return unparse(transformIntoBlock(prOp.stmt));
 }
@@ -360,6 +362,57 @@ private str getLambdaBodyForMapWhenLocalVariableDeclaration(str stmt) {
 	throw "No variable initializer in MAP";
 }
 
-private str getLambdaBodyForReduce(str stmt) {
-	return "needToImplementReduce()";
+// TODO check for prefix and postfix increment/decrement after ProspectiveOperation is working 
+private str buildMapReduceOperation(set[MethodVar] methodVars, ComposableProspectiveOperation cPrOp) {
+	mapOperation = "";
+	reduceOperation = "";
+	stmt = parse(#Statement, cPrOp.prOp.stmt);
+	bottom-up-break visit(stmt) {
+		case (Assignment) `<LeftHandSide lhs> <AssignmentOperator op> <Expression exp>`: {
+			reducingVar = unparse(lhs);
+			
+			lambdaParamName = retrieveLambdaParameterName(cPrOp);
+			mapOperation = "map(<lambdaParamName> -\> <exp>)";
+			
+			reduceOperation += buildReduceOperation(methodVars, op, reducingVar);			
+		}
+	}
+	
+	
+	
+	return "<mapOperation>.<reduceOperation>";
+}
+
+private str buildReduceOperation(set[MethodVar] methodVars, AssignmentOperator op, str reducingVar) {
+	reduceOperation = "";
+	if("<op>" == "+=")
+		reduceOperation = buildPlusAssignmentReduce(methodVars, reducingVar);						
+	else
+		reduceOperation = buildSimpleExplicitReduce("<op>", reducingVar);
+
+	return reduceOperation;
+}
+
+private str buildPlusAssignmentReduce(set[MethodVar] methodVars, str reducingVar) {
+	if(isString(methodVars, reducingVar))
+		return "reduce(<reducingVar>, String::concat)";
+	else 
+		if(isInteger(methodVars, reducingVar))
+			return "reduce(<reducingVar>, Integer::sum)";
+		else
+			return buildSimpleExplicitReduce("+=", reducingVar);
+}
+
+private bool isString(set[MethodVar] methodVars, str varName) {
+	var = findByName(methodVars, varName);
+	return isString(var);
+}
+
+private bool isInteger(set[MethodVar] methodVars, str varName) {
+	var = findByName(methodVars, varName);
+	return isInteger(var);
+}
+
+private str buildSimpleExplicitReduce(str op, str reducingVar) {
+	return "reduce(<reducingVar>, (accumulator, _item) -\> accumulator <op> _item)"; 
 }

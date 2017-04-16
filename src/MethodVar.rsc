@@ -11,6 +11,15 @@ public bool isArray(MethodVar methodVar) {
 	return methodVar.varType == "array";
 }
 
+public bool isString(MethodVar methodVar) {
+	return methodVar.varType == "String";
+}
+
+public bool isInteger(MethodVar methodVar) {
+	varType = methodVar.varType;
+	return varType == "int" || varType == "Integer"; 
+}
+
 public bool isParameter(MethodVar methodVar) {
 	return !methodVar.isParameter;
 } 

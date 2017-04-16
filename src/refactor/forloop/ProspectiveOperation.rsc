@@ -111,6 +111,7 @@ private ProspectiveOperation retrieveProspectiveOperationFromSingleStatement(Sta
 		return prospectiveOperation(unparse(statement), MAP);
 }
 
+// TODO implement prefix and postfix increment/decrement
 private bool isReducer(Statement statement) {
 	visit (statement) {
 		case (Assignment) `<LeftHandSide lhs> <AssignmentOperator assignmentOp> <Expression _>`:
