@@ -78,36 +78,34 @@ private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[
 		curr = composablePrOps[i];
 		prev = composablePrOps[i - 1];
 		if (!canBeChained(prev, curr)) {
-			if (canBeMerged(prev, curr)) {
-				opsSize = size(composablePrOps); 
-				
-				if (isFilter(prev.prOp) || isFilter(curr.prOp)) {
-					while(opsSize > i) {
-						ComposableProspectiveOperation last = composablePrOps[opsSize - 1];
-						ComposableProspectiveOperation beforeLast = composablePrOps[opsSize - 2];
-						
-						merged = mergeComposablePrOps(beforeLast, last);
-						composablePrOps = slice(composablePrOps, 0, opsSize - 2) + merged;
-						
-						opsSize = size(composablePrOps);
-					}
-				} else {
-					merged = mergeComposablePrOps(prev, curr);
+			if(neitherCanBeMerged(prev, curr))
+				throw "CanNotBeRefactored. Both operations are not mergeable";
+			
+			opsSize = size(composablePrOps); 
+			
+			if (isFilter(prev.prOp) || isFilter(curr.prOp)) {
+				while(opsSize > i) {
+					ComposableProspectiveOperation last = composablePrOps[opsSize - 1];
+					ComposableProspectiveOperation beforeLast = composablePrOps[opsSize - 2];
+					
+					merged = mergeComposablePrOps(beforeLast, last);
+					// XXX analyze if this "merging" is correct. probably not
 					composablePrOps = slice(composablePrOps, 0, opsSize - 2) + merged;
+					
+					opsSize = size(composablePrOps);
 				}
+			} else {
+				merged = mergeComposablePrOps(prev, curr);
+				composablePrOps = composablePrOps[0..i] + merged + composablePrOps[i + 1..];
 			}
+			
 		}
 	}
 	return composablePrOps;
 }
 
 private bool canBeChained(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
-	currNeededVarsInPrevAvailabilitySet = isCurrNeededVarsInPrevAvailabilitySet(curr.neededVars, prev);
-	return size(curr.neededVars) <= 1 && currNeededVarsInPrevAvailabilitySet;
-}
-
-private bool canBeMerged(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
-	return isMergeable(prev.prOp) && isMergeable(curr.prOp);
+	return size(curr.neededVars) <= 1 && isCurrNeededVarsInPrevAvailabilitySet(curr.neededVars, prev);
 }
 
 private bool isCurrNeededVarsInPrevAvailabilitySet(set[str] currNeededVars, ComposableProspectiveOperation prev) {
@@ -115,6 +113,10 @@ private bool isCurrNeededVarsInPrevAvailabilitySet(set[str] currNeededVars, Comp
 	for(currNeededVar <- currNeededVars)
 		if(currNeededVar notin prevAvailabilitySet) return false;
 	return true;
+}
+
+private bool neitherCanBeMerged(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
+	return !isMergeable(prev.prOp) || !isMergeable(curr.prOp);
 }
 
 private ComposableProspectiveOperation mergeComposablePrOps(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
