@@ -104,3 +104,14 @@ public MethodBody varsWithinTheLoopMethodBody() {
 	content = readFile(fileLoc);
 	return parse(#MethodBody, content);
 }
+
+public MethodHeader nonEffectiveFinalUsedInEnhancedForMethodHeader() {
+	header = "void set(String group, Collection\<Metric\<?\>\> values)";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody nonEffectiveFinalUsedInEnhancedForMethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/NonEffectiveFinalUsedInEnhancedFor|;
+	content = readFile(fileLoc);
+	return parse(#MethodBody, content);
+}

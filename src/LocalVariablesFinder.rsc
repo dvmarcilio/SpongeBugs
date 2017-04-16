@@ -76,13 +76,17 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
 	name = trim(unparse(varId));
 	varTypeStr = trim(unparse(varType));
-	return methodVar(isFinal, name, varTypeStr, false, false);
+	bool isParameter = false;
+	bool isDeclaredWithinLoop = false;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop);
 }
 
 private MethodVar createLocalMethodVarWithinLoop(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
 	name = trim(unparse(varId));
 	varTypeStr = trim(unparse(varType));
-	return methodVar(isFinal, name, varTypeStr, false, true);
+	bool isParameter = false;
+	bool isDeclaredWithinLoop = true;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop);
 }
 
 private MethodVar createLocalMethodVar(bool isFinal, Identifier varId, UnannType varType, Dims? dims) {
@@ -93,8 +97,10 @@ private MethodVar createLocalMethodVar(bool isFinal, Identifier varId, UnannType
 	// Standarizing arrays to have varType ==  <UnannType varType>[] 
 	if(dimsStr == "[]")
 		varTypeStr += "[]";
-		
-	return methodVar(isFinal, name, varTypeStr, false, false);
+	
+	bool isParameter = false;
+	bool isDeclaredWithinLoop = false;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop);
 }
 
 private MethodVar createLocalMethodVarWithinLoop(bool isFinal, Identifier varId, UnannType varType, Dims? dims) {
@@ -106,7 +112,9 @@ private MethodVar createLocalMethodVarWithinLoop(bool isFinal, Identifier varId,
 private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId, CatchType varType) {
 	name = trim(unparse(varId));
 	varTypeStr = trim(unparse(varType));
-	return methodVar(isFinal, name, varTypeStr, false, false);
+	bool isParameter = false;
+	bool isDeclaredWithinLoop = false;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop);
 }
 
 private bool figureIfIsFinal(VariableModifier* varMod) {
