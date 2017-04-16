@@ -69,13 +69,18 @@ private bool loopBodyPassConditions(Statement stmt) {
 	returnCount = 0;
 	visit(stmt) {
 		case (ThrowStatement) `throw new <TypeArguments? _> <ClassOrInterfaceTypeToInstantiate className> ( <ArgumentList? _>);`: {
-			classNameStr = unparse(className);
-			if (classNameStr in checkedExceptionClasses) return false;
+			if ("<className>" in checkedExceptionClasses) return false;
 		}
 		
 		case (BreakStatement) `break <Identifier? _>;`: return false;
 
-		case (ReturnStatement) `return <Expression? _>;`: returnCount += 1;
+		case (ReturnStatement) `return <Expression? returnExp>;`: {
+			returnExpStr = unparse(returnExp);
+			if(returnExpStr != "true" || returnExpStr != "false")
+				return false;
+			
+			returnCount += 1;	
+		}
 	
 		// labeled continue. 
 		case (ContinueStatement) `continue <Identifier _>;`: return false;
