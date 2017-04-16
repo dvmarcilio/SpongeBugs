@@ -43,24 +43,22 @@ public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
 }
 
 // TODO nested loops needed to be changed in ProspectiveOperation
-public test bool nestedLoops() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/NestedLoops.java|;
-	methodBody = parse(#MethodBody, readFile(fileLoc));
-	methodHeader = parse(#MethodHeader, "void testComplexBuilder()");
-	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For.java|;	
-	EnhancedForStatement forStmt = parse(#EnhancedForStatement, "for (Integer red : colorElem) {\n      for (Integer green : colorElem) {\n        for (Integer blue : colorElem) {\n          webSafeColorsBuilder.add((red \<\< 16) + (green \<\< 8) + blue);\n        }\n      }\n    }");
-	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "red");
-	Expression collectionId = parse(#Expression, "colorElem");
-	
-	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
-	println(refactoredStatement);
-	
-	return false;
-}
+//public test bool nestedLoops() {
+//	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/NestedLoops.java|;
+//	methodBody = parse(#MethodBody, readFile(fileLoc));
+//	methodHeader = parse(#MethodHeader, "void testComplexBuilder()");
+//	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
+//	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For.java|;	
+//	EnhancedForStatement forStmt = parse(#EnhancedForStatement, "for (Integer red : colorElem) {\n      for (Integer green : colorElem) {\n        for (Integer blue : colorElem) {\n          webSafeColorsBuilder.add((red \<\< 16) + (green \<\< 8) + blue);\n        }\n      }\n    }");
+//	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "red");
+//	Expression collectionId = parse(#Expression, "colorElem");
+//	
+//	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+//	
+//	return false;
+//}
 
 // not that useful of a test as it is now
-// TODO test the prospective operations with this methodBody.
 public test bool shouldNotBreakWithExpressionStatementAsMapOperation() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
@@ -72,7 +70,6 @@ public test bool shouldNotBreakWithExpressionStatementAsMapOperation() {
 	Expression collectionId = parse(#Expression, "entrySet");
 	
 	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
-	println(refactoredStatement);
 	
 	return !isEmpty("<refactoredStatement>");
 }

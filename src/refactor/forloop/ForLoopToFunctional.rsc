@@ -96,7 +96,7 @@ private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[
 				}
 			} else {
 				merged = mergeComposablePrOps(prev, curr);
-				composablePrOps = composablePrOps[0..i] + merged + composablePrOps[i + 1..];
+				composablePrOps = composablePrOps[0..(i - 1)] + merged + composablePrOps[(i + 1)..];
 			}
 			
 		}
