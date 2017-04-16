@@ -59,7 +59,7 @@ public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
 //}
 
 // TODO Complete the test with full output when REDUCE implemented
-public test bool shouldNotBreakWithExpressionStatementAsMapOperation() {
+public test bool shouldRefactorReduceWithCompoundPlusAssignmentOperator() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
@@ -70,6 +70,6 @@ public test bool shouldNotBreakWithExpressionStatementAsMapOperation() {
 	Expression collectionId = parse(#Expression, "entrySet");
 	
 	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
-	
-	return !isEmpty("<refactoredStatement>");
+
+	return unparse(refactoredStatement) == "entrySet.stream().map(entry -\> {\nassertTrue(map.containsKey(entry.getKey()));\nreturn entry;\n}).map(entry -\> {\nassertTrue(map.containsValue(entry.getValue()));\nreturn entry;\n}).map(entry -\> {\nint expectedHash =\r\n            (entry.getKey() == null ? 0 : entry.getKey().hashCode())\r\n                ^ (entry.getValue() == null ? 0 : entry.getValue().hashCode());\nassertEquals(expectedHash, entry.hashCode());\nreturn expectedHash;\n}).map(expectedHash -\> expectedHash).reduce(expectedEntrySetHash, Integer::sum);";
 }
