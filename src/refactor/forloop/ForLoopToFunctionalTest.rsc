@@ -58,7 +58,7 @@ public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
 //	return false;
 //}
 
-// not that useful of a test as it is now
+// TODO Complete the test with full output when REDUCE implemented
 public test bool shouldNotBreakWithExpressionStatementAsMapOperation() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));

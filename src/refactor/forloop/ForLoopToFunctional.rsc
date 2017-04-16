@@ -47,6 +47,9 @@ public list[ComposableProspectiveOperation] retrieveComposableProspectiveOperati
 	prospectiveOperations = retrieveProspectiveOperations(methodVars, forStmt);
 	if (canOperationsBeRefactored(prospectiveOperations)) {
 		composablePrOps = createComposableProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
+		
+		composablePrOps = rearrangeMapBodiesIfNeeded(composablePrOps);
+		
 		return mergeIntoComposableOperations(composablePrOps);
 	} else 
 		// Throwing the exception is not the best option, but the easiest to implement right now
@@ -207,6 +210,63 @@ private Block transformStatementsInBlock(list[str] stmts) {
 	return parse(#Block, joined);
 }
 
+private list[ComposableProspectiveOperation] rearrangeMapBodiesIfNeeded(list[ComposableProspectiveOperation] composablePrOps) {
+	listIndexes = [1 .. size(composablePrOps)];
+	for (int i <- reverse(listIndexes)) {
+		curr = composablePrOps[i - 1];
+		next = composablePrOps[i];
+		if (isMap(curr.prOp))
+			// Modifying in place
+			composablePrOps[i - 1] = rearrangeMapBody(curr, next.neededVars);
+	}
+	
+	return composablePrOps;
+}
+
+private ComposableProspectiveOperation rearrangeMapBody(ComposableProspectiveOperation curr, set[str] nextNeededVars) {
+		prOp = curr.prOp;
+
+		if(isLocalVariableDeclarationStatement(prOp.stmt))
+			return rearrangeLocalVariableDeclarationMapBody(curr, nextNeededVars);
+		else if(isNumericLiteral(prOp.stmt))
+			return curr;
+		else
+			return addReturnToMapBody(curr, nextNeededVars); 
+}
+
+private ComposableProspectiveOperation rearrangeLocalVariableDeclarationMapBody(ComposableProspectiveOperation curr, set[str] nextNeededVars) {
+	lvdl = parse(#LocalVariableDeclarationStatement, curr.prOp.stmt);
+	varName = "";
+	visit(lvdl) {
+		case VariableDeclaratorId varId: varName = trim(unparse(varId));
+	}
+	
+	if (varName notin nextNeededVars)
+		return addReturnToMapBody(curr, nextNeededVars); 
+	
+	return curr;
+}
+
+private bool isNumericLiteral(str stmt) {
+	// FIXME
+	return false;
+}
+
+private ComposableProspectiveOperation addReturnToMapBody(ComposableProspectiveOperation curr, set[str] nextNeededVars) {
+	list[str] stmts = [];
+	if (isBlock(curr.prOp.stmt))
+		stmts += retrieveAllStatementsFromBlock(curr.prOp.stmt);
+	else
+		stmts += curr.prOp.stmt;
+	
+	varName = isEmpty(nextNeededVars) ? "_item" : getOneFrom(nextNeededVars);
+	stmts += "return <varName>;";
+	block = transformStatementsInBlock(stmts);
+	
+	curr.prOp.stmt = unparse(block);
+	return curr;
+}
+
 private Statement buildFunctionalStatement(list[ComposableProspectiveOperation] composablePrOps, EnhancedForStatement forStmt, VariableDeclaratorId iteratedVarName, Expression collectionId) {
 	if(size(composablePrOps) == 1 && isForEach(composablePrOps[0].prOp))
 		return buildStatementForOnlyOneForEach(composablePrOps[0].prOp, iteratedVarName, collectionId);                   
@@ -266,17 +326,22 @@ private str retrieveLambdaBody(ProspectiveOperation prOp) {
 }
 
 private str getLambdaBodyForMap(str stmt) {
-	try {
-		expStmt = parse(#ExpressionStatement, stmt);
-		return getLambdaBodyForMapWhenExpressionStatement(expStmt);
-	} catch:
+	if(isExpressionStatement(stmt))
+		return getLambdaBodyForMapWhenExpressionStatement(stmt);
+	else
 		return getLambdaBodyForMapWhenLocalVariableDeclaration(stmt);
 }
 
-private str getLambdaBodyForMapWhenExpressionStatement(ExpressionStatement expStmt) {
-	stmtStr = unparse(expStmt);
-	stmtStr = removeEndingSemiCollonIfPresent(stmtStr);
-	return stmtStr;
+private bool isExpressionStatement(str stmt) {
+	try {
+		parse(#ExpressionStatement, stmt);
+		return true;
+	} catch:
+		return false;
+}
+
+private str getLambdaBodyForMapWhenExpressionStatement(str stmt) {
+	return removeEndingSemiCollonIfPresent(stmt);
 }
 
 private str removeEndingSemiCollonIfPresent(str stmt) {
