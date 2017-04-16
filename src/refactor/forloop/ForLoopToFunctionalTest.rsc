@@ -88,3 +88,18 @@ public test bool shouldAddReturnToMapWithMoreThanOneStatement() {
 	
 	return unparse(refactoredStatement) == "values.stream().map(v -\> {\nString key = keysIt.next();\nMetric\<?\> value = deserialize(key, v, this.zSetOperations.score(key));\nreturn value;\n}).filter(value -\> value != null).forEach(value -\> {\nresult.add(value);\n});";
 }
+
+public test bool shouldAddCorrectReturnTo3StmtsMapBody() {
+	methodBodyLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyWIth3StatementsMapBody.java|;
+	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+	methodHeader = parse(#MethodHeader, "void updateSnapshots(Collection\<FolderSnapshot\> snapshots)");
+	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForWith3StatementsMapBody.java|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "snapshot");
+	Expression collectionId = parse(#Expression, "snapshots");
+	
+	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	
+	return unparse(refactoredStatement) == "snapshots.stream().map(snapshot -\> {\nFolderSnapshot previous = this.folders.get(snapshot.getFolder());\nupdated.put(snapshot.getFolder(), snapshot);\nChangedFiles changedFiles = previous.getChangedFiles(snapshot,\r\n                                                this.triggerFilter);\nreturn changedFiles;\n}).filter(changedFiles -\> !changedFiles.getFiles().isEmpty()).forEach(changedFiles -\> {\nchangeSet.add(changedFiles);\n});";
+}
