@@ -264,10 +264,28 @@ private str retrieveLambdaBody(ProspectiveOperation prOp) {
 }
 
 private str getLambdaBodyForMap(str stmt) {
-	// XXX Are other kind of statements maps?
+	try {
+		expStmt = parse(#ExpressionStatement, stmt);
+		return getLambdaBodyForMapWhenExpressionStatement(expStmt);
+	} catch:
+		return getLambdaBodyForMapWhenLocalVariableDeclaration(stmt);
+}
+
+private str getLambdaBodyForMapWhenExpressionStatement(ExpressionStatement expStmt) {
+	stmtStr = unparse(expStmt);
+	stmtStr = removeEndingSemiCollonIfPresent(stmtStr);
+	return stmtStr;
+}
+
+private str removeEndingSemiCollonIfPresent(str stmt) {
 	if(endsWith(stmt, ";"))
 		stmt = substring(stmt, 0, size(stmt)-1);
+	return stmt;
+}
 
+private str getLambdaBodyForMapWhenLocalVariableDeclaration(str stmt) {
+	stmt = removeEndingSemiCollonIfPresent(stmt);
+	
 	lvdl = parse(#LocalVariableDeclaration, stmt);
 	visit(lvdl) {
 		case VariableInitializer vi: return unparse(vi);

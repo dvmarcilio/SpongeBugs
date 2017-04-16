@@ -59,7 +59,9 @@ public test bool nestedLoops() {
 	return false;
 }
 
-public test bool ex() {
+// not that useful of a test as it is now
+// TODO test the prospective operations with this methodBody.
+public test bool shouldNotBreakWithExpressionStatementAsMapOperation() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
