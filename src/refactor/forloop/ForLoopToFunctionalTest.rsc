@@ -73,3 +73,18 @@ public test bool shouldRefactorReduceWithCompoundPlusAssignmentOperator() {
 
 	return unparse(refactoredStatement) == "entrySet.stream().map(entry -\> {\nassertTrue(map.containsKey(entry.getKey()));\nreturn entry;\n}).map(entry -\> {\nassertTrue(map.containsValue(entry.getValue()));\nreturn entry;\n}).map(entry -\> {\nint expectedHash =\r\n            (entry.getKey() == null ? 0 : entry.getKey().hashCode())\r\n                ^ (entry.getValue() == null ? 0 : entry.getValue().hashCode());\nassertEquals(expectedHash, entry.hashCode());\nreturn expectedHash;\n}).map(expectedHash -\> expectedHash).reduce(expectedEntrySetHash, Integer::sum);";
 }
+
+public test bool shouldAddReturnToMapWithMoreThanOneStatement() {
+	methodBodyLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyWithMultiStatementMap.java|;
+	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+	methodHeader = parse(#MethodHeader, "Iterable\<Metric\<?\>\> findAll()");
+	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForWithMultiStatementMap.java|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "v");
+	Expression collectionId = parse(#Expression, "values");
+	
+	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	
+	return unparse(refactoredStatement) == "values.stream().map(v -\> {\nString key = keysIt.next();\nMetric\<?\> value = deserialize(key, v, this.zSetOperations.score(key));\nreturn value;\n}).filter(value -\> value != null).forEach(value -\> {\nresult.add(value);\n});";
+}

@@ -49,9 +49,9 @@ public list[ComposableProspectiveOperation] retrieveComposableProspectiveOperati
 	if (canOperationsBeRefactored(prospectiveOperations)) {
 		composablePrOps = createComposableProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
 		
-		composablePrOps = rearrangeMapBodiesIfNeeded(composablePrOps);
+		composablePrOps = mergeIntoComposableOperations(composablePrOps);
 		
-		return mergeIntoComposableOperations(composablePrOps);
+		return rearrangeMapBodiesIfNeeded(composablePrOps);
 	} else 
 		// Throwing the exception is not the best option, but the easiest to implement right now
 		throw "CanNotBeRefactored";
@@ -226,13 +226,12 @@ private list[ComposableProspectiveOperation] rearrangeMapBodiesIfNeeded(list[Com
 
 private ComposableProspectiveOperation rearrangeMapBody(ComposableProspectiveOperation curr, set[str] nextNeededVars) {
 		prOp = curr.prOp;
-
 		if(isLocalVariableDeclarationStatement(prOp.stmt))
 			return rearrangeLocalVariableDeclarationMapBody(curr, nextNeededVars);
 		else if(isNumericLiteral(prOp.stmt))
 			return curr;
 		else
-			return addReturnToMapBody(curr, nextNeededVars); 
+			return addReturnToMapBody(curr, nextNeededVars);
 }
 
 private ComposableProspectiveOperation rearrangeLocalVariableDeclarationMapBody(ComposableProspectiveOperation curr, set[str] nextNeededVars) {
@@ -255,7 +254,7 @@ private bool isNumericLiteral(str stmt) {
 
 private ComposableProspectiveOperation addReturnToMapBody(ComposableProspectiveOperation curr, set[str] nextNeededVars) {
 	list[str] stmts = [];
-	if (isBlock(curr.prOp.stmt))
+	if (isBlock(curr.prOp.stmt)) 
 		stmts += retrieveAllStatementsFromBlock(curr.prOp.stmt);
 	else
 		stmts += curr.prOp.stmt;
