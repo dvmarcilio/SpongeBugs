@@ -1,0 +1,14 @@
+{
+		String prefix = group;
+		if (!prefix.endsWith(".")) {
+			prefix = prefix + ".";
+		}
+		for (Metric<?> metric : values) {
+			if (!metric.getName().startsWith(prefix)) {
+				metric = new Metric<Number>(prefix + metric.getName(), metric.getValue(),
+						metric.getTimestamp());
+			}
+			this.repository.set(metric);
+		}
+		this.groups.add(group);
+	}

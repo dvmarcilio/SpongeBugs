@@ -32,14 +32,17 @@ private set[MethodVar] findVariablesAsParameters(MethodHeader methodHeader) {
 private MethodVar createParameterMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
 	name = trim(unparse(varId));
 	varTypeStr = trim(unparse(varType));
-	return methodVar(isFinal, name, varTypeStr, true, false);
+	bool isParameter = true;
+	bool isDeclaredWithinLoop = false;
+	bool isEffectiveFinal = true;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
 }
 
-// XXX probably incorrect, ugly and not really DRY way of checking for vars within loop
+// XXX ugly and not really DRY way of checking for vars within loop
 private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 	set[MethodVar] methodVars = {};
+	set[str] nonEffectiveFinalOutsideLoopVars = {};
 	set[str] varsWithinLoopNames = {};
-	
 	top-down visit(methodBody) {
 	
 		case EnhancedForStatement enhancedForStmt: {
@@ -56,7 +59,9 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 					}		
 			}
 		}
-
+		
+		
+		
 		case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: {
 			visit(vdl) {
 				case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
@@ -66,11 +71,15 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 			}
 		}
 		
+		case (Assignment) `<LeftHandSide varName> <AssignmentOperator _> <Expression  _>`: nonEffectiveFinalOutsideLoopVars += "<varName>";
+		
 		case(CatchFormalParameter) `<VariableModifier* varMod> <CatchType varType> <VariableDeclaratorId varId>`:
 			methodVars += createLocalMethodVar(figureIfIsFinal(varMod), varId, varType);	
 		
 	}
-	return methodVars;
+	
+	
+	return addNonEffectiveFinalVars(methodVars, nonEffectiveFinalOutsideLoopVars);
 }
 
 private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
@@ -78,7 +87,8 @@ private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId,
 	varTypeStr = trim(unparse(varType));
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = false;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop);
+	bool isEffectiveFinal = true;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
 }
 
 private MethodVar createLocalMethodVarWithinLoop(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
@@ -86,7 +96,8 @@ private MethodVar createLocalMethodVarWithinLoop(bool isFinal, VariableDeclarato
 	varTypeStr = trim(unparse(varType));
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = true;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop);
+	bool isEffectiveFinal = true;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
 }
 
 private MethodVar createLocalMethodVar(bool isFinal, Identifier varId, UnannType varType, Dims? dims) {
@@ -100,7 +111,8 @@ private MethodVar createLocalMethodVar(bool isFinal, Identifier varId, UnannType
 	
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = false;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop);
+	bool isEffectiveFinal = true;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
 }
 
 private MethodVar createLocalMethodVarWithinLoop(bool isFinal, Identifier varId, UnannType varType, Dims? dims) {
@@ -114,11 +126,32 @@ private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId,
 	varTypeStr = trim(unparse(varType));
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = false;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop);
+	bool isEffectiveFinal = true;
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
 }
 
 private bool figureIfIsFinal(VariableModifier* varMod) {
 	if ("<varMod>" := "final")
 		return true;
 	return false;
+}
+
+
+// XXX ugly handling of non effective finals (mainly due to usage of sets)
+private set[MethodVar] addNonEffectiveFinalVars(set[MethodVar] methodVars, set[str] nonEffectiveFinalOutsideLoopVars) {
+	completeMethodVars = methodVars; 
+	for (methodVar <- methodVars) {
+		for (nonEffectiveFinalVar <- nonEffectiveFinalOutsideLoopVars) {
+			if (methodVar.name == nonEffectiveFinalVar) {
+				completeMethodVars -= methodVar;
+				completeMethodVars += cloneMethodVarAsNonEffectiveFinal(methodVar);
+			}
+		}
+	}
+	return completeMethodVars;
+}
+
+private MethodVar cloneMethodVarAsNonEffectiveFinal(MethodVar m) {
+	bool isEffectiveFinal = false;
+	return methodVar(m.isFinal, m.name, m.varType, m.isParameter, m.isDeclaredWithinLoop, isEffectiveFinal);
 }

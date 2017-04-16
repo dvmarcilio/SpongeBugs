@@ -4,7 +4,6 @@ import Set;
 import String;
 
 // TODO Review if using a Set is the best choice. Probably not.
-public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, bool isDeclaredWithinLoop);
 public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, bool isDeclaredWithinLoop, bool isEffectiveFinal);
 
 public bool isArray(MethodVar methodVar) {
@@ -85,10 +84,6 @@ public set[str] retrieveNotDeclaredWithinLoopNames(set[MethodVar] methodVars) {
 	return { var.name | MethodVar var <- methodVars, !var.isDeclaredWithinLoop };
 }
 
-// FIXME
 public bool isEffectiveFinal(MethodVar methodVar) {
-	try
-		return methodVar.isFinal || methodVar.isEffectiveFinal;
-	catch NoSuchField("isEffectiveFinal"):
-		return methodVar.isFinal;
+	return methodVar.isFinal || methodVar.isEffectiveFinal;
 }

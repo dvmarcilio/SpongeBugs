@@ -120,7 +120,7 @@ public test bool shouldReturnNonFinalSingleParameter() {
 	return size(nonLocals) == 1 && !var.isFinal && var.isParameter;
 }
 
-public test bool shouldReturnFinalSingleParamater() {
+public test bool shouldReturnFinalSingleParameter() {
 	methodHeader = finalSingleParameterMethodHeader();
 	methodBody = emptyMethodBody();
 	
@@ -191,4 +191,14 @@ public test bool shouldReturnCorrectVarsNotDeclaredWithinLoop() {
 		"localVarNotWithinLoop" in notWithinLoopNames &&
 		"localVarNotWithinLoopAgain" in notWithinLoopNames &&
 		"notWithinLoopAfterLoop" in notWithinLoopNames;
+}
+
+public test bool shouldIdentifyNonEffectiveFinalVar() {
+	methodHeader = nonEffectiveFinalUsedInEnhancedForMethodHeader();
+	methodBody = nonEffectiveFinalUsedInEnhancedForMethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	nonEffectiveFinalVar = findByName(vars, "prefix");
+	
+	return !isEffectiveFinal(nonEffectiveFinalVar);
 }
