@@ -47,3 +47,16 @@ private set[MethodVar] filterAndMergedForEachVars() {
 	methodBody = parse(#MethodBody, "{\n    List\<String\> result = new ArrayList\<String\>();\n    for (Map.Entry\<ClassLoader, String\> entry :\n        childClassLoaders.entrySet())\n      if(isValid(entry)) {\n        ClassLoader cl = entry.getKey();\n        if (!((WebappClassLoader)cl).isStart())\n          result.add(entry.getValue());\n      }\n   return result;\n  }");
 	return findLocalVariables(methodHeader, methodBody);
 }
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] multipleMapsAndEndingReducer() {
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For2.java|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	return <multipleMapsAndEndingReducerVars(), forStmt>;
+}
+
+private set[MethodVar] multipleMapsAndEndingReducerVars() {
+	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
+	methodBody = parse(#MethodBody, readFile(fileLoc));
+	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
+	return findLocalVariables(methodHeader, methodBody);
+}

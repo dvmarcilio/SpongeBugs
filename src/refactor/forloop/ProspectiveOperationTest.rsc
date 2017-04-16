@@ -62,7 +62,7 @@ public test bool shouldHandleAnyMatch() {
 		prospectiveOperations[1].operation == ANY_MATCH;
 }
 
-public test bool shouldBreakAndChooseCorrectOperationsOnMultipleStatements() {
+public test bool shouldSeparateAndChooseCorrectOperationsOnMultipleStatements() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] filterAndMergedForEach = filterAndMergedForEach();
 	
 	prospectiveOperations = retrieveProspectiveOperations(filterAndMergedForEach.vars, filterAndMergedForEach.loop);
@@ -76,4 +76,22 @@ public test bool shouldBreakAndChooseCorrectOperationsOnMultipleStatements() {
 		prospectiveOperations[2].operation == FILTER &&
 		prospectiveOperations[3].stmt == "result.add(entry.getValue());" &&
 		prospectiveOperations[3].operation == FOR_EACH;
+}
+
+public test bool shouldSeparateAndChooseCorrectOperationsOnMultipleMapsEndingWithAReduce() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] multipleMapsAndEndingReducer = multipleMapsAndEndingReducer();
+	
+	prospectiveOperations = retrieveProspectiveOperations(multipleMapsAndEndingReducer.vars, multipleMapsAndEndingReducer.loop);
+	
+	return size(prospectiveOperations) == 5 &&
+		prospectiveOperations[0].stmt == "assertTrue(map.containsKey(entry.getKey()));" &&
+		prospectiveOperations[0].operation == MAP &&
+		prospectiveOperations[1].stmt == "assertTrue(map.containsValue(entry.getValue()));" &&
+		prospectiveOperations[1].operation == MAP &&
+		prospectiveOperations[2].stmt == "int expectedHash =\r\n            (entry.getKey() == null ? 0 : entry.getKey().hashCode())\r\n                ^ (entry.getValue() == null ? 0 : entry.getValue().hashCode());" &&
+		prospectiveOperations[2].operation == MAP &&
+		prospectiveOperations[3].stmt == "assertEquals(expectedHash, entry.hashCode());" &&
+		prospectiveOperations[3].operation == MAP &&
+		prospectiveOperations[4].stmt == "expectedEntrySetHash += expectedHash;" &&
+		prospectiveOperations[4].operation == REDUCE;
 }
