@@ -38,3 +38,20 @@ public test bool reduceShouldNotBeEmpty() {
 	
 	return !isEmpty("<refactoredStatement>");
 }
+
+// TODO nested loops needed to be changed in ProspectiveOperation
+public test bool nestedLoops() {
+	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/NestedLoops.java|;
+	methodBody = parse(#MethodBody, readFile(fileLoc));
+	methodHeader = parse(#MethodHeader, "void testComplexBuilder()");
+	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For.java|;	
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, "for (Integer red : colorElem) {\n      for (Integer green : colorElem) {\n        for (Integer blue : colorElem) {\n          webSafeColorsBuilder.add((red \<\< 16) + (green \<\< 8) + blue);\n        }\n      }\n    }");
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "red");
+	Expression collectionId = parse(#Expression, "colorElem");
+	
+	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	println(refactoredStatement);
+	
+	return false;
+}
