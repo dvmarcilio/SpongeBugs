@@ -141,6 +141,18 @@ private list[ProspectiveOperation] markLastStmtAsEager(list[ProspectiveOperation
 	return prefix(prOps) + lastPrOp;
 }
 
+public bool isMergeable(ProspectiveOperation prOp) {
+	return isFilter(prOp) || isMap (prOp) || isForEach(prOp);
+}
+
+public bool isEagerOperation(ProspectiveOperation prOp) {
+	return !isLazyOperation(prOp);
+}
+
+public bool isLazyOperation(ProspectiveOperation prOp) {
+	return isFilter(prOp) || isMap(prOp);
+}
+
 public bool isFilter(ProspectiveOperation prOp) {
 	return prOp.operation == FILTER;
 }
@@ -170,4 +182,16 @@ public bool isLocalVariableDeclarationStatement(str stmt) {
 		parse(#LocalVariableDeclarationStatement, stmt);
 		return true;
 	} catch: return false;
+}
+
+public bool canOperationsBeRefactored(list[ProspectiveOperation] prOps) {
+	return !haveEagerOperationAsNonLast(prOps);
+}
+
+private bool haveEagerOperationAsNonLast(list[ProspectiveOperation] prOps) {
+	operationsWithoutLast = prefix(prOps);
+	for(prOp <- operationsWithoutLast)
+		if(isEagerOperation(prOp)) return true;
+	
+	return false; 
 }

@@ -15,10 +15,16 @@ import refactor::forloop::OperationType;
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
 public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {	
-	
-	forStatement = parse(#Statement, unparse(forStmt));
+	try 
+		return buildRefactoredMethodBody(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	 catch:
+		return methodBody;
+}
+
+private MethodBody buildRefactoredMethodBody(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {
 	refactored = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
-	refactoredMethodBody = refactorToFunctional(methodBody, forStatement, refactored);
+	forStatement = parse(#Statement, unparse(forStmt));
+	refactoredMethodBody = refactorToFunctional(methodBody, forStatement, refactored);	
 	//println("\n --- APPLYING REFACTOR ---");
 	//println(forStmt);
 	//println("refactored to:");
@@ -39,8 +45,12 @@ MethodBody refactorToFunctional(MethodBody methodBody, Statement forStmt, Statem
 
 public list[ComposableProspectiveOperation] retrieveComposableProspectiveOperations(set[MethodVar] methodVars, EnhancedForStatement forStmt) {
 	prospectiveOperations = retrieveProspectiveOperations(methodVars, forStmt);
-	composablePrOps = createComposableProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
-	return mergeIntoComposableOperations(composablePrOps);
+	if (canOperationsBeRefactored(prospectiveOperations)) {
+		composablePrOps = createComposableProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
+		return mergeIntoComposableOperations(composablePrOps);
+	} else 
+		// Throwing the exception is not the best option, but the easiest to implement right now
+		throw "CanNotBeRefactored";
 }
 
 private list[ComposableProspectiveOperation] createComposableProspectiveOperationsWithVariableAvailability(list[ProspectiveOperation] prOps, set[MethodVar] methodVars) {
@@ -68,7 +78,7 @@ private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[
 		curr = composablePrOps[i];
 		prev = composablePrOps[i - 1];
 		if (!canBeChained(prev, curr)) {
-			if (isMergeable(prev) && isMergeable(curr)) {
+			if (canBeMerged(prev, curr)) {
 				opsSize = size(composablePrOps); 
 				
 				if (isFilter(prev.prOp) || isFilter(curr.prOp)) {
@@ -96,9 +106,8 @@ private bool canBeChained(ComposableProspectiveOperation prev, ComposableProspec
 	return size(curr.neededVars) <= 1 && currNeededVarsInPrevAvailabilitySet;
 }
 
-private bool isMergeable(ComposableProspectiveOperation cPrOp) {
-	operation = cPrOp.prOp.operation;
-	return operation == FILTER || operation == MAP || operation == FOR_EACH;
+private bool canBeMerged(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
+	return isMergeable(prev.prOp) && isMergeable(curr.prOp);
 }
 
 private bool isCurrNeededVarsInPrevAvailabilitySet(set[str] currNeededVars, ComposableProspectiveOperation prev) {
@@ -258,7 +267,7 @@ private str getLambdaBodyForMap(str stmt) {
 	// XXX Are other kind of statements maps?
 	if(endsWith(stmt, ";"))
 		stmt = substring(stmt, 0, size(stmt)-1);
-		
+
 	lvdl = parse(#LocalVariableDeclaration, stmt);
 	visit(lvdl) {
 		case VariableInitializer vi: return unparse(vi);

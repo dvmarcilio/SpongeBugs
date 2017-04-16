@@ -23,8 +23,7 @@ public test bool ex1() {
 	return unparse(refactoredStatement) == "testers.stream().map(testerClass -\> makeSuiteForTesterClass((Class\<? extends AbstractTester\<?\>\>) testerClass)).filter(testerSuite -\> testerSuite.countTestCases() \> 0).forEach(testerSuite -\> {\nsuite.addTest(testerSuite);\n});";
 }
 
-// FIXME workaround for now. not really useful test.
-public test bool reduceShouldNotBeEmpty() {
+public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
@@ -34,9 +33,13 @@ public test bool reduceShouldNotBeEmpty() {
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "key");
 	Expression collectionId = parse(#Expression, "keySet");
 	
-	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	try
+		refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	catch:
+		return true;
 	
-	return !isEmpty("<refactoredStatement>");
+	// Should have thrown exception
+	return false;
 }
 
 // TODO nested loops needed to be changed in ProspectiveOperation
@@ -54,4 +57,20 @@ public test bool nestedLoops() {
 	println(refactoredStatement);
 	
 	return false;
+}
+
+public test bool ex() {
+	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
+	methodBody = parse(#MethodBody, readFile(fileLoc));
+	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
+	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For2.java|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "entry");
+	Expression collectionId = parse(#Expression, "entrySet");
+	
+	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	println(refactoredStatement);
+	
+	return !isEmpty("<refactoredStatement>");
 }
