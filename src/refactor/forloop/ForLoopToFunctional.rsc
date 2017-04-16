@@ -267,5 +267,5 @@ private str getLambdaBodyForMap(str stmt) {
 }
 
 private str getLambdaBodyForReduce(str stmt) {
-	return "REDUCE_NOT_IMPLEMENTED_YET;";
+	return "needToImplementReduce()";
 }
