@@ -74,10 +74,12 @@ public test bool ifThenStatement() {
 		"entry" in usedVars;
 }
 
-public test bool reduceShouldReturnEmpty() {
+public test bool reduce() {
 	prOp = prospectiveOperation("count += rule.getErrors().size();", REDUCE);
 	
 	usedVars = retrieveUsedVariables(prOp);
 	
-	return size(usedVars) == 0;
+	return size(usedVars) == 2 &&
+		"count" in usedVars &&
+		"rule" in usedVars;
 }

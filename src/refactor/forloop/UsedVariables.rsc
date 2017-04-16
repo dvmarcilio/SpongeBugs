@@ -11,9 +11,7 @@ import refactor::forloop::ProspectiveOperation;
 public set[str] retrieveUsedVariables(ProspectiveOperation prOp) {
 	set[str] usedVariables = {};
 	
-	if (isReduce(prOp))
-		return {};
-	else if(isFilter(prOp))
+	if(isFilter(prOp))
 		usedVariables += retrieveUsedVarsFromFilter(prOp.stmt);	
 	else if (isLocalVariableDeclarationStatement(prOp.stmt))
 		usedVariables += retrieveUsedVarsFromLocalVariableDeclarationStmt(prOp.stmt);	
