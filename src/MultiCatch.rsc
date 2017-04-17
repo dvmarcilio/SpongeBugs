@@ -13,17 +13,20 @@ import Set;
 // However I could not find a way to perform both 
 // a replacement and count the number of times 
 // it was applied in the same compilation unit. 
-int numberOfOccurences = 0; 
+//int numberOfOccurences = 0; 
 
 /**
  * Refactor a try-catch statement to use the 
  * MultiCatch construct of Java 7. 
  */
 public tuple[int, CompilationUnit]  refactorMultiCatch(CompilationUnit unit) { 
-  numberOfOccurences = 0;  
+  int numberOfOccurences = 0;  
   CompilationUnit cu =  visit(unit) {
-   case (TryStatement)`try <Block b1> <Catches c1>` => (TryStatement)`try <Block b1> <Catches mc>`
-     when mc := computeMultiCatches(c1)
+   case (TryStatement)`try <Block b1> <Catches c1>` : { 
+     <app, mc> = computeMultiCatches(c1);
+     if(app) numberOfOccurences += 1;
+     insert (TryStatement)`try <Block b1><Catches mc>`;
+   }
   };
   return <numberOfOccurences, cu>;
 }
@@ -33,25 +36,26 @@ public tuple[int, CompilationUnit]  refactorMultiCatch(CompilationUnit unit) {
  * this function calculates the possible 
  * occurences of MultiCatch. 
  */ 
-private Catches computeMultiCatches(cs){
+private tuple[bool, Catches] computeMultiCatches(cs){
    map [Block, tuple[list[CatchType], VariableDeclaratorId, Block] ] mCatches = ();
-   top-down visit(cs){
+   app = false;
+   visit(cs){
       case(CatchClause)`catch (<CatchType t> <VariableDeclaratorId vId>) <Block b>` :{
          if (b in mCatches){
             <ts, vId, blk> = mCatches[b];
             ts += t;
             mCatches[b] = <ts, vId, blk>;
-            numberOfOccurences += 1;
+            app = true;
          }
          else{
             mCatches[b] = <[t], vId, b>;
          }
       }
    }
-   if(size(mCatches) > 0) {
-      return generateMultiCatches([mCatches[b] | b <- mCatches]); 
+   if(app) {
+      return <app, generateMultiCatches([mCatches[b] | b <- mCatches])>; 
    }
-   return cs; //this case should never happen. however, for some reason, it did!
+   return <false, cs>; // this return statement occurs when we find a try ... finally, without catch!
 }
 
 /*
@@ -66,7 +70,7 @@ private Catches computeMultiCatches(cs){
  */
 private Catches generateMultiCatches([<ts, vId, b>]) = {
   types = parse(#CatchType, intercalate("| ", ts));
-  return (Catches)`catch(<CatchType types>  <VariableDeclaratorId vId>) <Block b>`; 
+  return (Catches)`catch(<CatchType types> <VariableDeclaratorId vId>) /*multi-catch refactor*/ <Block b>`; 
 };
 private Catches generateMultiCatches([<ts, vId, b>, C*]) = {
   catches = generateMultiCatches(C);

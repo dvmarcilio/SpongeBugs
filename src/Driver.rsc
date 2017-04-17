@@ -17,7 +17,7 @@ import lang::java::\syntax::Java18;
  * Analyze all projecteds listed in 
  * the input file. 
  */
-public void analyzeProjects(loc input, bool verbose = false) {
+public void analyzeProjects(loc input, bool verbose = true) {
     list[str] projects = readFileLines(input);
     
     for(p <- projects) {
@@ -27,7 +27,7 @@ public void analyzeProjects(loc input, bool verbose = false) {
        list[loc] projectFiles = findAllFiles(|file:///| + projectDescriptor[4], "java");
     
        switch(projectDescriptor[2]) {
-          case /MC/: runMultiCatch(projectFiles, toInt(projectDescriptor[3]), verbose);
+          case /MC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorMultiCatch, "multicatch");
           default: println("... nothing to be done");
        }
     }  
@@ -44,14 +44,14 @@ public void analyzeProjects(loc input, bool verbose = false) {
  * nessa implementacao. Mas ok, eh a primeira tentativa. Depois 
  * melhoramos. 
  */ 
-public void runMultiCatch(list[loc] files, int percent, bool verbose) {
+public void executeTransformations(list[loc] files, int percent, bool verbose, tuple[int, CompilationUnit](CompilationUnit) transformation, str name) {
   list[tuple[int, loc, CompilationUnit]] processedFiles = [];
   int errors = 0; 
   for(file <- files) {
      contents = readFile(file);
      try {
        unit = parse(#CompilationUnit, contents);
-       tuple[int, CompilationUnit] res = refactorMultiCatch(unit);
+       tuple[int, CompilationUnit] res = transformation(unit);
        if(res[0] > 0) {
          processedFiles += <res[0], file, res[1]>;
        }
@@ -61,7 +61,7 @@ public void runMultiCatch(list[loc] files, int percent, bool verbose) {
   int total = size(processedFiles);
   int toExecute = numberOfTransformationsToApply(total, percent);
   set[int] toApply = generateRandomNumbers(toExecute, total);
-  int totalTransformations = exportResults(toApply, processedFiles, verbose);
+  int totalTransformations = exportResults(toApply, processedFiles, verbose, name);
   print("Total of applied transformations: ");
   println(totalTransformations);
   print("Errors: ");
@@ -72,13 +72,13 @@ public void runMultiCatch(list[loc] files, int percent, bool verbose) {
  * Export the results of a subset of the transformations. The results 
  * are exported to the original files.  
  */ 
-int exportResults(set[int] toApply, list[tuple[int, loc, CompilationUnit]] processedFiles, bool verbose) {
+int exportResults(set[int] toApply, list[tuple[int, loc, CompilationUnit]] processedFiles, bool verbose, str name) {
  int total = 0;
  for(v <- toApply) {
      output = processedFiles[v][1];
      unit = processedFiles[v][2];
      if(verbose) {
-       print("[Project Analyzer] applying multicatch into ");
+       print("[Project Analyzer] applying " + name + " into ");
        println(output); 
      }
      writeFile(output, unit);
