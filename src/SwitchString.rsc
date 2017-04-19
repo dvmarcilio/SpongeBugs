@@ -3,7 +3,6 @@ module SwitchString
 import lang::java::\syntax::Java18;
 import ParseTree; 
 import IO;
-import Map;
 import List;
 
 

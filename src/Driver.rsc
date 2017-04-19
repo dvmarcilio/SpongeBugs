@@ -9,7 +9,8 @@ import util::Math;
 
 import io::IOUtil; 
 
-import MultiCatch; 
+import MultiCatch;
+import SwitchString; 
 import lang::java::\syntax::Java18;
 
 
@@ -28,6 +29,8 @@ public void analyzeProjects(loc input, bool verbose = true) {
     
        switch(projectDescriptor[2]) {
           case /MC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorMultiCatch, "multicatch");
+          case /SS/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorSwitchString, "switchstring");
+          case /VA/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorVarArgs, "varargs");
           default: println("... nothing to be done");
        }
     }  

@@ -1,0 +1,14 @@
+/AllTestes.rsc
+/AnonymousToLambda.rsc
+/Driver.rsc
+/GraphDependency.rsc
+/JavaTypes.rsc
+/ManageCompilationUnit.rsc
+/MultiCatch.rsc
+/ParseTreeVisualization.rsc
+/SimpleMetrics.rsc
+/SimpleTransformations.rsc
+/io/
+/lang/
+/SwitchString.rsc
+/VarArgs.rsc
