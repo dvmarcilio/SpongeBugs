@@ -10,7 +10,8 @@ import util::Math;
 import io::IOUtil; 
 
 import MultiCatch;
-import SwitchString; 
+import SwitchString;
+import VarArgs; 
 import lang::java::\syntax::Java18;
 
 
