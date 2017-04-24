@@ -44,17 +44,14 @@ CompilationUnit refactorToVarArgs(CompilationUnit unit) =  visit(unit) {
       case (MethodDeclarator)`<Identifier n>(<VariableModifier* mds> <UnannPrimitiveType t>[] <Identifier arg>)` => 
         (MethodDeclarator)`<Identifier n>(<VariableModifier* mds> <UnannType t>... <Identifier arg>)`
   
-     case (MethodDeclarator)`<Identifier n>(<VariableModifier* mds> <UnannClassOrInterfaceType t>[] <Identifier arg>)` => 
+      case (MethodDeclarator)`<Identifier n>(<VariableModifier* mds> <UnannClassOrInterfaceType t>[] <Identifier arg>)` => 
         (MethodDeclarator)`<Identifier n>(<VariableModifier* mds> <UnannType t>... <Identifier arg>)`
   
-     case (MethodDeclarator)`<Identifier n>(<{FormalParameter ","}+ pmts2>, <VariableModifier* mds> <UnannPrimitiveType t>[] <Identifier arg>[])` => 
+      case (MethodDeclarator)`<Identifier n>(<{FormalParameter ","}+ pmts2>, <VariableModifier* mds> <UnannPrimitiveType t>[] <Identifier arg>[])` => 
         (MethodDeclarator)`<Identifier n>(<{FormalParameter ","}+ pmts2>, <VariableModifier* mds> <UnannType t> ... <Identifier arg>)` 
  
- 
-    case (MethodDeclarator)`<Identifier n>(<{FormalParameter ","}+ pmts3>, <VariableModifier* mds> <UnannClassOrInterfaceType t>[] <Identifier arg>[])` => 
+      case (MethodDeclarator)`<Identifier n>(<{FormalParameter ","}+ pmts3>, <VariableModifier* mds> <UnannClassOrInterfaceType t>[] <Identifier arg>[])` => 
         (MethodDeclarator)`<Identifier n>(<{FormalParameter ","}+ pmts3>, <VariableModifier* mds> <UnannType t> ... <Identifier arg>)` 
- 
-
  };
  
 
