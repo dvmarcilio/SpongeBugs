@@ -39,7 +39,6 @@ public tuple[int, CompilationUnit] refactorSwitchString(CompilationUnit unit) {
     }
     
   };
-  println("RESULTADO" + cu); 
   return <numberOfOccurences, cu>;
 }
 SwitchBlockStatementGroups buildSwitchGroups(stmt, id) {

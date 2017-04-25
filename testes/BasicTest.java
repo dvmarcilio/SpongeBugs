@@ -6,6 +6,7 @@ import com.sun.corba.se.impl.presentation.rmi.ExceptionHandlerImpl.ExceptionRWRM
 
 import java.io.IOException;
 import java.lang.Exception;
+import java.sql.SQLException;
 public class BasicTest {
 	public int test(int a, int b, int c[]) {
 		return a + b;
@@ -109,7 +110,7 @@ public class BasicTest {
 	public void testMulticatch()
 	{
 		try{
-			int x =0;
+			int x = 0;
 		}
 		catch(ExceptionInInitializerError e){
 			System.out.println(e);
@@ -118,8 +119,15 @@ public class BasicTest {
 			System.out.println(e);
 		}
 		catch(IOException e) {
-			e.printStackTrace();
+			try {
+				System.out.println( "blah" );
+			}
+			catch(SQLException e) {
+				System.out.println(e);
+			}
 		}
 	}
+	
+	
 	
 }

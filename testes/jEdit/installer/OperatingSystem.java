@@ -267,12 +267,9 @@ public abstract class OperatingSystem
 			proc.getInputStream().close();
 			proc.getOutputStream().close();
 			proc.getErrorStream().close();
-			try
-			{
+			try {
 				proc.waitFor();
-			}
-			catch(InterruptedException ie)
-			{
+			} catch(InterruptedException   ie) {
 			}
 		}
 	}
@@ -336,15 +333,9 @@ public abstract class OperatingSystem
 					+ File.separator
 					+ "bin" };
 
-				try
-				{
+				try {
 					Runtime.getRuntime().exec(args).waitFor();
-				}
-				catch(IOException io)
-				{
-				}
-				catch(InterruptedException ie)
-				{
+				} catch(IOException | InterruptedException   io) {
 				}
 			}
 		}

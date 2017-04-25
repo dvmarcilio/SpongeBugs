@@ -189,8 +189,7 @@ public class NodeProbe implements AutoCloseable
         jmxc = JMXConnectorFactory.connect(jmxUrl, env);
         mbeanServerConn = jmxc.getMBeanServerConnection();
 
-        try
-        {
+        try {
             ObjectName name = new ObjectName(ssObjName);
             ssProxy = JMX.newMBeanProxy(mbeanServerConn, name, StorageServiceMBean.class);
             name = new ObjectName(MessagingService.MBEAN_NAME);
@@ -213,9 +212,7 @@ public class NodeProbe implements AutoCloseable
             gossProxy = JMX.newMBeanProxy(mbeanServerConn, name, GossiperMBean.class);
             name = new ObjectName(BatchlogManager.MBEAN_NAME);
             bmProxy = JMX.newMBeanProxy(mbeanServerConn, name, BatchlogManagerMBean.class);
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(
                     "Invalid ObjectName? Please report this as a bug.", e);
         }
@@ -340,13 +337,10 @@ public class NodeProbe implements AutoCloseable
         }
         finally
         {
-            try
-            {
+            try {
                 ssProxy.removeNotificationListener(runner);
                 jmxc.removeConnectionNotificationListener(runner);
-            }
-            catch (Throwable e)
-            {
+            } catch(Throwable   e) {
                 out.println("Exception occurred during clean-up. " + e);
             }
         }
@@ -437,12 +431,9 @@ public class NodeProbe implements AutoCloseable
     {
         String cachePath = "org.apache.cassandra.db:type=Caches";
 
-        try
-        {
+        try {
             return JMX.newMBeanProxy(mbeanServerConn, new ObjectName(cachePath), CacheServiceMBean.class);
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -454,16 +445,11 @@ public class NodeProbe implements AutoCloseable
 
     public Iterator<Map.Entry<String, ColumnFamilyStoreMBean>> getColumnFamilyStoreMBeanProxies()
     {
-        try
-        {
+        try {
             return new ColumnFamilyStoreMBeanIterator(mbeanServerConn);
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException  e) {
             throw new RuntimeException("Invalid ObjectName? Please report this as a bug.", e);
-        }
-        catch (IOException e)
-        {
+        } catch(IOException   e) {
             throw new RuntimeException("Could not retrieve list of stat mbeans.", e);
         }
     }
@@ -480,12 +466,9 @@ public class NodeProbe implements AutoCloseable
 
     public List<String> getTokens(String endpoint)
     {
-        try
-        {
+        try {
             return ssProxy.getTokens(endpoint);
-        }
-        catch (UnknownHostException e)
-        {
+        } catch(UnknownHostException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -663,32 +646,26 @@ public class NodeProbe implements AutoCloseable
 
     public void setCacheCapacities(int keyCacheCapacity, int rowCacheCapacity, int counterCacheCapacity)
     {
-        try
-        {
+        try {
             String keyCachePath = "org.apache.cassandra.db:type=Caches";
             CacheServiceMBean cacheMBean = JMX.newMBeanProxy(mbeanServerConn, new ObjectName(keyCachePath), CacheServiceMBean.class);
             cacheMBean.setKeyCacheCapacityInMB(keyCacheCapacity);
             cacheMBean.setRowCacheCapacityInMB(rowCacheCapacity);
             cacheMBean.setCounterCacheCapacityInMB(counterCacheCapacity);
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
 
     public void setCacheKeysToSave(int keyCacheKeysToSave, int rowCacheKeysToSave, int counterCacheKeysToSave)
     {
-        try
-        {
+        try {
             String keyCachePath = "org.apache.cassandra.db:type=Caches";
             CacheServiceMBean cacheMBean = JMX.newMBeanProxy(mbeanServerConn, new ObjectName(keyCachePath), CacheServiceMBean.class);
             cacheMBean.setKeyCacheKeysToSave(keyCacheKeysToSave);
             cacheMBean.setRowCacheKeysToSave(rowCacheKeysToSave);
             cacheMBean.setCounterCacheKeysToSave(counterCacheKeysToSave);
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -732,28 +709,18 @@ public class NodeProbe implements AutoCloseable
 
     public void truncate(String keyspaceName, String tableName)
     {
-        try
-        {
+        try {
             ssProxy.truncate(keyspaceName, tableName);
-        }
-        catch (TimeoutException e)
-        {
-            throw new RuntimeException("Error while executing truncate", e);
-        }
-        catch (IOException e)
-        {
+        } catch(TimeoutException | IOException   e) {
             throw new RuntimeException("Error while executing truncate", e);
         }
     }
 
     public EndpointSnitchInfoMBean getEndpointSnitchInfoProxy()
     {
-        try
-        {
+        try {
             return JMX.newMBeanProxy(mbeanServerConn, new ObjectName("org.apache.cassandra.db:type=EndpointSnitchInfo"), EndpointSnitchInfoMBean.class);
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -761,8 +728,7 @@ public class NodeProbe implements AutoCloseable
     public ColumnFamilyStoreMBean getCfsProxy(String ks, String cf)
     {
         ColumnFamilyStoreMBean cfsProxy = null;
-        try
-        {
+        try {
             String type = cf.contains(".") ? "IndexColumnFamilies" : "ColumnFamilies";
             Set<ObjectName> beans = mbeanServerConn.queryNames(
                     new ObjectName("org.apache.cassandra.db:type=*" + type +",keyspace=" + ks + ",columnfamily=" + cf), null);
@@ -772,14 +738,10 @@ public class NodeProbe implements AutoCloseable
             assert beans.size() == 1;
             for (ObjectName bean : beans)
                 cfsProxy = JMX.newMBeanProxy(mbeanServerConn, bean, ColumnFamilyStoreMBean.class);
-        }
-        catch (MalformedObjectNameException mone)
-        {
+        } catch(MalformedObjectNameException  mone) {
             System.err.println("ColumnFamilyStore for " + ks + "/" + cf + " not found.");
             System.exit(1);
-        }
-        catch (IOException e)
-        {
+        } catch(IOException   e) {
             System.err.println("ColumnFamilyStore for " + ks + "/" + cf + " not found: " + e);
             System.exit(1);
         }
@@ -885,24 +847,18 @@ public class NodeProbe implements AutoCloseable
 
     public void truncateHints()
     {
-        try
-        {
+        try {
             hhProxy.truncateAllHints();
-        }
-        catch (ExecutionException | InterruptedException e)
-        {
+        } catch(ExecutionException | InterruptedException   e) {
             throw new RuntimeException("Error while executing truncate hints", e);
         }
     }
 
     public void refreshSizeEstimates()
     {
-        try
-        {
+        try {
             ssProxy.refreshSizeEstimates();
-        }
-        catch (ExecutionException e)
-        {
+        } catch(ExecutionException   e) {
             throw new RuntimeException("Error while refreshing system.size_estimates", e);
         }
     }
@@ -1153,8 +1109,7 @@ public class NodeProbe implements AutoCloseable
      */
     public Object getCacheMetric(String cacheType, String metricName)
     {
-        try
-        {
+        try {
             switch(metricName)
             {
                 case "Capacity":
@@ -1182,9 +1137,7 @@ public class NodeProbe implements AutoCloseable
                     throw new RuntimeException("Unknown cache metric name.");
 
             }
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -1211,8 +1164,7 @@ public class NodeProbe implements AutoCloseable
      */
     public Object getColumnFamilyMetric(String ks, String cf, String metricName)
     {
-        try
-        {
+        try {
             ObjectName oName = null;
             if (!Strings.isNullOrEmpty(ks) && !Strings.isNullOrEmpty(cf))
             {
@@ -1273,9 +1225,7 @@ public class NodeProbe implements AutoCloseable
                 default:
                     throw new RuntimeException("Unknown table metric " + metricName);
             }
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -1286,14 +1236,11 @@ public class NodeProbe implements AutoCloseable
      */
     public CassandraMetricsRegistry.JmxTimerMBean getProxyMetric(String scope)
     {
-        try
-        {
+        try {
             return JMX.newMBeanProxy(mbeanServerConn,
                     new ObjectName("org.apache.cassandra.metrics:type=ClientRequest,scope=" + scope + ",name=Latency"),
                     CassandraMetricsRegistry.JmxTimerMBean.class);
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -1304,8 +1251,7 @@ public class NodeProbe implements AutoCloseable
      */
     public Object getCompactionMetric(String metricName)
     {
-        try
-        {
+        try {
             switch(metricName)
             {
                 case "BytesCompacted":
@@ -1325,9 +1271,7 @@ public class NodeProbe implements AutoCloseable
                 default:
                     throw new RuntimeException("Unknown compaction metric.");
             }
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -1338,14 +1282,11 @@ public class NodeProbe implements AutoCloseable
      */
     public long getStorageMetric(String metricName)
     {
-        try
-        {
+        try {
             return JMX.newMBeanProxy(mbeanServerConn,
                     new ObjectName("org.apache.cassandra.metrics:type=Storage,name=" + metricName),
                     CassandraMetricsRegistry.JmxCounterMBean.class).getCount();
-        }
-        catch (MalformedObjectNameException e)
-        {
+        } catch(MalformedObjectNameException   e) {
             throw new RuntimeException(e);
         }
     }
@@ -1384,12 +1325,9 @@ public class NodeProbe implements AutoCloseable
 
     public void setLoggingLevel(String classQualifier, String level)
     {
-        try
-        {
+        try {
             ssProxy.setLoggingLevel(classQualifier, level);
-        }
-        catch (Exception e)
-        {
+        } catch(Exception   e) {
           throw new RuntimeException("Error setting log for " + classQualifier +" on level " + level +". Please check logback configuration and ensure to have <jmxConfigurator /> set", e);
         }
     }
@@ -1422,13 +1360,10 @@ public class NodeProbe implements AutoCloseable
         }
         finally
         {
-            try
-            {
+            try {
                 ssProxy.removeNotificationListener(monitor);
                 jmxc.removeConnectionNotificationListener(monitor);
-            }
-            catch (Throwable e)
-            {
+            } catch(Throwable   e) {
                 out.println("Exception occurred during clean-up. " + e);
             }
         }
@@ -1436,24 +1371,18 @@ public class NodeProbe implements AutoCloseable
 
     public void replayBatchlog() throws IOException
     {
-        try
-        {
+        try {
             bmProxy.forceBatchlogReplay();
-        }
-        catch (Exception e)
-        {
+        } catch(Exception   e) {
             throw new IOException(e);
         }
     }
 
     public TabularData getFailureDetectorPhilValues()
     {
-        try
-        {
+        try {
             return fdProxy.getPhiValues();
-        }
-        catch (OpenDataException e)
-        {
+        } catch(OpenDataException   e) {
             throw new RuntimeException(e);
         }
     }

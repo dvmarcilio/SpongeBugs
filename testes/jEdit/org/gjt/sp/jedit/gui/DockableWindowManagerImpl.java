@@ -168,17 +168,10 @@ public class DockableWindowManagerImpl extends DockableWindowManager
 		{
 			String filename = getLayoutFilename(baseName, viewIndex);
 			DefaultHandler handler = getPerspectiveHandler();
-			try
-			{
+			try {
 				// no need to close the stream it is closed by XMLUtilities.parseXML() method
 				XMLUtilities.parseXML(new FileInputStream(filename), handler);
-			}
-			catch (FileNotFoundException e)
-			{
-				return false;
-			}
-			catch (IOException e)
-			{
+			} catch(FileNotFoundException | IOException   e) {
 				return false;
 			}
 			return true;
@@ -462,13 +455,11 @@ public class DockableWindowManagerImpl extends DockableWindowManager
 			public void run()
 			{
 				/* Try to hide the last entry that was shown */
-				try
-				{
+				try {
 					String dockableName = showStack.pop();
 					hideDockableWindow(dockableName);
 					return;
-				}
-				catch (Exception e) {}
+				} catch(Exception   e) {}
 
 				Component comp = view.getFocusOwner();
 				while(comp != null)

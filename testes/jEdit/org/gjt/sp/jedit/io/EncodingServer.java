@@ -56,16 +56,9 @@ public class EncodingServer
 	 */
 	public static Encoding getEncoding(String name)
 	{
-		try
-		{
+		try {
 			return new CharsetEncoding(name);
-		}
-		catch (IllegalCharsetNameException e)
-		{
-			// just failed
-		}
-		catch (UnsupportedCharsetException e)
-		{
+		} catch(IllegalCharsetNameException | UnsupportedCharsetException   e) {
 			// just failed
 		}
 
@@ -142,15 +135,12 @@ public class EncodingServer
 	 */
 	public static boolean hasEncoding(String name)
 	{
-		try
-		{
+		try {
 			if (Charset.isSupported(name))
 			{
 				return true;
 			}
-		}
-		catch (IllegalCharsetNameException e)
-		{
+		} catch(IllegalCharsetNameException   e) {
 			// The name is illegal for java.nio.charset.Charset.
 			// But it may be legal for service name.
 		}

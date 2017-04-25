@@ -135,16 +135,9 @@ public class JMXResource implements IResource
         if (!hasParent())
             return true;
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        try
-        {
+        try {
             return !(mbs.queryNames(new ObjectName(name), null).isEmpty());
-        }
-        catch (MalformedObjectNameException e)
-        {
-            return false;
-        }
-        catch (NullPointerException e)
-        {
+        } catch(MalformedObjectNameException | NullPointerException   e) {
             return false;
         }
     }

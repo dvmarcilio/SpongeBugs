@@ -296,8 +296,7 @@ public class PingPongList<E> extends JPanel
 		@Override
 		public boolean importData(JComponent comp, Transferable t)
 		{
-			try
-			{
+			try {
 				@SuppressWarnings({"unchecked"})
 				E[] transferData = (E[]) t.getTransferData(MyTransferable.javaListFlavor);
 				JList targetList = (JList) comp;
@@ -342,13 +341,7 @@ public class PingPongList<E> extends JPanel
 				}
 				targetList.setSelectedIndices(indices);
 				return true;
-			}
-			catch (UnsupportedFlavorException e)
-			{
-				Log.log(Log.ERROR, this, e);
-			}
-			catch (IOException e)
-			{
+			} catch(UnsupportedFlavorException | IOException   e) {
 				Log.log(Log.ERROR, this, e);
 			}
 			return false;

@@ -124,12 +124,9 @@ public class BufferLoadRequest extends BufferIORequest
 		}
 		finally
 		{
-			try
-			{
+			try {
 				vfs._endVFSSession(session,view);
-			}
-			catch(Exception e)
-			{
+			} catch(Exception   e) {
 				Log.log(Log.ERROR,this,e);
 				String[] pp = { e.toString() };
 				VFSManager.error(view,path,"ioerror.read-error",pp);
@@ -177,13 +174,10 @@ public class BufferLoadRequest extends BufferIORequest
 	private BufferedInputStream rewindContentsStream(BufferedInputStream markedStream, boolean gzipped)
 		throws IOException
 	{
-		try
-		{
+		try {
 			markedStream.reset();
 			return markedStream;
-		}
-		catch(IOException e)
-		{
+		} catch(IOException   e) {
 			Log.log(Log.NOTICE, this
 				, path + ": Reopening to rewind the stream");
 			// Reopen the stream because the mark has been
@@ -287,8 +281,7 @@ public class BufferLoadRequest extends BufferIORequest
 				}
 
 				markedStream = rewindContentsStream(markedStream, gzipped);
-				try
-				{
+				try {
 					read(EncodingServer.getTextReader(markedStream, encoding)
 						, length, false);
 					if(autodetect)
@@ -301,21 +294,7 @@ public class BufferLoadRequest extends BufferIORequest
 						buffer.setProperty(JEditBuffer.ENCODING, encoding);
 					}
 					return;
-				}
-				catch(CharConversionException e)
-				{
-					encodingError = e;
-				}
-				catch(CharacterCodingException e)
-				{
-					encodingError = e;
-				}
-				catch(UnsupportedEncodingException e)
-				{
-					encodingError = e;
-				}
-				catch(UnsupportedCharsetException e)
-				{
+				} catch(CharConversionException | CharacterCodingException | UnsupportedEncodingException | UnsupportedCharsetException   e) {
 					encodingError = e;
 				}
 				Log.log(Log.NOTICE, this, path + ": " + encoding

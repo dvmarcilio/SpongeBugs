@@ -165,17 +165,14 @@ public class BufferSwitcher extends JComboBox
 		ComboBoxUI ui = getUI();
 		if (ui instanceof BasicComboBoxUI)
 		{
-			try
-			{
+			try {
 				Field listBoxField = getField(ui.getClass(), "listBox");
 				listBoxField.setAccessible(true);
 				JList list = (JList)listBoxField.get(ui);
 				list.setDragEnabled(true);
 				list.setDropMode(DropMode.INSERT);
 				list.setTransferHandler(new BufferSwitcherTransferHandler());
-			}
-			catch (Exception ignored) // NOPMD
-			{
+			} catch(Exception   ignored) {
 				// don't do anything if the above fails, it just means dnd won't work.
 			}
 		}
@@ -187,12 +184,9 @@ public class BufferSwitcher extends JComboBox
 	private Field getField( Class aClass, String fieldName ) throws NoSuchFieldException {
 		if ( aClass == null )
 			throw new NoSuchFieldException( "Invalid field : " + fieldName );
-		try 
-		{
+		try {
 			return aClass.getDeclaredField( fieldName );
-		}
-		catch ( NoSuchFieldException e ) 
-		{
+		} catch(NoSuchFieldException   e ) {
 			return getField( aClass.getSuperclass(), fieldName );
 		}
 	}
@@ -297,17 +291,10 @@ public class BufferSwitcher extends JComboBox
 
 			Transferable t = support.getTransferable();
 			BufferTransferableData data;
-			try
-			{
+			try {
 				data = (BufferTransferableData) t
 						.getTransferData(BufferSwitcher.BufferDataFlavor);
-			}
-			catch (UnsupportedFlavorException e)
-			{
-				return false;
-			}
-			catch (IOException e)
-			{
+			} catch(UnsupportedFlavorException | IOException   e) {
 				return false;
 			}
 			JComponent target = (JComponent) support.getComponent();
@@ -345,17 +332,10 @@ public class BufferSwitcher extends JComboBox
 			
 			Transferable t = support.getTransferable();
 			BufferTransferableData data;
-			try
-			{
+			try {
 				data = (BufferTransferableData) t
 						.getTransferData(BufferSwitcher.BufferDataFlavor);
-			}
-			catch (UnsupportedFlavorException e)
-			{
-				return false;
-			}
-			catch (IOException e)
-			{
+			} catch(UnsupportedFlavorException | IOException   e) {
 				return false;
 			}
 			JComponent target = (JComponent) support.getComponent();
@@ -392,17 +372,10 @@ public class BufferSwitcher extends JComboBox
 			{
 				BufferTransferableData data;
 
-				try
-				{
+				try {
 					data = (BufferTransferableData) t
 							.getTransferData(BufferSwitcher.BufferDataFlavor);
-				}
-				catch (UnsupportedFlavorException e)
-				{
-					return;
-				}
-				catch (IOException e)
-				{
+				} catch(UnsupportedFlavorException | IOException   e) {
 					return;
 				}
 
