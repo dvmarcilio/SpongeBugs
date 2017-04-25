@@ -2,6 +2,7 @@ module Driver
 
 import IO;
 import String; 
+import DateTime; 
 import List; 
 import Set;
 import ParseTree; 
@@ -14,17 +15,20 @@ import SwitchString;
 import VarArgs; 
 import lang::java::\syntax::Java18;
 
+str logFile = "";
 
 /**
  * Analyze all projecteds listed in 
  * the input file. 
  */
 public void analyzeProjects(loc input, bool verbose = true) {
+    str ctime =  printTime(now(), "YYYYMMDDHHmmss");
+    logFile = "log-" + ctime;
     list[str] projects = readFileLines(input);
     
     for(p <- projects) {
-       list[str] projectDescriptor = split(";", p);
-       println("[Project Analyzer] processing project: " + projectDescriptor[0]);
+       list[str] projectDescriptor = split(",", p);
+       logMessage("[Project Analyzer] processing project: " + projectDescriptor[0]);
       
        list[loc] projectFiles = findAllFiles(|file:///| + projectDescriptor[4], "java");
     
@@ -32,7 +36,7 @@ public void analyzeProjects(loc input, bool verbose = true) {
           case /MC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorMultiCatch, "multicatch");
           case /SS/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorSwitchString, "switchstring");
           case /VA/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorVarArgs, "varargs");
-          default: println("... nothing to be done");
+          default: logMessage(" ... nothing to be done");
        }
     }  
 }
@@ -60,16 +64,19 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
          processedFiles += <res[0], file, res[1]>;
        }
      }
-     catch : { errors += 1; };
+     catch : { 
+     	errors += 1; 
+     };
   }
   int total = size(processedFiles);
   int toExecute = numberOfTransformationsToApply(total, percent);
   set[int] toApply = generateRandomNumbers(toExecute, total);
   int totalTransformations = exportResults(toApply, processedFiles, verbose, name);
-  print("Total of applied transformations: ");
-  println(totalTransformations);
-  print("Errors: ");
-  println(errors);
+  logMessage("- Number of files:  " + toString(size(files)));
+  logMessage("- Processed Filies: " + toString(size(processedFiles)));
+  logMessage("- Exported Files:   " + toString(size(toApply))); 
+  logMessage("- Total of applied transformations: " + toString(totalTransformations));
+  logMessage("- Errors: " + toString(errors));
 }
 
 /**
@@ -82,8 +89,7 @@ int exportResults(set[int] toApply, list[tuple[int, loc, CompilationUnit]] proce
      output = processedFiles[v][1];
      unit = processedFiles[v][2];
      if(verbose) {
-       print("[Project Analyzer] applying " + name + " into ");
-       println(output); 
+       logMessage("- applying " + name + " into " + output.path); 
      }
      writeFile(output, unit);
      total = total + processedFiles[v][0];
@@ -105,8 +111,18 @@ set[int] generateRandomNumbers(int toExecute, int total) {
 }
 
 int numberOfTransformationsToApply(int total, int percent) {
-   if(total <=10) {
+   if(total * percent / 100 <= 10 && total >= 10) {
      return total; 
    }
    return total * percent / 100;
+}
+
+void logMessage(str message) {
+  loc out = |project://rascal-Java8/output/|;
+  out += logFile; 
+  if(!exists(out)) {
+     println("Creating log file at: " + out.path);	
+     writeFile(out, "");
+  } 
+  appendToFile(out, message  + "\n");
 }
