@@ -1,23 +1,14 @@
 module LocalVariablesFinder
 
-import Set;
-import lang::java::\syntax::Java18;
-import String;
-import ParseTree;
 import IO;
+import lang::java::\syntax::Java18;
+import ParseTree;
+import Set;
+import String;
 import MethodVar;
-import ParseTreeVisualization;
-
-// syntax LocalVariableDeclarationStatement = LocalVariableDeclaration ";"+ ;
-// syntax LocalVariableDeclaration = VariableModifier* UnannType VariableDeclaratorList ;
-// syntax VariableDeclaratorList = variableDeclaratorList: {VariableDeclarator ","}+ ; 
-// syntax VariableDeclarator = variableDeclarator: VariableDeclaratorId ("=" VariableInitializer)? ;
 
 public set[MethodVar] findLocalVariables(MethodHeader methodHeader, MethodBody methodBody) {
-	set[MethodVar] methodVars = {};
-	methodVars += findVariablesAsParameters(methodHeader);
-	methodVars += findVariablesInsideBody(methodBody);
-	return methodVars;
+	return findVariablesAsParameters(methodHeader) + findVariablesInsideBody(methodBody);
 }
 
 private set[MethodVar] findVariablesAsParameters(MethodHeader methodHeader) {
@@ -27,6 +18,10 @@ private set[MethodVar] findVariablesAsParameters(MethodHeader methodHeader) {
 			methodVars += createParameterMethodVar(figureIfIsFinal(varMod), varId, varType);
 	}
 	return methodVars;
+}
+
+private bool figureIfIsFinal(VariableModifier* varMod) {
+	return "<varMod>" := "final";
 }
 
 private MethodVar createParameterMethodVar(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
@@ -129,13 +124,6 @@ private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId,
 	bool isEffectiveFinal = true;
 	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
 }
-
-private bool figureIfIsFinal(VariableModifier* varMod) {
-	if ("<varMod>" := "final")
-		return true;
-	return false;
-}
-
 
 // XXX ugly handling of non effective finals (mainly due to usage of sets)
 private set[MethodVar] addNonEffectiveFinalVars(set[MethodVar] methodVars, set[str] nonEffectiveFinalOutsideLoopVars) {
