@@ -7,9 +7,14 @@ import LocalVariablesFinder;
 import refactor::forloop::EnhancedLoopExpression;
 import refactor::forloop::ForLoopBodyReferences;
 import refactor::forloop::ForLoopToFunctional;
+import refactor::forloop::ClassFieldsFinder;
 import MethodVar;
 
 private set[str] checkedExceptionClasses;
+
+private set[MethodVar] currentClassFields = {};
+
+private bool alreadyComputedClassFields;
 
 public void findForLoops(list[loc] locs, set[str] checkedExceptions) {
 	checkedExceptionClasses = checkedExceptions;
@@ -17,6 +22,7 @@ public void findForLoops(list[loc] locs, set[str] checkedExceptions) {
 		javaFileContent = readFile(fileLoc);
 		try {
 			unit = parse(#CompilationUnit, javaFileContent);
+			alreadyComputedClassFields = false;
 			lookForForStatements(unit);
 		} catch:
 			continue;	
@@ -26,28 +32,41 @@ public void findForLoops(list[loc] locs, set[str] checkedExceptions) {
 private void lookForForStatements(CompilationUnit unit) {
 	visit(unit) {
 		case MethodDeclaration methodDeclaration:
-			lookForEnhancedForStatementsInMethod(methodDeclaration);
+			lookForEnhancedForStatementsInMethod(unit, methodDeclaration);
 	}
 }
 
-private void lookForEnhancedForStatementsInMethod(MethodDeclaration methodDeclaration) {
+private void lookForEnhancedForStatementsInMethod(CompilationUnit unit, MethodDeclaration methodDeclaration) {
 	visit(methodDeclaration) {
 		case (MethodDeclaration) `<MethodModifier* _> <MethodHeader methodHeader> <MethodBody methodBody>`:
-			lookForEnhancedForStatementsInMethodBody(methodHeader, methodBody);
+			lookForEnhancedForStatementsInMethodBody(unit, methodHeader, methodBody);
 	}
 }
 
-private void lookForEnhancedForStatementsInMethodBody(MethodHeader methodHeader, MethodBody methodBody) {
+private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, MethodHeader methodHeader, MethodBody methodBody) {
+	set[MethodVar] availableVars = {};
+	alreadyComputedCurrentMethodAvailableVars = false;
+	
 	visit(methodBody) {
 		case EnhancedForStatement forStmt: {
+			
+			if(!alreadyComputedClassFields) {
+				currentClassFields = findClassFields(unit);
+				alreadyComputedClassFields = true;
+			}
+			
+			if(!alreadyComputedCurrentMethodAvailableVars) { 
+				availableVars = currentClassFields + findLocalVariables(methodHeader, methodBody);
+				alreadyComputedAvailableVars = true;
+			}
+			
 			visit(forStmt) {
 				case EnhancedForStatement enhancedForStmt: {
 					visit(enhancedForStmt) {
 						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement stmt>`: {
-							methodLocalVariables = findLocalVariables(methodHeader, methodBody);
-							if(isLoopRefactorable(methodLocalVariables, collectionId, stmt))
-								// TODO Create data structure
-								refactorEnhancedToFunctional(methodLocalVariables, enhancedForStmt, methodBody, iteratedVarName, collectionId);
+							
+							if(isLoopRefactorable(availableVars, collectionId, stmt))
+								refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
 						}
 					}
 				}
