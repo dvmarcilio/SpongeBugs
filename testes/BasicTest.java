@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+
+import java.util.HashMap;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -6,12 +8,14 @@ import com.sun.corba.se.impl.presentation.rmi.ExceptionHandlerImpl.ExceptionRWRM
 
 import java.io.IOException;
 import java.lang.Exception;
-import java.sql.SQLException;
 public class BasicTest {
 	public int test(int a, int b, int c[]) {
 		return a + b;
 	}
-
+	List<String> list1 = new ArrayList();
+	List<String> list2 = new ArrayList<>();
+	Map<String, List<String>> myMap = new HashMap();
+	Map<String, List<String>> myMap2 = new HashMap<String, List<String>>();
 	public static void whileWithIteratorStatement() {
 		Collection<String> list = new ArrayList<String>();
 
@@ -110,7 +114,7 @@ public class BasicTest {
 	public void testMulticatch()
 	{
 		try{
-			int x = 0;
+			int x =0;
 		}
 		catch(ExceptionInInitializerError e){
 			System.out.println(e);
@@ -119,15 +123,7 @@ public class BasicTest {
 			System.out.println(e);
 		}
 		catch(IOException e) {
-			try {
-				System.out.println( "blah" );
-			}
-			catch(SQLException e) {
-				System.out.println(e);
-			}
+			e.printStackTrace();
 		}
 	}
-	
-	
-	
 }

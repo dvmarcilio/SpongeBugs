@@ -13,6 +13,8 @@ import io::IOUtil;
 import MultiCatch;
 import SwitchString;
 import VarArgs; 
+import Diamond;
+
 import lang::java::\syntax::Java18;
 
 str logFile = "";
@@ -21,13 +23,18 @@ str logFile = "";
  * Analyze all projecteds listed in 
  * the input file. 
  */
-public void analyzeProjects(loc input, bool verbose = true) {
+public void refactorProjects(loc input, bool verbose = true) {
     str ctime =  printTime(now(), "YYYYMMDDHHmmss");
     logFile = "log-" + ctime;
     list[str] projects = readFileLines(input);
     
     for(p <- projects) {
+       if(startsWith(p, "#")) {
+         continue;
+       }
+       
        list[str] projectDescriptor = split(",", p);
+       println("[Project Analyszer] project: " + projectDescriptor[0]);
        logMessage("[Project Analyzer] processing project: " + projectDescriptor[0]);
       
        list[loc] projectFiles = findAllFiles(|file:///| + projectDescriptor[4], "java");
@@ -36,6 +43,7 @@ public void analyzeProjects(loc input, bool verbose = true) {
           case /MC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorMultiCatch, "multicatch");
           case /SS/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorSwitchString, "switchstring");
           case /VA/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorVarArgs, "varargs");
+          case /DI/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorDiamond, "diamond");
           default: logMessage(" ... nothing to be done");
        }
     }  
