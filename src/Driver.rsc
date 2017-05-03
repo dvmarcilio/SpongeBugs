@@ -112,7 +112,7 @@ set[int] generateRandomNumbers(int toExecute, int total) {
 
 int numberOfTransformationsToApply(int total, int percent) {
    if(total * percent / 100 <= 10 && total >= 10) {
-     return total; 
+     return 10; 
    }
    return total * percent / 100;
 }
