@@ -21,7 +21,6 @@ public bool isIteratingOnCollection(Expression exp, set[MethodVar] localVariable
 		return false;
 }
 
-// (Object[]) object will be treated as method invocation
 private bool isExpAnIdentifier(Expression exp) {
 	expStr = unparse(exp);
 	return !contains(expStr, ".") && !contains(expStr, "(");
