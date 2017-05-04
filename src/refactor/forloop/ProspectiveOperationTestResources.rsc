@@ -60,3 +60,42 @@ private set[MethodVar] multipleMapsAndEndingReducerVars() {
 	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
 	return findLocalVariables(methodHeader, methodBody);
 }
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] innerLoop1() {
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/InnerLoop1.java|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	return <innerLoop1Vars(), forStmt>;
+}
+
+private set[MethodVar] innerLoop1Vars() {
+	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyInnerLoop1.java|;
+	methodBody = parse(#MethodBody, readFile(fileLoc));
+	methodHeader = parse(#MethodHeader, "\<N\> Graph\<N\> transitiveClosure(Graph\<N\> graph)");
+	return findLocalVariables(methodHeader, methodBody);
+}
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] innerLoop2() {
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/InnerLoop2.java|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	return <innerLoop2Vars(), forStmt>;
+}
+
+private set[MethodVar] innerLoop2Vars() {
+	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyInnerLoop2.java|;
+	methodBody = parse(#MethodBody, readFile(fileLoc));
+	methodHeader = parse(#MethodHeader, "ImmutableList\<Method\> getAnnotatedMethodsNotCached(Class\<?\> clazz)");
+	return findLocalVariables(methodHeader, methodBody);
+}
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithInnerWhile() {
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/LoopWithInnerWhile.java|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	return <loopWithInnerWhileVars(), forStmt>;
+}
+
+private set[MethodVar] loopWithInnerWhileVars() {
+	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyLoopWithInnerWhile.java|;
+	methodBody = parse(#MethodBody, readFile(fileLoc));
+	methodHeader = parse(#MethodHeader, "ImmutableList\<Method\> getAnnotatedMethodsNotCached(Class\<?\> clazz)");
+	return findLocalVariables(methodHeader, methodBody);
+}

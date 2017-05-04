@@ -34,21 +34,18 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromStatement(St
 		case IfThenStatement ifStmt: {
 			prOps += retrieveProspectiveOperationsFromIfThenStatement(ifStmt);
 		}
-		case IfThenElseStatement ifElseStmt: {
-			println("IfThenElseStatement");
-			println(ifElseStmt);
-			println();
-		}
 		case ExpressionStatement expStmt: {
 			statement = parse(#Statement, unparse(expStmt));
 			prOps += retrieveProspectiveOperationFromSingleStatement(statement);
 		}
+		
+		case IfThenElseStatement ifElseStmt: throw "Not Refactoring If/Else for now";
+		case ForStatement _: throw "Not Refactoring Inner Loops for now";
+		case WhileStatement _: throw "Not Refactoring While Loops inside ForStatement for now";
 	}
 	return prOps;
 }
 
-
-// XXX we might need to save `if (exp)` when a filter is added
 private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block block) {
 	list[ProspectiveOperation] prOps = [];
 	top-down-break visit(block) {
@@ -59,8 +56,7 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 					prOps += retrieveProspectiveOperationsFromIfThenStatement(ifThenStmt);
 				}
 				case (IfThenElseStatement) `if ( <Expression exp> ) <StatementNoShortIf thenStmt> else <Statement elseStmt>`: {
-					//retrieveProspectiveOperationsFromStatement(thenStmt);
-					println("if else");
+					throw "Not Refactoring If/Else for now";
 				}
 				case LocalVariableDeclarationStatement lvdlStmt: {
 					// not an if, so it's a map
@@ -70,6 +66,10 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 					statement = parse(#Statement, unparse(otherStmt));
 					prOps += retrieveProspectiveOperationFromSingleStatement(statement);
 				}
+				
+				case IfThenElseStatement ifElseStmt: throw "Not Refactoring If/Else for now";
+				case ForStatement _: throw "Not Refactoring Inner Loops for now";
+				case WhileStatement _: throw "Not Refactoring While Loops inside ForStatement for now";
 			}
 		}
 	}

@@ -95,3 +95,36 @@ public test bool shouldSeparateAndChooseCorrectOperationsOnMultipleMapsEndingWit
 		prospectiveOperations[4].stmt == "expectedEntrySetHash += expectedHash;" &&
 		prospectiveOperations[4].operation == REDUCE;
 }
+
+public test bool shouldThrowExceptionWhenInnerLoopIsFound() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] innerLoop = innerLoop1();
+	
+	try {
+		prospectiveOperations = retrieveProspectiveOperations(innerLoop.vars, innerLoop.loop);
+	} catch:
+		return true;
+	
+	return false;
+}
+
+public test bool shouldThrowExceptionWhenAnotherInnerLoopIsFound() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] innerLoop = innerLoop2();
+	
+	try {
+		prospectiveOperations = retrieveProspectiveOperations(innerLoop.vars, innerLoop.loop);
+	} catch:
+		return true;
+	
+	return false;
+}
+
+public test bool shouldThrowExceptionWhenLoopWithInnerWhileIsFound() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithInnerWhile = loopWithInnerWhile();
+	
+	try {
+		prospectiveOperations = retrieveProspectiveOperations(loopWithInnerWhile.vars, loopWithInnerWhile.loop);
+	} catch:
+		return true;
+	
+	return false;
+}
