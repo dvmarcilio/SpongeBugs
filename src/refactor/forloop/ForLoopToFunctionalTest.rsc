@@ -58,7 +58,6 @@ public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
 //	return false;
 //}
 
-// TODO Complete the test with full output when REDUCE implemented
 public test bool shouldRefactorReduceWithCompoundPlusAssignmentOperator() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));

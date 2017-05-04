@@ -7,18 +7,34 @@ import IO;
 import Set;
 import MethodVar;
 
-// TODO still need to find effective final vars somewhere.
 public bool atMostOneReferenceToNonEffectiveFinalVar(set[MethodVar] localVariables, Statement loopBody) {
-	varsReferenced = findVariablesReferenced(loopBody);
-	return size(varsReferenced) <= 1;
+	return getTotalOfNonEffectiveFinalVarsReferenced(localVariables, loopBody) <= 1;
 }
 
-private set[str] findVariablesReferenced(Statement stmt) {
+public int getTotalOfNonEffectiveFinalVarsReferenced(set[MethodVar] localVariables, Statement loopBody) {
+	varsReferencedNames = findVariablesReferenced(loopBody);
+	nonEffectiveFinalVarsReferencedCount = 0;
+	
+	for (varReferencedName <- varsReferencedNames) {
+		var = findByName(localVariables, varReferencedName);
+		if (!isEffectiveFinal(var) && !var.isDeclaredWithinLoop)
+			nonEffectiveFinalVarsReferencedCount += 1;
+	}
+	
+	return nonEffectiveFinalVarsReferencedCount;
+}
+
+// XXX UsedVariables could use the same thing
+// XXX Ignoring class fields. ('this.x')
+public set[str] findVariablesReferenced(Statement loopBody) {
 	set[str] varsReferenced = {};
 
-	visit (stmt) {
-		case (Assignment) `<LeftHandSide lhs> <AssignmentOperator _> <Expression _>`:
-			varsReferenced += trim(unparse(lhs));
+	visit (loopBody) {
+		case ExpressionName expName: {
+			visit(expName) {
+				case Identifier id: varsReferenced += unparse(id);
+			}
+		}
 	}	
 	
 	return varsReferenced;
