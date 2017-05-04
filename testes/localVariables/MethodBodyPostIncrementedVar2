@@ -1,0 +1,43 @@
+{
+            // Corner case: List is empty.
+            if (futures.isEmpty()) {
+                handleAllCompleted();
+                return;
+            }
+
+            // NOTE: If we ever want to use a custom executor here, have a look at CombinedFuture as we'll
+            // need to handle RejectedExecutionException
+            if (allMustSucceed) {
+                // We need fail fast, so we have to keep track of which future failed so we can propagate
+                // the exception immediately
+
+                // Register a listener on each Future in the list to update the state of this future.
+                // Note that if all the futures on the list are done prior to completing this loop, the last
+                // call to addListener() will callback to setOneValue(), transitively call our cleanup
+                // listener, and set this.futures to null.
+                // This is not actually a problem, since the foreach only needs this.futures to be non-null
+                // at the beginning of the loop.
+                int i = 0;
+                for (final ListenableFuture<? extends InputT> listenable : futures) {
+                    final int index = i++;
+                    listenable.addListener(
+                            new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                handleOneInputDone(index, listenable);
+                            } finally {
+                                decrementCountAndMaybeComplete();
+                            }
+                        }
+                    },
+                            directExecutor());
+                }
+            } else {
+                // We'll only call the callback when all futures complete, regardless of whether some failed
+                // Hold off on calling setOneValue until all complete, so we can share the same listener
+                for (ListenableFuture<? extends InputT> listenable : futures) {
+                    listenable.addListener(this, directExecutor());
+                }
+            }
+        }

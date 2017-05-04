@@ -1,0 +1,11 @@
+{
+            // Collect the values if (a) our output requires collecting them and (b) we haven't been
+            // collecting them as we go. (We've collected them as we go only if we needed to fail fast)
+            if (collectsValues & !allMustSucceed) {
+                int i = 0;
+                for (ListenableFuture<? extends InputT> listenable : futures) {
+                    handleOneInputDone(i++, listenable);
+                }
+            }
+            handleAllCompleted();
+        }

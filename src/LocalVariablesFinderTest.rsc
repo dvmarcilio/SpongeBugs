@@ -222,3 +222,43 @@ public test bool shouldIdentifyAnonnymousInnerClassMethodParams() {
 	
 	return iterableParam.varType == "Iterable\<? extends K\>";
 }
+
+public test bool postIncrementedVariableInsideLoopShouldBeNonEffectiveFinal() {
+	methodHeader = postIncrementedVarMethodHeader();
+	methodBody = postIncrementedVarMethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	i = findByName(vars, "i");
+
+	return !i.isEffectiveFinal && !isEffectiveFinal(i);
+}
+
+public test bool postIncrementedVariable2InsideLoopShouldBeNonEffectiveFinal() {
+	methodHeader = postIncrementedVar2MethodHeader();
+	methodBody = postIncrementedVar2MethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	i = findByName(vars, "i");
+
+	return !i.isEffectiveFinal && !isEffectiveFinal(i);
+}
+
+public test bool postIncrementedVariable3InsideLoopShouldBeNonEffectiveFinal() {
+	methodHeader = postIncrementedVar3MethodHeader();
+	methodBody = postIncrementedVar3MethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	i = findByName(vars, "i");
+
+	return !i.isEffectiveFinal && !isEffectiveFinal(i);
+}
+
+public test bool postDecrementedVariableInsideLoopShouldBeNonEffectiveFinal() {
+	methodHeader = postDecrementedVarMethodHeader();
+	methodBody = postDecrementedVarMethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	misses = findByName(vars, "misses");
+
+	return !misses.isEffectiveFinal && !isEffectiveFinal(misses);
+}

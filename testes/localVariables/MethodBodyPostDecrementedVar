@@ -1,0 +1,44 @@
+{
+    int hits = 0;
+    int misses = 0;
+
+    Map<K, V> result = Maps.newLinkedHashMap();
+    Set<K> keysToLoad = Sets.newLinkedHashSet();
+//    for (K key : keys) {
+//      V value = get(key);
+//      if (!result.containsKey(key)) {
+//        result.put(key, value);
+//        if (value == null) {
+//          misses++;
+//          keysToLoad.add(key);
+//        } else {
+//          hits++;
+//        }
+//      }
+//    }
+
+    try {
+      if (!keysToLoad.isEmpty()) {
+        try {
+          Map<K, V> newEntries = loadAll(keysToLoad, defaultLoader);
+          for (K key : keysToLoad) {
+            V value = newEntries.get(key);
+            if (value == null) {
+              throw new InvalidCacheLoadException("loadAll failed to return a value for " + key);
+            }
+            result.put(key, value);
+          }
+        } catch (UnsupportedLoadingOperationException e) {
+          // loadAll not implemented, fallback to load
+          for (K key : keysToLoad) {
+            misses--; // get will count this miss
+            result.put(key, get(key, defaultLoader));
+          }
+        }
+      }
+      return ImmutableMap.copyOf(result);
+    } finally {
+      globalStatsCounter.recordHits(hits);
+      globalStatsCounter.recordMisses(misses);
+    }
+  }

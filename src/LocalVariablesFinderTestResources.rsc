@@ -130,3 +130,44 @@ public MethodBody methodWithAnonnymousInnerClassMethodBody() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyWithAnonnymousInnerClass|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
+
+public MethodHeader postIncrementedVarMethodHeader() {
+	header = "void processCompleted()";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody postIncrementedVarMethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostIncrementedVar|;
+	return parse(#MethodBody, readFile(fileLoc));
+}
+
+public MethodHeader postIncrementedVar2MethodHeader() {
+	header = "void init()";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody postIncrementedVar2MethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostIncrementedVar2|;
+	return parse(#MethodBody, readFile(fileLoc));
+}
+
+public MethodHeader postIncrementedVar3MethodHeader() {
+	header = "\<E\> ImmutableMap\<E, Integer\> indexMap(Collection\<E\> list)";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody postIncrementedVar3MethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostIncrementedVar3|;
+	return parse(#MethodBody, readFile(fileLoc));
+}
+
+
+public MethodHeader postDecrementedVarMethodHeader() {
+	header = "ImmutableMap\<K, V\> getAll(Iterable\<? extends K\> keys) throws ExecutionException";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody postDecrementedVarMethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostDecrementedVar|;
+	return parse(#MethodBody, readFile(fileLoc));
+}

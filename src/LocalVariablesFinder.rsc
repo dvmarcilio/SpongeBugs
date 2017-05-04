@@ -71,6 +71,11 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 		
 		case (Assignment) `<LeftHandSide varName> <AssignmentOperator _> <Expression  _>`: nonEffectiveFinalOutsideLoopVars += "<varName>";
 		
+		case (PreIncrementExpression) `++ <Identifier varName>`:  nonEffectiveFinalOutsideLoopVars += "<varName>";
+		case (PreDecrementExpression) `-- <Identifier varName>`:  nonEffectiveFinalOutsideLoopVars += "<varName>";
+		case (PostIncrementExpression) `<Identifier varName> ++`:  nonEffectiveFinalOutsideLoopVars += "<varName>";
+		case (PostDecrementExpression) `<Identifier varName> --`:  nonEffectiveFinalOutsideLoopVars += "<varName>";
+		
 		case(CatchFormalParameter) `<VariableModifier* varMod> <CatchType varType> <VariableDeclaratorId varId>`:
 			methodVars += createLocalMethodVar(figureIfIsFinal(varMod), varId, varType);	
 		
