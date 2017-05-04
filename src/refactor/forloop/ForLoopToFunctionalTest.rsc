@@ -8,7 +8,6 @@ import refactor::forloop::ForLoopToFunctional;
 import MethodVar;
 import LocalVariablesFinder;
 import LocalVariablesFinderTestResources;
-import ParseTreeVisualization;
 
 public test bool ex1() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T1.java|;
@@ -21,7 +20,7 @@ public test bool ex1() {
 	
 	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	
-	return unparse(refactoredStatement) == "testers.stream().map(testerClass -\> makeSuiteForTesterClass((Class\<? extends AbstractTester\<?\>\>) testerClass)).filter(testerSuite -\> testerSuite.countTestCases() \> 0).forEach(testerSuite -\> {\nsuite.addTest(testerSuite);\n});";
+	return "<refactoredStatement>" == "testers.stream().map(testerClass -\> makeSuiteForTesterClass((Class\<? extends AbstractTester\<?\>\>) testerClass)).filter(testerSuite -\> testerSuite.countTestCases() \> 0).forEach(testerSuite -\> {\n        suite.addTest(testerSuite);\n      });";
 }
 
 public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
@@ -86,7 +85,7 @@ public test bool shouldAddReturnToMapWithMoreThanOneStatement() {
 	
 	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	
-	return unparse(refactoredStatement) == "values.stream().map(v -\> {\nString key = keysIt.next();\nMetric\<?\> value = deserialize(key, v, this.zSetOperations.score(key));\nreturn value;\n}).filter(value -\> value != null).forEach(value -\> {\nresult.add(value);\n});";
+	return "<refactoredStatement>" ==  "values.stream().map(v -\> {\nString key = keysIt.next();\nMetric\<?\> value = deserialize(key, v, this.zSetOperations.score(key));\nreturn value;\n}).filter(value -\> value != null).forEach(value -\> {\r\n\t\t\t\tresult.add(value);\r\n\t\t\t});";
 }
 
 public test bool shouldAddCorrectReturnTo3StmtsMapBody() {
@@ -101,7 +100,7 @@ public test bool shouldAddCorrectReturnTo3StmtsMapBody() {
 	
 	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	
-	return unparse(refactoredStatement) == "snapshots.stream().map(snapshot -\> {\nFolderSnapshot previous = this.folders.get(snapshot.getFolder());\nupdated.put(snapshot.getFolder(), snapshot);\nChangedFiles changedFiles = previous.getChangedFiles(snapshot,\r\n                                                this.triggerFilter);\nreturn changedFiles;\n}).filter(changedFiles -\> !changedFiles.getFiles().isEmpty()).forEach(changedFiles -\> {\nchangeSet.add(changedFiles);\n});";
+	return "<refactoredStatement>" == "snapshots.stream().map(snapshot -\> {\nFolderSnapshot previous = this.folders.get(snapshot.getFolder());\nupdated.put(snapshot.getFolder(), snapshot);\nChangedFiles changedFiles = previous.getChangedFiles(snapshot,\r\n                                                this.triggerFilter);\nreturn changedFiles;\n}).filter(changedFiles -\> !changedFiles.getFiles().isEmpty()).forEach(changedFiles -\> {\r\n                                        changeSet.add(changedFiles);\r\n                                });";
 }
 
 public test bool shouldThrowExceptionWhenALoopWithOnlyOneReferenceToOutsideNonEffectiveFinalVarIsNotAReducer() {
