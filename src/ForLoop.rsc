@@ -9,6 +9,7 @@ import refactor::forloop::ForLoopBodyReferences;
 import refactor::forloop::ForLoopToFunctional;
 import refactor::forloop::ClassFieldsFinder;
 import MethodVar;
+import util::Math;
 
 private set[str] checkedExceptionClasses;
 
@@ -16,7 +17,10 @@ private set[MethodVar] currentClassFields = {};
 
 private bool alreadyComputedClassFields;
 
+private int refactoredCount = 0;
+
 public void findForLoops(list[loc] locs, set[str] checkedExceptions) {
+	refactoredCount = 0;
 	checkedExceptionClasses = checkedExceptions;
 	for(fileLoc <- locs) {
 		javaFileContent = readFile(fileLoc);
@@ -27,6 +31,7 @@ public void findForLoops(list[loc] locs, set[str] checkedExceptions) {
 		} catch:
 			continue;	
 	}
+	println("refactoredCount: " + toString(refactoredCount));
 }
 
 private void lookForForStatements(CompilationUnit unit) {
@@ -47,7 +52,7 @@ private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, Meth
 	set[MethodVar] availableVars = {};
 	alreadyComputedCurrentMethodAvailableVars = false;
 	
-	visit(methodBody) {
+	top-down visit(methodBody) {
 		case EnhancedForStatement forStmt: {
 			
 			if(!alreadyComputedClassFields) {
@@ -60,13 +65,26 @@ private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, Meth
 				alreadyComputedAvailableVars = true;
 			}
 			
-			visit(forStmt) {
+			top-down visit(forStmt) {
 				case EnhancedForStatement enhancedForStmt: {
 					visit(enhancedForStmt) {
 						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement stmt>`: {
 							
-							if(isLoopRefactorable(availableVars, collectionId, stmt))
-								refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
+							if(isLoopRefactorable(availableVars, collectionId, stmt)) {
+							
+								try {
+									refactored = refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
+									refactoredCount += 1;
+									println("refactored: " + toString(refactoredCount));
+									println(enhancedForStmt);
+									println("---");
+									println(refactored);
+									println();
+								} catch: {
+									continue;
+								}
+								
+							}
 						}
 					}
 				}
