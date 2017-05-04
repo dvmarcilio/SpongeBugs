@@ -16,21 +16,13 @@ import ParseTreeVisualization;
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
 public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {	
-	try 
-		return buildRefactoredMethodBody(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
-	 catch:
-		return methodBody;
+	return buildRefactoredMethodBody(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 }
 
 private MethodBody buildRefactoredMethodBody(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {
 	refactored = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	forStatement = parse(#Statement, unparse(forStmt));
 	refactoredMethodBody = refactorToFunctional(methodBody, forStatement, refactored);	
-	//println("\n --- APPLYING REFACTOR ---");
-	//println(forStmt);
-	//println("refactored to:");
-	//println(refactored);
-	
 	return refactoredMethodBody;
 }
 
@@ -271,9 +263,6 @@ private Statement buildFunctionalStatement(set[MethodVar] methodVars, list[Compo
 	if(size(composablePrOps) == 1 && isForEach(composablePrOps[0].prOp))
 		return buildStatementForOnlyOneForEach(composablePrOps[0].prOp, iteratedVarName, collectionId);                   
 	
-	println();
-	println(forStmt);
-	println("\nrefactored to:");
 	return chainOperationsIntoStatement(methodVars, composablePrOps, collectionId);
 }
 
@@ -299,7 +288,6 @@ private Statement chainOperationsIntoStatement(set[MethodVar] methodVars, list[C
 		chainStr = "<chainStr>." + buildChainableOperation(methodVars, composablePrOp);
 	}
 	
-	println(chainStr);
 	return parse(#Statement, "<chainStr>;");
 }
 
