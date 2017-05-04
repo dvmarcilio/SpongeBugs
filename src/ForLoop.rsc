@@ -69,9 +69,9 @@ private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, Meth
 			top-down visit(forStmt) {
 				case EnhancedForStatement enhancedForStmt: {
 					visit(enhancedForStmt) {
-						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement stmt>`: {
+						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement loopBody>`: {
 							
-							if(isLoopRefactorable(availableVars, collectionId, stmt)) {
+							if(isLoopRefactorable(availableVars, collectionId, loopBody)) {
 							
 								try {
 									refactored = refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
@@ -97,13 +97,13 @@ private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, Meth
 	}
 }
 
-private bool isLoopRefactorable(set[MethodVar] methodLocalVariables, Expression exp, Statement stmt) {
-	return loopBodyPassConditions(stmt) && isIteratingOnCollection(exp, methodLocalVariables) &&
-		atMostOneReferenceToNonEffectiveFinalVar(methodLocalVariables, stmt);
+private bool isLoopRefactorable(set[MethodVar] methodLocalVariables, Expression collectionId, Statement loopBody) {
+	return loopBodyPassConditions(loopBody) && isIteratingOnCollection(collectionId, methodLocalVariables) &&
+		atMostOneReferenceToNonEffectiveFinalVar(methodLocalVariables, loopBody);
 }
 
 // TODO extract module and test it
-private bool loopBodyPassConditions(Statement stmt) {
+private bool loopBodyPassConditions(Statement loopBody) {
 	returnCount = 0;
 	visit(stmt) {
 		case (ThrowStatement) `throw new <TypeArguments? _> <ClassOrInterfaceTypeToInstantiate className> ( <ArgumentList? _>);`: {
