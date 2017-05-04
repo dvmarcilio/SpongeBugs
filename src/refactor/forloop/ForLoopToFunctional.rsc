@@ -269,7 +269,7 @@ private Statement buildFunctionalStatement(set[MethodVar] methodVars, list[Compo
 private Statement buildStatementForOnlyOneForEach(ProspectiveOperation prOp, VariableDeclaratorId iteratedVarName, Expression collectionId) {
 	stmtBlock = transformIntoBlock(prOp.stmt);
 	iteratedVarName = trimEndingBlankSpace(iteratedVarName);
-	return parse(#Statement, "<collectionId>.forEach((<iteratedVarName>) -\> <stmtBlock>);");
+	return parse(#Statement, "<collectionId>.forEach(<iteratedVarName> -\> <stmtBlock>);");
 }
 
 private Block transformIntoBlock(str stmt) {
