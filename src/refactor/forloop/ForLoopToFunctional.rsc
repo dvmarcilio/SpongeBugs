@@ -11,7 +11,7 @@ import refactor::forloop::ProspectiveOperation;
 import refactor::forloop::UsedVariables;
 import refactor::forloop::AvailableVariables;
 import refactor::forloop::OperationType;
-import ParseTreeVisualization;
+import refactor::forloop::ForLoopBodyReferences;
 
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
@@ -38,7 +38,8 @@ MethodBody refactorToFunctional(MethodBody methodBody, Statement forStmt, Statem
 
 public list[ComposableProspectiveOperation] retrieveComposableProspectiveOperations(set[MethodVar] methodVars, EnhancedForStatement forStmt) {
 	prospectiveOperations = retrieveProspectiveOperations(methodVars, forStmt);
-	if (canOperationsBeRefactored(prospectiveOperations)) {
+	nonEffectiveOutsideVarsReferencedCount = getTotalOfNonEffectiveFinalVarsReferenced(methodVars, forStmt);
+	if (canOperationsBeRefactored(prospectiveOperations, nonEffectiveOutsideVarsReferencedCount)) {
 		composablePrOps = createComposableProspectiveOperationsWithVariableAvailability(prospectiveOperations, methodVars);
 		
 		composablePrOps = mergeIntoComposableOperations(composablePrOps);

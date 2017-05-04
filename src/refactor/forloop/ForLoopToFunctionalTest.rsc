@@ -7,6 +7,7 @@ import ParseTree;
 import refactor::forloop::ForLoopToFunctional;
 import MethodVar;
 import LocalVariablesFinder;
+import LocalVariablesFinderTestResources;
 import ParseTreeVisualization;
 
 public test bool ex1() {
@@ -101,4 +102,21 @@ public test bool shouldAddCorrectReturnTo3StmtsMapBody() {
 	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	
 	return unparse(refactoredStatement) == "snapshots.stream().map(snapshot -\> {\nFolderSnapshot previous = this.folders.get(snapshot.getFolder());\nupdated.put(snapshot.getFolder(), snapshot);\nChangedFiles changedFiles = previous.getChangedFiles(snapshot,\r\n                                                this.triggerFilter);\nreturn changedFiles;\n}).filter(changedFiles -\> !changedFiles.getFiles().isEmpty()).forEach(changedFiles -\> {\nchangeSet.add(changedFiles);\n});";
+}
+
+public test bool shouldThrowExceptionWhenALoopWithOnlyOneReferenceToOutsideNonEffectiveFinalVarIsNotAReducer() {
+	methodHeader = assignmentInsideForMethodHeader();
+	methodBody = assignmentInsideForMethodBody();
+	methodVars = findLocalVariables(methodHeader, methodBody);
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "entry");
+	Expression collectionId = parse(#Expression, "dir");
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, "for (Path entry : dir) {\n               exceptions = concat(exceptions, deleteRecursivelyInsecure(entry));\n            }");
+	
+	try {
+		refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	} catch:
+		return true;
+		
+	return false;
+	
 }

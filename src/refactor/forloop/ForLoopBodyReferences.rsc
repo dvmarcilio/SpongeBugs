@@ -11,6 +11,18 @@ public bool atMostOneReferenceToNonEffectiveFinalVar(set[MethodVar] localVariabl
 	return getTotalOfNonEffectiveFinalVarsReferenced(localVariables, loopBody) <= 1;
 }
 
+public int getTotalOfNonEffectiveFinalVarsReferenced(set[MethodVar] localVariables, EnhancedForStatement forStmt) {
+	return getTotalOfNonEffectiveFinalVarsReferenced(localVariables, retrieveLoopBodyFromEnhancedFor(forStmt)); 
+}
+
+public Statement retrieveLoopBodyFromEnhancedFor(EnhancedForStatement forStmt) {
+	visit (forStmt) {
+		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _>: <Expression _> ) <Statement loopBody>`:
+		return loopBody;
+	}	
+	throw "Error";
+}
+
 public int getTotalOfNonEffectiveFinalVarsReferenced(set[MethodVar] localVariables, Statement loopBody) {
 	varsReferencedNames = findVariablesReferenced(loopBody);
 	nonEffectiveFinalVarsReferencedCount = 0;

@@ -185,8 +185,9 @@ public bool isLocalVariableDeclarationStatement(str stmt) {
 	} catch: return false;
 }
 
-public bool canOperationsBeRefactored(list[ProspectiveOperation] prOps) {
-	return !haveEagerOperationAsNonLast(prOps);
+public bool canOperationsBeRefactored(list[ProspectiveOperation] prOps, int nonEffectiveOutsideVarsReferencedCount) {
+	return !haveEagerOperationAsNonLast(prOps) 
+		&& isLoopAReducerIfHasMoreThanOneReferenceToOutsideNonEffectiveFinalVar(prOps, nonEffectiveOutsideVarsReferencedCount);
 }
 
 private bool haveEagerOperationAsNonLast(list[ProspectiveOperation] prOps) {
@@ -195,4 +196,10 @@ private bool haveEagerOperationAsNonLast(list[ProspectiveOperation] prOps) {
 		if(isEagerOperation(prOp)) return true;
 	
 	return false; 
+}
+
+private bool isLoopAReducerIfHasMoreThanOneReferenceToOutsideNonEffectiveFinalVar(list[ProspectiveOperation] prOps, int outsideNonEffectiveReferencesCount) {
+	if (outsideNonEffectiveReferencesCount == 1)
+		return isReduce(last(prOps));
+	return true;
 }

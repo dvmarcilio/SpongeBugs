@@ -22,14 +22,6 @@ public test bool variablesReferenced1() {
 		"changeSet" in result;
 }
 
-private Statement retrieveLoopBodyFromEnhancedFor(EnhancedForStatement forStmt) {
-	visit (forStmt) {
-		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _>: <Expression _> ) <Statement loopBody>`:
-		return loopBody;
-	}	
-	throw "Error";
-}
-
 public test bool variablesReferenced2() {
 	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForWithMultiStatementMap.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
