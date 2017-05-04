@@ -99,3 +99,15 @@ private set[MethodVar] loopWithInnerWhileVars() {
 	methodHeader = parse(#MethodHeader, "ImmutableList\<Method\> getAnnotatedMethodsNotCached(Class\<?\> clazz)");
 	return findLocalVariables(methodHeader, methodBody);
 }
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] loopReduceWithPostIncrement() {
+	forStmt = parse(#EnhancedForStatement, "for (Entry\<E\> entry : entries) {\n      elementsBuilder.add(entry.getElement());\n      // cumulativeCounts[i + 1] = cumulativeCounts[i] + entry.getCount();\n      i++;\n    }");
+	return <loopReduceWithPostIncrementVars(), forStmt>;
+}
+
+private set[MethodVar] loopReduceWithPostIncrementVars() {
+	methodHeader = parse(#MethodHeader, "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)");
+	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyReduceWithPostIncrement|;
+  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+	return findLocalVariables(methodHeader, methodBody);
+}

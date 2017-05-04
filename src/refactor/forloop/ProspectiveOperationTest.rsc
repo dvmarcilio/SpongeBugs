@@ -128,3 +128,16 @@ public test bool shouldThrowExceptionWhenLoopWithInnerWhileIsFound() {
 	
 	return false;
 }
+
+public test bool shouldIdentifyPostIncrementAsReduce() {
+	throw "Not yet implemented";
+	
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] loopReduceWithPostIncrement = loopReduceWithPostIncrement();
+
+	prospectiveOperations = retrieveProspectiveOperations(loopReduceWithPostIncrement.vars, loopReduceWithPostIncrement.loop);
+	
+	println(prospectiveOperations);
+	
+	return false;
+
+}
