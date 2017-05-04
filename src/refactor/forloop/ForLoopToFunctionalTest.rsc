@@ -117,6 +117,22 @@ public test bool shouldThrowExceptionWhenALoopWithOnlyOneReferenceToOutsideNonEf
 	} catch:
 		return true;
 		
-	return false;
-	
+	return false;	
+}
+
+public test bool shouldThrowExceptionWhenALoopWithOnlyOneReferenceToOutsideNonEffectiveFinalVarIsNotAReducer2() {
+	methodHeader = parse(#MethodHeader, "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)");
+  	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyWithTwoReferencesToOutsideNonEffectiveVars|;
+  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+  	methodVars = findLocalVariables(methodHeader, methodBody);
+  	forStmt = parse(#EnhancedForStatement, "for (Entry\<E\> entry : entries) {\n      elementsBuilder.add(entry.getElement());\n      cumulativeCounts[i + 1] = cumulativeCounts[i] + entry.getCount();\n      i++;\n    }");
+  	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "entry");
+	Expression collectionId = parse(#Expression, "entries");
+  	
+  	try {
+		refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	} catch:
+		return true;
+		
+	return false;	 	
 }

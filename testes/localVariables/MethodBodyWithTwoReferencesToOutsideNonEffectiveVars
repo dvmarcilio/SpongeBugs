@@ -1,0 +1,18 @@
+{
+    if (entries.isEmpty()) {
+      return emptyMultiset(comparator);
+    }
+    ImmutableList.Builder<E> elementsBuilder = new ImmutableList.Builder<E>(entries.size());
+    long[] cumulativeCounts = new long[entries.size() + 1];
+    int i = 0;
+    for (Entry<E> entry : entries) {
+      elementsBuilder.add(entry.getElement());
+      cumulativeCounts[i + 1] = cumulativeCounts[i] + entry.getCount();
+      i++;
+    }
+    return new RegularImmutableSortedMultiset<E>(
+        new RegularImmutableSortedSet<E>(elementsBuilder.build(), comparator),
+        cumulativeCounts,
+        0,
+        entries.size());
+ }

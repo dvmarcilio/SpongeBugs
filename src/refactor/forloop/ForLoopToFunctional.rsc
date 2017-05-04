@@ -46,7 +46,6 @@ public list[ComposableProspectiveOperation] retrieveComposableProspectiveOperati
 		
 		return rearrangeMapBodiesIfNeeded(composablePrOps);
 	} else 
-		// Throwing the exception is not the best option, but the easiest to implement right now
 		throw "CanNotBeRefactored";
 }
 

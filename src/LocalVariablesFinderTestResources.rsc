@@ -181,3 +181,13 @@ public MethodBody assignmentInsideForMethodBody() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyAssignmentInsideLoop|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
+
+public MethodHeader twoNonEffectiveFinalVarsInsideLoopMethodHeader() {
+	header = "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody twoNonEffectiveFinalVarsInsideLoopMethodBody() {
+	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyWithTwoReferencesToOutsideNonEffectiveVars|;
+  	return parse(#MethodBody, readFile(methodBodyLoc));
+}

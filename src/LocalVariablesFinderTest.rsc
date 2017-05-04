@@ -272,3 +272,15 @@ public test bool variableAssignedInsideLoopShouldNotBeEffectiveFinal() {
 
 	return !exceptions.isEffectiveFinal && !isEffectiveFinal(exceptions);
 }
+
+public test bool arrayAssignmentShouldStillKeepVarAsEffectiveFinal() {
+  	methodHeader = twoNonEffectiveFinalVarsInsideLoopMethodHeader();
+  	methodBody = twoNonEffectiveFinalVarsInsideLoopMethodBody();
+  	
+  	vars = findLocalVariables(methodHeader, methodBody);
+  	
+  	i = findByName(vars, "i");
+  	cumulativeCounts = findByName(vars, "cumulativeCounts");
+  	
+  	return !isEffectiveFinal(i) && isEffectiveFinal(cumulativeCounts);
+}
