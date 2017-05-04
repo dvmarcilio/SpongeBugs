@@ -95,7 +95,10 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatem
 						
 					if (!foundReturn) {
 						prOps += prospectiveOperation(unparse(exp), FILTER);
-						prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+						if (isSingleStatementBlock(thenStmt))
+							prOps += retrieveProspectiveOperationFromSingleStatement(thenStmt);
+						else
+							prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
 					}
 				}
 			}
@@ -131,6 +134,23 @@ private bool isReferenceToNonFinalLocalVar(LeftHandSide lhs) {
 	varName = trim(unparse(lhs));
 	var = findByName(methodLocalVars, varName);
 	return !isEffectiveFinal(var);
+}
+
+// XXX Does this really work?
+private bool isSingleStatementBlock(Statement thenStmt) {
+	if (isBlock("<thenStmt>")) {
+		semiCollonOccurrences = findAll("<thenStmt>", ";");
+		return size(semiCollonOccurrences) == 1;
+	}
+	
+	return false;
+}
+
+private bool isBlock(str stmt) {
+	try {
+		parse(#Block, stmt);
+		return true;
+	} catch: return false;
 }
 
 private list[ProspectiveOperation] markLastStmtAsEager(list[ProspectiveOperation] prOps) {

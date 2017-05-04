@@ -111,3 +111,15 @@ private set[MethodVar] loopReduceWithPostIncrementVars() {
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	return findLocalVariables(methodHeader, methodBody);
 }
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithThrowStatement() {
+	forStmt = parse(#EnhancedForStatement, "for (K key : keysToLoad) {\n            V value = newEntries.get(key);\n            if (value == null) {\n              throw new InvalidCacheLoadException(\"loadAll failed to return a value for \" + key);\n            }\n            result.put(key, value);\n          }");
+	return <loopWithThrowStatementVars(), forStmt>;
+}
+
+private set[MethodVar] loopWithThrowStatementVars() {
+	methodHeader = parse(#MethodHeader, "ImmutableMap\<K, V\> getAll(Iterable\<? extends K\> keys) throws ExecutionException");
+	methodBodyLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostDecrementedVar|;
+  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+	return findLocalVariables(methodHeader, methodBody);
+}

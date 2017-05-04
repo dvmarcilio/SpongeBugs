@@ -139,5 +139,20 @@ public test bool shouldIdentifyPostIncrementAsReduce() {
 	println(prospectiveOperations);
 	
 	return false;
+}
 
+public test bool shouldKeepBlockAfterAnIf() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithThrowStatement = loopWithThrowStatement();
+
+	prospectiveOperations = retrieveProspectiveOperations(loopWithThrowStatement.vars, loopWithThrowStatement.loop);
+	
+	return size(prospectiveOperations) == 4 &&
+		prospectiveOperations[0].stmt == "V value = newEntries.get(key);" &&
+		prospectiveOperations[0].operation == MAP &&
+		prospectiveOperations[1].stmt == "value == null" &&
+		prospectiveOperations[1].operation == FILTER &&
+		prospectiveOperations[2].stmt == "{\n              throw new InvalidCacheLoadException(\"loadAll failed to return a value for \" + key);\n            }" &&
+		prospectiveOperations[2].operation == MAP &&
+		prospectiveOperations[3].stmt == "result.put(key, value);" &&
+		prospectiveOperations[3].operation == FOR_EACH;
 }
