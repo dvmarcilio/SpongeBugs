@@ -12,12 +12,12 @@ public set[MethodVar] findLocalVariables(MethodHeader methodHeader, MethodBody m
 }
 
 private set[MethodVar] findVariablesAsParameters(MethodHeader methodHeader) {
-	set[MethodVar] methodVars = {};
+	set[MethodVar] methodParams = {};
 	visit(methodHeader) {
 		case (FormalParameter) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorId varId>`:
-			methodVars += createParameterMethodVar(figureIfIsFinal(varMod), varId, varType);
+			methodParams += createParameterMethodVar(figureIfIsFinal(varMod), varId, varType);
 	}
-	return methodVars;
+	return methodParams;
 }
 
 private bool figureIfIsFinal(VariableModifier* varMod) {
@@ -55,7 +55,10 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 			}
 		}
 		
-		
+		// XXX Redundant. Doing this inside MethodHeader and MethodBody
+		// might just visit the MethodDeclaration here.
+		case (FormalParameter) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorId varId>`:
+			methodVars += createParameterMethodVar(figureIfIsFinal(varMod), varId, varType);
 		
 		case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: {
 			visit(vdl) {

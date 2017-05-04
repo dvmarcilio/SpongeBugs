@@ -1,0 +1,19 @@
+{
+            return new ForwardingTypeCollector<K>(this) {
+                @Override
+                Iterable<? extends K> getInterfaces(K type) {
+                    return ImmutableSet.of();
+                }
+
+                @Override
+                ImmutableList<K> collectTypes(Iterable<? extends K> types) {
+                    ImmutableList.Builder<K> builder = ImmutableList.builder();
+                    for (K type : types) {
+                        if (!getRawType(type).isInterface()) {
+                            builder.add(type);
+                        }
+                    }
+                    return super.collectTypes(builder.build());
+                }
+            };
+        }

@@ -120,3 +120,13 @@ public MethodBody iterableParameterMethodBody() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/IterableParameterMethodBody|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
+
+public MethodHeader methodWithAnonnymousInnerClassMethodHeader() {
+	header = "TypeCollector\<K\> classesOnly()";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody methodWithAnonnymousInnerClassMethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyWithAnonnymousInnerClass|;
+	return parse(#MethodBody, readFile(fileLoc));
+}

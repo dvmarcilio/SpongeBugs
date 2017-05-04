@@ -212,3 +212,13 @@ public test bool shouldParseCorrectTypeFromIterableParameter() {
 	
 	return iterableParam.varType == "Iterable\<? extends K\>";
 }
+
+public test bool shouldIdentifyAnonnymousInnerClassMethodParams() {
+	methodHeader = methodWithAnonnymousInnerClassMethodHeader();
+	methodBody = methodWithAnonnymousInnerClassMethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	iterableParam = findByName(vars, "types");
+	
+	return iterableParam.varType == "Iterable\<? extends K\>";
+}
