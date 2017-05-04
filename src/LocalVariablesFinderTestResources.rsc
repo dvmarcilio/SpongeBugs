@@ -171,3 +171,13 @@ public MethodBody postDecrementedVarMethodBody() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostDecrementedVar|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
+
+public MethodHeader assignmentInsideForMethodHeader() {
+	header = "Collection\<IOException\> deleteDirectoryContentsInsecure(DirectoryStream\<Path\> dir)";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody assignmentInsideForMethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyAssignmentInsideLoop|;
+	return parse(#MethodBody, readFile(fileLoc));
+}

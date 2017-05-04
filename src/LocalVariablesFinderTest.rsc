@@ -223,7 +223,7 @@ public test bool shouldIdentifyAnonnymousInnerClassMethodParams() {
 	return iterableParam.varType == "Iterable\<? extends K\>";
 }
 
-public test bool postIncrementedVariableInsideLoopShouldBeNonEffectiveFinal() {
+public test bool postIncrementedVariableInsideLoopShouldNotBeEffectiveFinal() {
 	methodHeader = postIncrementedVarMethodHeader();
 	methodBody = postIncrementedVarMethodBody();
 	
@@ -233,7 +233,7 @@ public test bool postIncrementedVariableInsideLoopShouldBeNonEffectiveFinal() {
 	return !i.isEffectiveFinal && !isEffectiveFinal(i);
 }
 
-public test bool postIncrementedVariable2InsideLoopShouldBeNonEffectiveFinal() {
+public test bool postIncrementedVariable2InsideLoopShouldNotBeEffectiveFinal() {
 	methodHeader = postIncrementedVar2MethodHeader();
 	methodBody = postIncrementedVar2MethodBody();
 	
@@ -243,7 +243,7 @@ public test bool postIncrementedVariable2InsideLoopShouldBeNonEffectiveFinal() {
 	return !i.isEffectiveFinal && !isEffectiveFinal(i);
 }
 
-public test bool postIncrementedVariable3InsideLoopShouldBeNonEffectiveFinal() {
+public test bool postIncrementedVariable3InsideLoopShouldNotBeEffectiveFinal() {
 	methodHeader = postIncrementedVar3MethodHeader();
 	methodBody = postIncrementedVar3MethodBody();
 	
@@ -253,7 +253,7 @@ public test bool postIncrementedVariable3InsideLoopShouldBeNonEffectiveFinal() {
 	return !i.isEffectiveFinal && !isEffectiveFinal(i);
 }
 
-public test bool postDecrementedVariableInsideLoopShouldBeNonEffectiveFinal() {
+public test bool postDecrementedVariableInsideLoopShouldNotBeEffectiveFinal() {
 	methodHeader = postDecrementedVarMethodHeader();
 	methodBody = postDecrementedVarMethodBody();
 	
@@ -261,4 +261,14 @@ public test bool postDecrementedVariableInsideLoopShouldBeNonEffectiveFinal() {
 	misses = findByName(vars, "misses");
 
 	return !misses.isEffectiveFinal && !isEffectiveFinal(misses);
+}
+
+public test bool variableAssignedInsideLoopShouldNotBeEffectiveFinal() {
+	methodHeader = assignmentInsideForMethodHeader();
+	methodBody = assignmentInsideForMethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	exceptions = findByName(vars, "exceptions");
+
+	return !exceptions.isEffectiveFinal && !isEffectiveFinal(exceptions);
 }
