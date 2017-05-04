@@ -61,7 +61,8 @@ private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, Meth
 			}
 			
 			if(!alreadyComputedCurrentMethodAvailableVars) { 
-				availableVars = currentClassFields + findLocalVariables(methodHeader, methodBody);
+				methodVars = findLocalVariables(methodHeader, methodBody);
+				availableVars = retainLocalVariablesIfDuplicates(currentClassFields, methodVars);
 				alreadyComputedAvailableVars = true;
 			}
 			

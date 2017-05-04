@@ -202,3 +202,13 @@ public test bool shouldIdentifyNonEffectiveFinalVar() {
 	
 	return !isEffectiveFinal(nonEffectiveFinalVar);
 }
+
+public test bool shouldParseCorrectTypeFromIterableParameter() {
+	methodHeader = iterableParameterMethodHeader();
+	methodBody = iterableParameterMethodBody();
+	
+	vars = findLocalVariables(methodHeader, methodBody);
+	iterableParam = findByName(vars, "types");
+	
+	return iterableParam.varType == "Iterable\<? extends K\>";
+}

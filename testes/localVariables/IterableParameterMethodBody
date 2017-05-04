@@ -1,0 +1,9 @@
+{
+                    ImmutableList.Builder<K> builder = ImmutableList.builder();
+                    for (K type : types) {
+                        if (!getRawType(type).isInterface()) {
+                            builder.add(type);
+                        }
+                    }
+                    return super.collectTypes(builder.build());
+                }

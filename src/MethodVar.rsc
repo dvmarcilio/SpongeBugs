@@ -87,3 +87,15 @@ public set[str] retrieveNotDeclaredWithinLoopNames(set[MethodVar] methodVars) {
 public bool isEffectiveFinal(MethodVar methodVar) {
 	return methodVar.isFinal || methodVar.isEffectiveFinal;
 }
+
+// FIXME This will break if 'this.varName' is referenced, as we are removing the class field
+// Would need to treat 'this.*' and change how we find vars by name
+public set[MethodVar] retainLocalVariablesIfDuplicates(set[MethodVar] classFields, set[MethodVar] localVars) {
+	duplicatedNames = retrieveAllNames(classFields) & retrieveAllNames(localVars);
+	duplicatedClassFields = { field | MethodVar field <- classFields, field.name in duplicatedNames };
+	return (classFields - duplicatedClassFields) + localVars;
+}
+
+private set[str] retrieveAllNames(set[MethodVar] vars) {
+	return { var.name | MethodVar var <- vars };
+}

@@ -37,20 +37,17 @@ public MethodBody emptyMethodBody() {
 
 public MethodBody enhancedForLoopFinalVarDecl() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/EnhancedForLoopFinalVarDecl|;
-	content = readFile(fileLoc);
-	return parse(#MethodBody, content);
+	return parse(#MethodBody, readFile(fileLoc));
 }
 
 public MethodBody enhancedForLoopWithException() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/EnhancedForLoopWithException|;
-	content = readFile(fileLoc);
-	return parse(#MethodBody, content);
+	return parse(#MethodBody, readFile(fileLoc));
 }
 
 public MethodBody arrayVariables() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/MultiplePlainArrayDeclarations|;
-	content = readFile(fileLoc);
-	return parse(#MethodBody, content);
+	return parse(#MethodBody, readFile(fileLoc));
 }
 
 public set[MethodVar] getEncouragedArrays(set[MethodVar] vars) {
@@ -101,8 +98,7 @@ public MethodHeader varsWithinTheLoopMethodHeader() {
 
 public MethodBody varsWithinTheLoopMethodBody() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/EnhancedForLoopVarsWithinLoop|;
-	content = readFile(fileLoc);
-	return parse(#MethodBody, content);
+	return parse(#MethodBody, readFile(fileLoc));
 }
 
 public MethodHeader nonEffectiveFinalUsedInEnhancedForMethodHeader() {
@@ -112,6 +108,15 @@ public MethodHeader nonEffectiveFinalUsedInEnhancedForMethodHeader() {
 
 public MethodBody nonEffectiveFinalUsedInEnhancedForMethodBody() {
 	fileLoc = |project://rascal-Java8//testes/localVariables/NonEffectiveFinalUsedInEnhancedFor|;
-	content = readFile(fileLoc);
-	return parse(#MethodBody, content);
+	return parse(#MethodBody, readFile(fileLoc));
+}
+
+public MethodHeader iterableParameterMethodHeader() {
+	header = "ImmutableList\<K\> collectTypes(Iterable\<? extends K\> types)";
+	return parse(#MethodHeader, header);
+}
+
+public MethodBody iterableParameterMethodBody() {
+	fileLoc = |project://rascal-Java8//testes/localVariables/IterableParameterMethodBody|;
+	return parse(#MethodBody, readFile(fileLoc));
 }

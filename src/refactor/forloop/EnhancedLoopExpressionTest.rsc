@@ -5,6 +5,7 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import MethodVar;
 import LocalVariablesFinder;
+import LocalVariablesFinderTestResources;
 import refactor::forloop::EnhancedLoopExpression;
 
 public test bool iterableShouldReturnFalse() {
@@ -29,4 +30,30 @@ private tuple[MethodHeader methodHeader, MethodBody methodBody] getEnhancedForOn
 			return <methodHeader, methodBody>;
 		}
 	} 
+}
+
+public test bool objectCastedToArrayShouldReturnFalse() {
+	params = paramsObjectCastedToArray();
+	
+	return isIteratingOnCollection(params.exp, params.localVariables) == false;
+}
+
+private tuple [Expression exp, set[MethodVar] localVariables] paramsObjectCastedToArray() {
+	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyObjectCastedToArray.java|;
+	methodBody = parse(#MethodBody, readFile(fileLoc));
+	methodHeader = parse(#MethodHeader, "List\<Class\<?\>\> collectClasses(List\<Object\> list)");
+	localVariables = findLocalVariables(methodHeader, methodBody);
+	
+	exp = parse(#Expression, "(Object[]) object");
+	
+	return <exp, localVariables>;
+}
+
+public test bool iterableParamShouldReturnFalse() {
+	exp = parse(#Expression, "types");
+	methodHeader = iterableParameterMethodHeader();
+	methodBody = iterableParameterMethodBody();
+	localVariables = findLocalVariables(methodHeader, methodBody);
+	
+	return isIteratingOnCollection(exp, localVariables) == false;
 }

@@ -4,6 +4,7 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import MethodVar;
 import String;
+import IO;
 
 // XXX Only checking iterable variables defined in method (local and parameter)
 // Need to verify class and instance variables too!
@@ -20,13 +21,14 @@ public bool isIteratingOnCollection(Expression exp, set[MethodVar] localVariable
 		return false;
 }
 
+// (Object[]) object will be treated as method invocation
 private bool isExpAnIdentifier(Expression exp) {
 	expStr = unparse(exp);
 	return !contains(expStr, ".") && !contains(expStr, "(");
 }
 
 private bool isIdentifierACollection(Expression exp, set[MethodVar] localVariables) {
-	varName = unparse(exp);
+	varName = trim(unparse(exp));
 	var = findByName(localVariables, varName);
 	return !isTypePlainArray(var) && !isIterable(var);
 }
