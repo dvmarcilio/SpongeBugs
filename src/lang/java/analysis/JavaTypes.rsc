@@ -1,4 +1,4 @@
-module JavaTypes
+module lang::java::analysis::JavaTypes
 
 import lang::java::\syntax::Java18;
 import ParseTree; 

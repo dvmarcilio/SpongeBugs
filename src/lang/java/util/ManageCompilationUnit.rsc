@@ -1,4 +1,4 @@
-module ManageCompilationUnit
+module lang::java::util::ManageCompilationUnit
 
 import lang::java::\syntax::Java18;
 import ParseTree; 

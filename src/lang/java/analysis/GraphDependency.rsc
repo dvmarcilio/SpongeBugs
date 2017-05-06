@@ -1,9 +1,9 @@
-module GraphDependency
+module lang::java::analysis::GraphDependency
 
 import lang::java::\syntax::Java18;
-import ParseTree; 
+import lang::java::analysis::JavaTypes; 
 
-import JavaTypes; 
+import ParseTree; 
 
 import IO;
 import List;
