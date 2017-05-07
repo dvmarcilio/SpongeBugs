@@ -13,9 +13,16 @@ import io::IOUtil;
  * List all class files from a given location. 
  * This location might be either a directory, a jar 
  * filer, a zip file or a .class file.  
+ *
+ * listAllClassFiles(|jar:///Users/rbonifacio/Documents/workspace-rascal/rascal-Java8/lib/rt.jar!|);
  */ 
 list[loc] listAllClassFiles(loc location) {
     return findAllFiles(location, "class");
+}
+
+map[str, str] classesHierarchy(list[loc] classPath) {
+   list[M3] models = createM3FromClassPath(classPath);
+   return ( replaceFirst(replaceAll(C.path, "/", "."), ".", "") : replaceFirst(replaceAll(S.path, "/", "."), ".", "") | m <- models, <C, S> <- m@extends);
 }
 
 /*
@@ -34,13 +41,12 @@ list[str] classesFromClassPath(list[loc] classPath) {
 list[str] interfacesFromClassPath(list[loc] classPath) {
    list[M3] models = createM3FromClassPath(classPath);
    println([e | m <- models, e <- m@extends]);
-   println("*******************");
    return [ replaceFirst(replaceAll(N.path, "/", "."), ".", "") | m <- models, <N, S> <- m@declarations, N.scheme == "java+interface"];
 }
 
 /* Auxiliarly functions */ 
 
-private list[M3] createM3FromClassPath(list[loc] locations) {
+list[M3] createM3FromClassPath(list[loc] locations) {
    list[loc] classes = [ c | l <- locations,  c <- listAllClassFiles(l) ];
    return [ createM3FromJarClass(c) | c <- classes ];
 }

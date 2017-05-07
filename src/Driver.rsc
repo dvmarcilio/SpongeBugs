@@ -10,11 +10,12 @@ import util::Math;
 
 import io::IOUtil; 
 
-import MultiCatch;
-import SwitchString;
-import VarArgs; 
-import Diamond;
+import lang::java::refactoring::MultiCatch;
+import lang::java::refactoring::SwitchString;
+import lang::java::refactoring::VarArgs; 
+import lang::java::refactoring::Diamond;
 
+import lang::java::m3::M3Util;
 import lang::java::\syntax::Java18;
 
 str logFile = "";
@@ -27,7 +28,7 @@ public void refactorProjects(loc input, bool verbose = true) {
     str ctime =  printTime(now(), "YYYYMMDDHHmmss");
     logFile = "log-" + ctime;
     list[str] projects = readFileLines(input);
-    
+     
     for(p <- projects) {
        if(startsWith(p, "#")) {
          continue;

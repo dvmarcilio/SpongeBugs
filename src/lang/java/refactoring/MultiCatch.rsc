@@ -1,4 +1,4 @@
-module MultiCatch
+module lang::java::refactoring::MultiCatch
 
 import lang::java::\syntax::Java18;
 import ParseTree; 

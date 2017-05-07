@@ -1,4 +1,4 @@
-module SimpleTransformations
+module lang::java::refactoring::SimpleTransformations
 
 import lang::java::\syntax::Java18;
 import ParseTree; 

@@ -1,4 +1,4 @@
-module SwitchString
+module lang::java::refactoring::SwitchString
 
 import lang::java::\syntax::Java18;
 import ParseTree; 
