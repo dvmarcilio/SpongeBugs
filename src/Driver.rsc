@@ -35,7 +35,7 @@ public void refactorProjects(loc input, bool verbose = true) {
        }
        
        list[str] projectDescriptor = split(",", p);
-       println("[Project Analyszer] project: " + projectDescriptor[0]);
+       println("[Project Analyzer] project: " + projectDescriptor[0]);
        logMessage("[Project Analyzer] processing project: " + projectDescriptor[0]);
       
        list[loc] projectFiles = findAllFiles(|file:///| + projectDescriptor[4], "java");
@@ -89,6 +89,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   logMessage("- Total of files changed: " + toString(totalOfChangedFiles));
   logMessage("- Total of transformations: " + toString(totalOfTransformations));
   logMessage("- Errors: " + toString(errors));
+  logMessage("- Final Time: " + printTime(now(), "YYYYMMDDHHmmss"));
 }
 
 /**
