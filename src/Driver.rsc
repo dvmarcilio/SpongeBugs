@@ -94,6 +94,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
  */ 
 int exportResults(set[int] toApply, list[tuple[int, loc, CompilationUnit]] processedFiles, bool verbose, str name) {
  int total = 0;
+ println(toString(size(toApply)));
  for(v <- toApply) {
      output = processedFiles[v][1];
      unit = processedFiles[v][2];
@@ -120,10 +121,14 @@ set[int] generateRandomNumbers(int toExecute, int total) {
 }
 
 int numberOfTransformationsToApply(int total, int percent) {
-   if(total * percent / 100 <= 10 && total >= 10) {
+   int res = total * percent / 100; 
+   if(res <= 10 && total >= 10) {
      return 10; 
    }
-   return total * percent / 100;
+   else if(res <= 10 && total < 10) {
+     return total; 
+   }
+   return res;
 }
 
 void logMessage(str message) {

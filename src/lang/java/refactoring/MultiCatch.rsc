@@ -1,6 +1,5 @@
 module lang::java::refactoring::MultiCatch
 
-import lang::java::\syntax::Java18;
 import ParseTree; 
 import IO;
 import Map;
@@ -8,6 +7,10 @@ import Type;
 import List;
 import Set;
 
+import lang::java::\syntax::Java18;
+
+import lang::java::analysis::ClassTable;
+import lang::java::analysis::GraphDependency;
 
 /**
  * Refactor a try-catch statement to use the 
@@ -72,6 +75,10 @@ private Catches generateMultiCatches([<ts, vId, b>, C*]) = {
   types = parse(#CatchType, intercalate("| ", ts));
   return (Catches)`catch(<CatchType types><VariableDeclaratorId vId>) <Block b> <CatchClause+ catches>`;
 };
+
+bool isSuperClassOf(t, ts) {
+  return false;
+}
 
 /*
  * Verifies whether a try-catch block has a nested 
