@@ -64,12 +64,14 @@ public void refactorProjects(loc input, bool verbose = true) {
 public void executeTransformations(list[loc] files, int percent, bool verbose, tuple[int, CompilationUnit](CompilationUnit) transformation, str name) {
   list[tuple[int, loc, CompilationUnit]] processedFiles = [];
   int errors = 0; 
+  int totalOfTransformations = 0;
   for(file <- files) {
      contents = readFile(file);
      try {
        unit = parse(#CompilationUnit, contents);
        tuple[int, CompilationUnit] res = transformation(unit);
        if(res[0] > 0) {
+         totalOfTransformations = totalOfTransformations + res[0];
          processedFiles += <res[0], file, res[1]>;
        }
      }
@@ -80,11 +82,12 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   int total = size(processedFiles);
   int toExecute = numberOfTransformationsToApply(total, percent);
   set[int] toApply = generateRandomNumbers(toExecute, total);
-  int totalTransformations = exportResults(toApply, processedFiles, verbose, name);
+  int totalOfChangedFiles = exportResults(toApply, processedFiles, verbose, name);
   logMessage("- Number of files:  " + toString(size(files)));
   logMessage("- Processed Filies: " + toString(size(processedFiles)));
   logMessage("- Exported Files:   " + toString(size(toApply))); 
-  logMessage("- Total of applied transformations: " + toString(totalTransformations));
+  logMessage("- Total of files changed: " + toString(totalOfChangedFiles));
+  logMessage("- Total of transformations: " + toString(totalOfTransformations));
   logMessage("- Errors: " + toString(errors));
 }
 
