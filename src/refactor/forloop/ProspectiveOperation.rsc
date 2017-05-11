@@ -83,30 +83,22 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatem
 	list[ProspectiveOperation] prOps = [];
 	foundReturn = false;
 	top-down-break visit (ifStmt) {
-		case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
+		case (IfThenStatement) `if ( <Expression ifExp> ) <Statement thenStmt>`: {
 			top-down-break visit (thenStmt) {
 				case Statement stmt: {
 					visit(stmt) {
 						case (ReturnStatement) `return <Expression returnExp>;`: {
 							foundReturn = true;
-							if ("<returnExp>" == "true")
-								prOps += prospectiveOperation(unparse(exp), ANY_MATCH);
-							else if ("<returnExp>" == "false")
-								prOps += prospectiveOperation(unparse(exp), NONE_MATCH);
+							prOps += createAnyMatchOrNoneMatchPrOp("<returnExp>", "<ifExp>");
 						}
 					}
 						
 					if (!foundReturn) {
-						if (!ifStatementHasNoStatementAfter(ifStmt, currBlockStmts)) {
+						if (!ifStatementHasNoStatementAfter(ifStmt, currBlockStmts))
 							prOps += prospectiveOperation(unparse(ifStmt), MAP);
-						}
 						else {					
-							prOps += prospectiveOperation(unparse(exp), FILTER);
-								
-							if (isSingleStatementBlock(thenStmt))
-								prOps += retrieveProspectiveOperationFromSingleStatement(thenStmt);
-							else
-								prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+							prOps += prospectiveOperation(unparse(ifExp), FILTER);
+							prOps += retrieveProspectiveOperationsFromThenStatement(thenStmt);
 						}
 					}
 				}
@@ -116,9 +108,33 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatem
 	return prOps;
 }
 
+private ProspectiveOperation createAnyMatchOrNoneMatchPrOp(str returnExp, str ifExp) {
+	if (returnExp == "true")
+		return prospectiveOperation(ifExp, ANY_MATCH);
+	else // (returnExp == "false")
+		return prospectiveOperation(ifExp, NONE_MATCH);
+}
+
 private bool ifStatementHasNoStatementAfter(IfThenStatement ifStmt, list[Stmt] currBlockStmts) {
 	lastStmt = last(currBlockStmts);
 	return lastStmt.stmtType == "IfThenStatement" && lastStmt.statement == ifStmt;
+}
+
+private list[ProspectiveOperation] retrieveProspectiveOperationsFromThenStatement(Statement thenStmt) {
+	if (isSingleStatementBlock(thenStmt))
+		return retrieveProspectiveOperationFromSingleStatement(thenStmt);
+	else
+		return retrieveProspectiveOperationsFromStatement(thenStmt);
+}
+
+// XXX Does this really work?
+private bool isSingleStatementBlock(Statement thenStmt) {
+	if (isBlock("<thenStmt>")) {
+		semiCollonOccurrences = findAll("<thenStmt>", ";");
+		return size(semiCollonOccurrences) == 1;
+	}
+	
+	return false;
 }
 
 private ProspectiveOperation retrieveProspectiveOperationFromSingleStatement(Statement statement) {
@@ -148,16 +164,6 @@ private bool isReferenceToNonFinalLocalVar(LeftHandSide lhs) {
 	varName = trim(unparse(lhs));
 	var = findByName(methodLocalVars, varName);
 	return !isEffectiveFinal(var);
-}
-
-// XXX Does this really work?
-private bool isSingleStatementBlock(Statement thenStmt) {
-	if (isBlock("<thenStmt>")) {
-		semiCollonOccurrences = findAll("<thenStmt>", ";");
-		return size(semiCollonOccurrences) == 1;
-	}
-	
-	return false;
 }
 
 private bool isBlock(str stmt) {
