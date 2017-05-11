@@ -8,6 +8,8 @@ import refactor::forloop::ForLoopToFunctional;
 import MethodVar;
 import LocalVariablesFinder;
 import LocalVariablesFinderTestResources;
+import refactor::forloop::ProspectiveOperationTestResources;
+import ParseTreeVisualization;
 
 public test bool ex1() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T1.java|;
@@ -41,22 +43,6 @@ public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
 	// Should have thrown exception
 	return false;
 }
-
-// TODO nested loops needed to be changed in ProspectiveOperation
-//public test bool nestedLoops() {
-//	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/NestedLoops.java|;
-//	methodBody = parse(#MethodBody, readFile(fileLoc));
-//	methodHeader = parse(#MethodHeader, "void testComplexBuilder()");
-//	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
-//	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For.java|;	
-//	EnhancedForStatement forStmt = parse(#EnhancedForStatement, "for (Integer red : colorElem) {\n      for (Integer green : colorElem) {\n        for (Integer blue : colorElem) {\n          webSafeColorsBuilder.add((red \<\< 16) + (green \<\< 8) + blue);\n        }\n      }\n    }");
-//	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "red");
-//	Expression collectionId = parse(#Expression, "colorElem");
-//	
-//	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
-//	
-//	return false;
-//}
 
 public test bool shouldRefactorReduceWithCompoundPlusAssignmentOperator() {
 	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
@@ -136,21 +122,49 @@ public test bool shouldThrowExceptionWhenALoopWithOnlyOneReferenceToOutsideNonEf
 	return false;	 	
 }
 
-public test bool shouldRefactorToReduceWithPostIncrement() {
-	throw "Not yet implemented";
-
-	methodHeader = parse(#MethodHeader, "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)");
-  	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyReduceWithPostIncrement|;
+public test bool shouldWorkWithThrowStatementInsideAnIfThatIsNotTheLastStatement() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithThrowStatement = loopWithThrowStatement();
+	methodBodyLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostDecrementedVar|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
-  	methodVars = findLocalVariables(methodHeader, methodBody);
-  	forStmt = parse(#EnhancedForStatement, "for (Entry\<E\> entry : entries) {\n      elementsBuilder.add(entry.getElement());\n      // cumulativeCounts[i + 1] = cumulativeCounts[i] + entry.getCount();\n      i++;\n    }");
-  	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "entry");
-	Expression collectionId = parse(#Expression, "entries");
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "key");
+	Expression collectionId = parse(#Expression, "keysToLoad");
   	
-  	try {
-		refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
-	} catch:
-		return true;
-		
-	return false;	 	
+  	refactoredStatement = buildRefactoredEnhancedFor(loopWithThrowStatement.vars, loopWithThrowStatement.loop, methodBody, iteratedVarName, collectionId);
+  	
+  	return "<refactoredStatement>" == "keysToLoad.forEach(key -\> {\nV value = newEntries.get(key);\nif (value == null) {\n              throw new InvalidCacheLoadException(\"loadAll failed to return a value for \" + key);\n            }\nresult.put(key, value);\n});";
 }
+
+//public test bool shouldRefactorToReduceWithPostIncrement() {
+//	throw "Not yet implemented";
+//
+//	methodHeader = parse(#MethodHeader, "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)");
+//  	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyReduceWithPostIncrement|;
+//  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+//  	methodVars = findLocalVariables(methodHeader, methodBody);
+//  	forStmt = parse(#EnhancedForStatement, "for (Entry\<E\> entry : entries) {\n      elementsBuilder.add(entry.getElement());\n      // cumulativeCounts[i + 1] = cumulativeCounts[i] + entry.getCount();\n      i++;\n    }");
+//  	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "entry");
+//	Expression collectionId = parse(#Expression, "entries");
+//  	
+//  	try {
+//		refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+//	} catch:
+//		return true;
+//		
+//	return false;	 	
+//}
+
+// TODO nested loops needed to be changed in ProspectiveOperation
+//public test bool nestedLoops() {
+//	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/NestedLoops.java|;
+//	methodBody = parse(#MethodBody, readFile(fileLoc));
+//	methodHeader = parse(#MethodHeader, "void testComplexBuilder()");
+//	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
+//	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For.java|;	
+//	EnhancedForStatement forStmt = parse(#EnhancedForStatement, "for (Integer red : colorElem) {\n      for (Integer green : colorElem) {\n        for (Integer blue : colorElem) {\n          webSafeColorsBuilder.add((red \<\< 16) + (green \<\< 8) + blue);\n        }\n      }\n    }");
+//	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "red");
+//	Expression collectionId = parse(#Expression, "colorElem");
+//	
+//	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+//	
+//	return false;
+//}

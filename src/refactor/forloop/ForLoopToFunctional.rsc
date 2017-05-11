@@ -12,6 +12,7 @@ import refactor::forloop::UsedVariables;
 import refactor::forloop::AvailableVariables;
 import refactor::forloop::OperationType;
 import refactor::forloop::ForLoopBodyReferences;
+import refactor::forloop::BreakIntoStatements;
 
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
@@ -150,49 +151,18 @@ private set[str] mergeNeededVars(set[str] currNeededVars, set[str] prevNeededVar
 }
 
 private ComposableProspectiveOperation mergeIntoABlock(ComposableProspectiveOperation prev, ComposableProspectiveOperation curr) {
-	list[str] statements = retrieveAllStatements(prev.prOp) + retrieveAllStatements(curr.prOp);
+	prevStatements = retrieveAllStatements(prev.prOp);
+	currStatements = retrieveAllStatements(curr.prOp);
+	list[str] statements =  prevStatements + currStatements ;
 	Block statementsAsOneBlock = transformStatementsInBlock(statements);
 	prOp = prospectiveOperation(unparse(statementsAsOneBlock), curr.prOp.operation);
 	return mergeComposableProspectiveOperations(prOp, prev, curr);
 }
 
 private list[str] retrieveAllStatements(ProspectiveOperation prOp) {
-	list[str] allStatements = [];
-	if (isBlock(prOp.stmt))
-		return retrieveAllStatementsFromBlock(prOp.stmt); 
-	else if(isLocalVariableDeclarationStatement(prOp.stmt))
+	if(isLocalVariableDeclarationStatement(prOp.stmt))
 		return [prOp.stmt];
- 	else
-		return retrieveAllExpressionStatementsFromStatement(prOp.stmt);
-}
-
-private bool isBlock(str stmt) {
-	try {
-		parse(#Block, stmt);
-		return true;
-	} catch: return false;
-}
-
-private list[str] retrieveAllStatementsFromBlock(str blockStr) {
-	list[str] blockStatements = [];
-	block = parse(#Block, blockStr);
-	top-down visit(block) {
-		case BlockStatement blockStmt:
-			blockStatements += unparse(blockStmt);
-	}
-	return blockStatements;	
-}
-
-private list[str] retrieveAllExpressionStatementsFromStatement(str statement) {
-	list[str] stmts = [];
-	Statement stmt = parse(#Statement, statement);
-	top-down visit(stmt) {
-		case ExpressionStatement expStmt:
-			stmts += unparse(expStmt);
-		case (IfThenStatement) `if (<Expression exp>) <Statement thenStmt>`:
-			stmts += "if (<exp>)";
-	}
-	return stmts;
+	return breakIntoStatementsAsStringList(prOp.stmt);
 }
 
 private Block transformStatementsInBlock(list[str] stmts) {
@@ -246,10 +216,11 @@ private bool isNumericLiteral(str stmt) {
 
 private ComposableProspectiveOperation addReturnToMapBody(ComposableProspectiveOperation curr, set[str] nextNeededVars) {
 	list[str] stmts = [];
-	if (isBlock(curr.prOp.stmt)) 
-		stmts += retrieveAllStatementsFromBlock(curr.prOp.stmt);
+	stmt = curr.prOp.stmt;
+	if (isBlock(stmt)) 
+		stmts += breakIntoStatementsAsStringList(parse(#Block, stmt));
 	else
-		stmts += curr.prOp.stmt;
+		stmts += stmt;
 		
 	varName = isEmpty(nextNeededVars) ? "_item" : getOneFrom(nextNeededVars);
 	stmts += "return <varName>;";
@@ -285,7 +256,8 @@ private Statement chainOperationsIntoStatement(set[MethodVar] methodVars, list[C
 	str chainStr = "<collectionId>.stream()";
 	
 	for(composablePrOp <- composablePrOps) {
-		chainStr = "<chainStr>." + buildChainableOperation(methodVars, composablePrOp);
+		chainableOperation = buildChainableOperation(methodVars, composablePrOp);
+		chainStr = "<chainStr>." + chainableOperation;
 	}
 	
 	return parse(#Statement, "<chainStr>;");
