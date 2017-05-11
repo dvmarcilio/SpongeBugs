@@ -134,6 +134,34 @@ public test bool shouldWorkWithThrowStatementInsideAnIfThatIsNotTheLastStatement
   	return "<refactoredStatement>" == "keysToLoad.forEach(key -\> {\nV value = newEntries.get(key);\nif (value == null) {\n              throw new InvalidCacheLoadException(\"loadAll failed to return a value for \" + key);\n            }\nresult.put(key, value);\n});";
 }
 
+public test bool loopWithIfWithTwoStatementsInsideBlockShouldRefactorInnerIfAsMap() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] loop = loopWithIfWithTwoStatementsInsideBlock();
+	methodBodyLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "endpoint");
+	Expression collectionId = parse(#Expression, "endpoints");
+  	
+  	refactoredStatement = buildRefactoredEnhancedFor(loop.vars, loop.loop, methodBody, iteratedVarName, collectionId);
+	
+	return "<refactoredStatement>" == "endpoints.stream().filter(endpoint -\> isIncluded(endpoint)).map(endpoint -\> endpointHandlerMapping.getPath(endpoint.getPath())).map(path -\> {\npaths.add(path);\nreturn path;\n}).map(path -\> {\nif (!path.equals(\"\")) {\r\n\t\t\t\t\t\tpaths.add(path + \"/**\");\r\n\t\t\t\t\t\t// Add Spring MVC-generated additional paths\r\n\t\t\t\t\t\tpaths.add(path + \".*\");\r\n\t\t\t\t\t}\nreturn path;\n}).forEach(path -\> {\npaths.add(path + \"/\");\n});";
+}
+
+public test bool anotherIfThatIsMap() {
+	methodHeader = parse(#MethodHeader, "void afterPropertiesSet() throws Exception");
+  	methodBodyLoc = |project://rascal-Java8/testes/ForLoopToFunctional/MethodBodyIfAsNotAFilter|;
+  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+  	methodVars = findLocalVariables(methodHeader, methodBody);
+  	forStmt = parse(#EnhancedForStatement, "for (Endpoint\<?\> endpoint : delegates) {if (isGenericEndpoint(endpoint.getClass()) && endpoint.isEnabled()) {EndpointMvcAdapter adapter = new EndpointMvcAdapter(endpoint);String path = determinePath(endpoint,this.applicationContext.getEnvironment());if (path != null) {adapter.setPath(path);}this.endpoints.add(adapter);}}");
+  	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "endpoint");
+	Expression collectionId = parse(#Expression, "delegates");
+	
+	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
+	
+	println(refactoredStatement);
+	
+	return "<refactoredStatement>" == "delegates.stream().filter(endpoint -\> isGenericEndpoint(endpoint.getClass()) && endpoint.isEnabled()).map(endpoint -\> {\nEndpointMvcAdapter adapter = new EndpointMvcAdapter(endpoint);\nString path = determinePath(endpoint,this.applicationContext.getEnvironment());\nif (path != null) {adapter.setPath(path);}\nreturn adapter;\n}).forEach(adapter -\> {\nthis.endpoints.add(adapter);\n});";
+}
+
 //public test bool shouldRefactorToReduceWithPostIncrement() {
 //	throw "Not yet implemented";
 //
