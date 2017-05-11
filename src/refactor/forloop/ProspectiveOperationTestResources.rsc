@@ -123,3 +123,16 @@ private set[MethodVar] loopWithThrowStatementVars() {
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	return findLocalVariables(methodHeader, methodBody);
 }
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithIfWithTwoStatementsInsideBlock() {
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	return <loopWithIfWithTwoStatementsInsideBlockVars(), forStmt>;
+}
+
+private set[MethodVar] loopWithIfWithTwoStatementsInsideBlockVars() {
+	methodHeader = parse(#MethodHeader, "String[] getPaths(EndpointHandlerMapping endpointHandlerMapping)");
+	methodBodyLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+	return findLocalVariables(methodHeader, methodBody);
+}

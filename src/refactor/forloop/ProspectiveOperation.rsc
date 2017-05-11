@@ -8,6 +8,7 @@ import ParseTree;
 import MethodVar;
 import refactor::forloop::OperationType;
 import ParseTreeVisualization;
+import refactor::forloop::BreakIntoStatements;
 
 public data ProspectiveOperation = prospectiveOperation(str stmt, str operation);
 
@@ -32,7 +33,8 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromStatement(St
 			prOps += retrieveProspectiveOperationsFromBlock(block);
 		}
 		case IfThenStatement ifStmt: {
-			prOps += retrieveProspectiveOperationsFromIfThenStatement(ifStmt);
+			stmtsBrokenInto = breakIntoStatements(stmt);
+			prOps += retrieveProspectiveOperationsFromIfThenStatement(ifStmt, stmtsBrokenInto);
 		}
 		case ExpressionStatement expStmt: {
 			statement = parse(#Statement, unparse(expStmt));
@@ -53,7 +55,8 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 			top-down-break visit(blockStatement) {
 				case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`: {
 					ifThenStmt = [IfThenStatement] "if (<exp>) <thenStmt>";
-					prOps += retrieveProspectiveOperationsFromIfThenStatement(ifThenStmt);
+					stmtsBrokenInto = breakIntoStatements(block);
+					prOps += retrieveProspectiveOperationsFromIfThenStatement(ifThenStmt, stmtsBrokenInto);
 				}
 				case (IfThenElseStatement) `if ( <Expression exp> ) <StatementNoShortIf thenStmt> else <Statement elseStmt>`: {
 					throw "Not Refactoring If/Else for now";
@@ -76,7 +79,7 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromBlock(Block 
 	return prOps;
 }
 
-private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatement(IfThenStatement ifStmt) {
+private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatement(IfThenStatement ifStmt, list[Stmt] currBlockStmts) {
 	list[ProspectiveOperation] prOps = [];
 	foundReturn = false;
 	top-down-break visit (ifStmt) {
@@ -94,17 +97,28 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatem
 					}
 						
 					if (!foundReturn) {
-						prOps += prospectiveOperation(unparse(exp), FILTER);
-						if (isSingleStatementBlock(thenStmt))
-							prOps += retrieveProspectiveOperationFromSingleStatement(thenStmt);
-						else
-							prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+						if (!ifStatementHasNoStatementAfter(ifStmt, currBlockStmts)) {
+							prOps += prospectiveOperation(unparse(ifStmt), MAP);
+						}
+						else {					
+							prOps += prospectiveOperation(unparse(exp), FILTER);
+								
+							if (isSingleStatementBlock(thenStmt))
+								prOps += retrieveProspectiveOperationFromSingleStatement(thenStmt);
+							else
+								prOps += retrieveProspectiveOperationsFromStatement(thenStmt);
+						}
 					}
 				}
 			}
 		}
 	}
 	return prOps;
+}
+
+private bool ifStatementHasNoStatementAfter(IfThenStatement ifStmt, list[Stmt] currBlockStmts) {
+	lastStmt = last(currBlockStmts);
+	return lastStmt.stmtType == "IfThenStatement" && lastStmt.statement == ifStmt;
 }
 
 private ProspectiveOperation retrieveProspectiveOperationFromSingleStatement(Statement statement) {

@@ -30,29 +30,6 @@ public test bool shouldHandleReduce() {
 		prospectiveOperations[1].operation == REDUCE;
 }
 
-//public test bool shouldHandleAnyMatchAndIfWithContinue() {
-//	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
-//	
-//	prospectiveOperations = retrieveProspectiveOperations(continueAndReturn.vars, continueAndReturn.loop);
-//	println(prospectiveOperations);
-//	
-//	return size(prospectiveOperations) == 2 && 
-//		prospectiveOperations[0].stmt == "e.getGrammarName() != null" &&
-//		prospectiveOperations[0].operation == FILTER &&
-//		prospectiveOperations[1].stmt == "e.getGrammarName().equals(grammarName)" &&
-//		prospectiveOperations[1].operation == ANY_MATCH;
-//}
-//
-//public test bool shouldHandleIfWithContinue() {
-//	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
-//	
-//	prospectiveOperations = retrieveProspectiveOperations(continueAndReturn.vars, continueAndReturn.loop);
-//	println(prospectiveOperations);
-//	
-//	return prospectiveOperations[0].stmt == "e.getGrammarName() != null" &&
-//		prospectiveOperations[0].operation == FILTER;
-//}
-
 public test bool shouldHandleAnyMatch() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
 	
@@ -129,30 +106,72 @@ public test bool shouldThrowExceptionWhenLoopWithInnerWhileIsFound() {
 	return false;
 }
 
-public test bool shouldIdentifyPostIncrementAsReduce() {
-	throw "Not yet implemented";
-	
-	tuple [set[MethodVar] vars, EnhancedForStatement loop] loopReduceWithPostIncrement = loopReduceWithPostIncrement();
-
-	prospectiveOperations = retrieveProspectiveOperations(loopReduceWithPostIncrement.vars, loopReduceWithPostIncrement.loop);
-	
-	println(prospectiveOperations);
-	
-	return false;
-}
-
-public test bool shouldKeepBlockAfterAnIf() {
+public test bool ifAsNotTheLastStatementShouldBeAMap() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithThrowStatement = loopWithThrowStatement();
 
 	prospectiveOperations = retrieveProspectiveOperations(loopWithThrowStatement.vars, loopWithThrowStatement.loop);
 	
-	return size(prospectiveOperations) == 4 &&
+	return size(prospectiveOperations) == 3 &&
 		prospectiveOperations[0].stmt == "V value = newEntries.get(key);" &&
 		prospectiveOperations[0].operation == MAP &&
-		prospectiveOperations[1].stmt == "value == null" &&
-		prospectiveOperations[1].operation == FILTER &&
-		prospectiveOperations[2].stmt == "{\n              throw new InvalidCacheLoadException(\"loadAll failed to return a value for \" + key);\n            }" &&
-		prospectiveOperations[2].operation == MAP &&
-		prospectiveOperations[3].stmt == "result.put(key, value);" &&
-		prospectiveOperations[3].operation == FOR_EACH;
+		prospectiveOperations[1].stmt == "if (value == null) {\n              throw new InvalidCacheLoadException(\"loadAll failed to return a value for \" + key);\n            }" &&
+		prospectiveOperations[1].operation == MAP &&
+		prospectiveOperations[2].stmt == "result.put(key, value);" &&
+		prospectiveOperations[2].operation == FOR_EACH;
 }
+
+// This is actually a really nice example.
+// The first if is a filter because it is the last statement from the outer block
+// The inner if is not the last statement within the first if block, so it's a map
+public test bool innerIfAsNotTheLastStatementShouldBeAMap() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] loop = loopWithIfWithTwoStatementsInsideBlock();
+
+	prospectiveOperations = retrieveProspectiveOperations(loop.vars, loop.loop);
+	
+	return size(prospectiveOperations) == 5 &&
+		prospectiveOperations[0].stmt == "isIncluded(endpoint)" &&
+		prospectiveOperations[0].operation == FILTER &&
+		prospectiveOperations[1].stmt == "String path = endpointHandlerMapping.getPath(endpoint.getPath());" &&
+		prospectiveOperations[1].operation == MAP &&
+		prospectiveOperations[2].stmt == "paths.add(path);" &&
+		prospectiveOperations[2].operation == MAP &&
+		prospectiveOperations[3].stmt == "if (!path.equals(\"\")) {\r\n\t\t\t\t\t\tpaths.add(path + \"/**\");\r\n\t\t\t\t\t\t// Add Spring MVC-generated additional paths\r\n\t\t\t\t\t\tpaths.add(path + \".*\");\r\n\t\t\t\t\t}" &&
+		prospectiveOperations[3].operation == MAP &&
+		prospectiveOperations[4].stmt == "paths.add(path + \"/\");" &&
+		prospectiveOperations[4].operation == FOR_EACH;
+}
+
+//public test bool shouldIdentifyPostIncrementAsReduce() {
+//	throw "Not yet implemented";
+//	
+//	tuple [set[MethodVar] vars, EnhancedForStatement loop] loopReduceWithPostIncrement = loopReduceWithPostIncrement();
+//
+//	prospectiveOperations = retrieveProspectiveOperations(loopReduceWithPostIncrement.vars, loopReduceWithPostIncrement.loop);
+//	
+//	println(prospectiveOperations);
+//	
+//	return false;
+//}
+
+//public test bool shouldHandleAnyMatchAndIfWithContinue() {
+//	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
+//	
+//	prospectiveOperations = retrieveProspectiveOperations(continueAndReturn.vars, continueAndReturn.loop);
+//	println(prospectiveOperations);
+//	
+//	return size(prospectiveOperations) == 2 && 
+//		prospectiveOperations[0].stmt == "e.getGrammarName() != null" &&
+//		prospectiveOperations[0].operation == FILTER &&
+//		prospectiveOperations[1].stmt == "e.getGrammarName().equals(grammarName)" &&
+//		prospectiveOperations[1].operation == ANY_MATCH;
+//}
+//
+//public test bool shouldHandleIfWithContinue() {
+//	tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn = continueAndReturn();
+//	
+//	prospectiveOperations = retrieveProspectiveOperations(continueAndReturn.vars, continueAndReturn.loop);
+//	println(prospectiveOperations);
+//	
+//	return prospectiveOperations[0].stmt == "e.getGrammarName() != null" &&
+//		prospectiveOperations[0].operation == FILTER;
+//}

@@ -8,6 +8,15 @@ import ParseTree;
 
 data Stmt = stmt(Tree statement, str stmtType);
 
+public list[Stmt] breakIntoStatements(Block block) {
+	list [Stmt] stmts = [];
+	top-down-break visit(block) {
+		case Statement stmt:
+			stmts += breakIntoStatements(stmt);
+	}
+	return stmts;
+}
+
 public list[Stmt] breakIntoStatements(Statement statement) {
 	list[Stmt] stmts = [];
 	top-down-break visit(statement) {
