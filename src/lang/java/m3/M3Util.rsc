@@ -22,7 +22,7 @@ list[loc] listAllClassFiles(loc location) {
 
 map[str, str] classesHierarchy(list[loc] classPath) {
    list[M3] models = createM3FromClassPath(classPath);
-   return ( replaceFirst(replaceAll(C.path, "/", "."), ".", "") : replaceFirst(replaceAll(S.path, "/", "."), ".", "") | m <- models, <C, S> <- m@extends);
+   return (replaceFirst(replaceAll(C.path, "/", "."), ".", "") : replaceFirst(replaceAll(S.path, "/", "."), ".", "") | m <- models, <C, S> <- m@extends);
 }
 
 /*

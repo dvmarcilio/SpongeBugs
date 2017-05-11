@@ -35,7 +35,7 @@ public void refactorProjects(loc input, bool verbose = true) {
        }
        
        list[str] projectDescriptor = split(",", p);
-       println("[Project Analyszer] project: " + projectDescriptor[0]);
+       println("[Project Analyzer] project: " + projectDescriptor[0]);
        logMessage("[Project Analyzer] processing project: " + projectDescriptor[0]);
       
        list[loc] projectFiles = findAllFiles(|file:///| + projectDescriptor[4], "java");
@@ -64,12 +64,14 @@ public void refactorProjects(loc input, bool verbose = true) {
 public void executeTransformations(list[loc] files, int percent, bool verbose, tuple[int, CompilationUnit](CompilationUnit) transformation, str name) {
   list[tuple[int, loc, CompilationUnit]] processedFiles = [];
   int errors = 0; 
+  int totalOfTransformations = 0;
   for(file <- files) {
      contents = readFile(file);
      try {
        unit = parse(#CompilationUnit, contents);
        tuple[int, CompilationUnit] res = transformation(unit);
        if(res[0] > 0) {
+         totalOfTransformations = totalOfTransformations + res[0];
          processedFiles += <res[0], file, res[1]>;
        }
      }
@@ -80,12 +82,14 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   int total = size(processedFiles);
   int toExecute = numberOfTransformationsToApply(total, percent);
   set[int] toApply = generateRandomNumbers(toExecute, total);
-  int totalTransformations = exportResults(toApply, processedFiles, verbose, name);
+  int totalOfChangedFiles = exportResults(toApply, processedFiles, verbose, name);
   logMessage("- Number of files:  " + toString(size(files)));
   logMessage("- Processed Filies: " + toString(size(processedFiles)));
   logMessage("- Exported Files:   " + toString(size(toApply))); 
-  logMessage("- Total of applied transformations: " + toString(totalTransformations));
+  logMessage("- Total of files changed: " + toString(totalOfChangedFiles));
+  logMessage("- Total of transformations: " + toString(totalOfTransformations));
   logMessage("- Errors: " + toString(errors));
+  logMessage("- Final Time: " + printTime(now(), "YYYYMMDDHHmmss"));
 }
 
 /**
@@ -94,6 +98,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
  */ 
 int exportResults(set[int] toApply, list[tuple[int, loc, CompilationUnit]] processedFiles, bool verbose, str name) {
  int total = 0;
+ println(toString(size(toApply)));
  for(v <- toApply) {
      output = processedFiles[v][1];
      unit = processedFiles[v][2];
@@ -120,10 +125,14 @@ set[int] generateRandomNumbers(int toExecute, int total) {
 }
 
 int numberOfTransformationsToApply(int total, int percent) {
-   if(total * percent / 100 <= 10 && total >= 10) {
+   int res = total * percent / 100; 
+   if(res <= 10 && total >= 10) {
      return 10; 
    }
-   return total * percent / 100;
+   else if(res <= 10 && total < 10) {
+     return total; 
+   }
+   return res;
 }
 
 void logMessage(str message) {

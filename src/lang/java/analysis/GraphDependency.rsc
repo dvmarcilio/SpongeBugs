@@ -1,7 +1,7 @@
 module lang::java::analysis::GraphDependency
 
-import lang::java::\syntax::Java18;
-import lang::java::analysis::JavaTypes; 
+import lang::java::\syntax::Java18; 
+import lang::java::analysis::ClassTable; 
 
 import ParseTree; 
 
@@ -16,7 +16,7 @@ data TypeDeclaration = class(str package, str name, str superClass, list[str] su
                      | interface(str package, str name, list[str] superInterfaces, list[Member] members)
                      | enum(str package, str name);
                      
-/* (utility function) 
+/* 
  * return the name of the types imported by a translation unit and 
  * a set of type declarations. In this way, it is possible to deal 
  * with situations like import <package>.* (all declarations within 
@@ -59,7 +59,7 @@ map[str,str] listClassesFromPackage(str package, map[str, tuple[str, str]] decls
  * this class table contains all definitions of classes, interfaces, and 
  * enumerations- plus their dependencies. 
  */
-list[TypeDeclaration] classTable(CompilationUnit unit) {
+list[TypeDeclaration] enrichedClassTable(CompilationUnit unit) {
    str package = "";
    list[TypeDeclaration] classes = [];
    visit(unit) {
