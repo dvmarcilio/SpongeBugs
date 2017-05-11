@@ -36,7 +36,7 @@ public list[Stmt] breakIntoStatements(Block block) {
 	top-down-break visit(block) {
 		case Statement stmt:
 			stmts += breakIntoStatements(stmt);
-		case LocalVariableDeclaration lvdlStmt:
+		case LocalVariableDeclarationStatement lvdlStmt:
 			stmts += stmtBrokenInto(lvdlStmt, "LocalVariableDeclarationStatement");
 	}
 	return stmts;

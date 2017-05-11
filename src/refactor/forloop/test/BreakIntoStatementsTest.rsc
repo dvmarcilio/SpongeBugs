@@ -110,15 +110,14 @@ public test bool ex7() {
 		stmts[3].stmtType == "ExpressionStatement";
 }
 
-// Sometimes LocalVariableDeclaration does not end with a semi collon.
 public test bool shouldIncludeLocalVariableDeclarationInsideBlock() {
 	block = "{\nupdated.put(snapshot.getFolder(), snapshot);\nChangedFiles changedFiles = previous.getChangedFiles(snapshot,\r\n                                                this.triggerFilter);\n}";
 	
 	stmts = breakIntoStatements(block);
-
+	printStmtsBrokenInto(stmts);
 	return size(stmts) == 2 &&
 		"<stmts[0].statement>" == "updated.put(snapshot.getFolder(), snapshot);" &&
 		stmts[0].stmtType == "ExpressionStatement" &&
-		"<stmts[1].statement>" == "ChangedFiles changedFiles = previous.getChangedFiles(snapshot,\r\n                                                this.triggerFilter)" &&
+		"<stmts[1].statement>" == "ChangedFiles changedFiles = previous.getChangedFiles(snapshot,\r\n                                                this.triggerFilter);" &&
 		stmts[1].stmtType == "LocalVariableDeclarationStatement";
 }
