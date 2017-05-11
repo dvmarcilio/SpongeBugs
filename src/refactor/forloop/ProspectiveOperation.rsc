@@ -122,7 +122,7 @@ private bool ifStatementHasNoStatementAfter(IfThenStatement ifStmt, list[Stmt] c
 
 private list[ProspectiveOperation] retrieveProspectiveOperationsFromThenStatement(Statement thenStmt) {
 	if (isSingleStatementBlock(thenStmt))
-		return retrieveProspectiveOperationFromSingleStatement(thenStmt);
+		return [retrieveProspectiveOperationFromSingleStatement(thenStmt)];
 	else
 		return retrieveProspectiveOperationsFromStatement(thenStmt);
 }
