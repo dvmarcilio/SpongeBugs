@@ -166,13 +166,6 @@ private bool isReferenceToNonFinalLocalVar(LeftHandSide lhs) {
 	return !isEffectiveFinal(var);
 }
 
-private bool isBlock(str stmt) {
-	try {
-		parse(#Block, stmt);
-		return true;
-	} catch: return false;
-}
-
 private list[ProspectiveOperation] markLastStmtAsEager(list[ProspectiveOperation] prOps) {
 	lastPrOp = prOps[-1];
 	if(lastPrOp.operation == MAP)

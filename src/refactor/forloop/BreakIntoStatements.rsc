@@ -6,13 +6,38 @@ import String;
 import lang::java::\syntax::Java18;
 import ParseTree;
 
-data Stmt = stmt(Tree statement, str stmtType);
+data Stmt = stmtBrokenInto(Tree statement, str stmtType);
+
+public list[str] breakIntoStatementsAsStringList(str stmt) {
+	stmts = breakIntoStatements(stmt);
+	return [ "<stmt.statement>" | Stmt stmt <- stmts ];
+}
+
+public list[str] breakIntoStatementsAsStringList(Block block) {
+	stmts = breakIntoStatements(block);
+	return [ "<stmt.statement>" | Stmt stmt <- stmts ];
+}
+
+public list[Stmt] breakIntoStatements(str stmt) {
+	if(isBlock(stmt))
+		return breakIntoStatements(parse(#Block, stmt));
+	return breakIntoStatements(parse(#Statement, stmt));
+}
+
+public bool isBlock(str stmt) {
+	try {
+		parse(#Block, stmt);
+		return true;
+	} catch: return false;
+}
 
 public list[Stmt] breakIntoStatements(Block block) {
 	list [Stmt] stmts = [];
 	top-down-break visit(block) {
 		case Statement stmt:
 			stmts += breakIntoStatements(stmt);
+		case LocalVariableDeclaration lvdlStmt:
+			stmts += stmtBrokenInto(lvdlStmt, "LocalVariableDeclarationStatement");
 	}
 	return stmts;
 }
@@ -21,13 +46,13 @@ public list[Stmt] breakIntoStatements(Statement statement) {
 	list[Stmt] stmts = [];
 	top-down-break visit(statement) {
 		case IfThenStatement ifStmt: {
-			stmts += stmt(ifStmt, "IfThenStatement");
+			stmts += stmtBrokenInto(ifStmt, "IfThenStatement");
 		}
 		case ExpressionStatement expStmt: {
-			stmts += stmt(expStmt, "ExpressionStatement");
+			stmts += stmtBrokenInto(expStmt, "ExpressionStatement");
 		}
 		case LocalVariableDeclarationStatement lvdlStmt: {
-			stmts += stmt(lvdlStmt, "LocalVariableDeclarationStatement");
+			stmts += stmtBrokenInto(lvdlStmt, "LocalVariableDeclarationStatement");
 		} 
 		
 		case IfThenElseStatement ifElseStmt: throw "Not Refactoring If/Else for now";
