@@ -82,7 +82,30 @@ public test bool ex6() {
 	loopBody = retrieveLoopBodyFromEnhancedFor(enhancedForLoop);
 	
 	stmts = breakIntoStatements(loopBody);
-	printStmtsBrokenInto(stmts);
 	
-	return false;
+	return size(stmts) == 1 &&
+		"<stmts[0].statement>" == "if (isIncluded(endpoint)) {\r\n\t\t\t\t\tString path = endpointHandlerMapping.getPath(endpoint.getPath());\r\n\t\t\t\t\tpaths.add(path);\r\n\t\t\t\t\tif (!path.equals(\"\")) {\r\n\t\t\t\t\t\tpaths.add(path + \"/**\");\r\n\t\t\t\t\t\t// Add Spring MVC-generated additional paths\r\n\t\t\t\t\t\tpaths.add(path + \".*\");\r\n\t\t\t\t\t}\r\n\t\t\t\t\tpaths.add(path + \"/\");\r\n\t\t\t\t}" &&
+		stmts[0].stmtType == "IfThenStatement";
+}
+
+// inside the if after the loop from previous example
+public test bool ex7() {
+	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileForLoc));
+	loopBody = retrieveLoopBodyFromEnhancedFor(enhancedForLoop);
+	list[Stmt] stmts = [];
+	top-down-break visit(loopBody) {
+		case (IfThenStatement) `if ( <Expression exp> ) <Statement thenStmt>`:
+			stmts = breakIntoStatements(thenStmt);
+	}
+	
+	return size(stmts) == 4 &&
+		"<stmts[0].statement>" == "String path = endpointHandlerMapping.getPath(endpoint.getPath());" &&
+		stmts[0].stmtType == "LocalVariableDeclarationStatement" &&
+		"<stmts[1].statement>" == "paths.add(path);" &&
+		stmts[1].stmtType == "ExpressionStatement" &&
+		"<stmts[2].statement>" == "if (!path.equals(\"\")) {\r\n\t\t\t\t\t\tpaths.add(path + \"/**\");\r\n\t\t\t\t\t\t// Add Spring MVC-generated additional paths\r\n\t\t\t\t\t\tpaths.add(path + \".*\");\r\n\t\t\t\t\t}" &&
+		stmts[2].stmtType == "IfThenStatement" &&
+		"<stmts[3].statement>" == "paths.add(path + \"/\");" &&
+		stmts[3].stmtType == "ExpressionStatement";
 }
