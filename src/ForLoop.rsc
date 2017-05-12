@@ -105,7 +105,7 @@ private bool isLoopRefactorable(set[MethodVar] methodLocalVariables, Expression 
 // TODO extract module and test it
 private bool loopBodyPassConditions(Statement loopBody) {
 	returnCount = 0;
-	visit(stmt) {
+	visit(loopBody) {
 		case (ThrowStatement) `throw new <TypeArguments? _> <ClassOrInterfaceTypeToInstantiate className> ( <ArgumentList? _>);`: {
 			if ("<className>" in checkedExceptionClasses) return false;
 		}
