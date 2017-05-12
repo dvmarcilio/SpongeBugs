@@ -15,9 +15,10 @@ import lang::java::refactoring::SwitchString;
 import lang::java::refactoring::VarArgs; 
 import lang::java::refactoring::Diamond;
 
+import lang::java::util::ManageCompilationUnit;
 import lang::java::m3::M3Util;
 import lang::java::\syntax::Java18;
-
+DateTime t0, t1;
 str logFile = "";
 
 /**
@@ -33,7 +34,7 @@ public void refactorProjects(loc input, bool verbose = true) {
        if(startsWith(p, "#")) {
          continue;
        }
-       
+       t0 = now();
        list[str] projectDescriptor = split(",", p);
        println("[Project Analyzer] project: " + projectDescriptor[0]);
        logMessage("[Project Analyzer] processing project: " + projectDescriptor[0]);
@@ -83,6 +84,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   int toExecute = numberOfTransformationsToApply(total, percent);
   set[int] toApply = generateRandomNumbers(toExecute, total);
   int totalOfChangedFiles = exportResults(toApply, processedFiles, verbose, name);
+  t1 = now();
   logMessage("- Number of files:  " + toString(size(files)));
   logMessage("- Processed Filies: " + toString(size(processedFiles)));
   logMessage("- Exported Files:   " + toString(size(toApply))); 
@@ -90,6 +92,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   logMessage("- Total of transformations: " + toString(totalOfTransformations));
   logMessage("- Errors: " + toString(errors));
   logMessage("- Final Time: " + printTime(now(), "YYYYMMDDHHmmss"));
+  logMessage("- Elapsed Time: " + prettyPrinterDuration(t1 - t0, "ms") + "ms");
 }
 
 /**
