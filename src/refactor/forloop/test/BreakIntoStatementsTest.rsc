@@ -114,7 +114,7 @@ public test bool shouldIncludeLocalVariableDeclarationInsideBlock() {
 	block = "{\nupdated.put(snapshot.getFolder(), snapshot);\nChangedFiles changedFiles = previous.getChangedFiles(snapshot,\r\n                                                this.triggerFilter);\n}";
 	
 	stmts = breakIntoStatements(block);
-	printStmtsBrokenInto(stmts);
+	
 	return size(stmts) == 2 &&
 		"<stmts[0].statement>" == "updated.put(snapshot.getFolder(), snapshot);" &&
 		stmts[0].stmtType == "ExpressionStatement" &&
