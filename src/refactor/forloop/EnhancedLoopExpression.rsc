@@ -26,7 +26,7 @@ public bool isIteratingOnCollection(Expression exp, set[MethodVar] availableVari
 // But not everything that have '(' will be a method invocation. (Casts for instance)
 private bool isMethodInvocation(Expression exp) {
 	expStr = "<exp>";
-	return contains(expStr, "(") && parsesAsMethodInvocation(exp);
+	return contains(expStr, "(") && parsesAsMethodInvocation(expStr);
 }
 
 private bool parsesAsMethodInvocation(str expStr) {
