@@ -14,21 +14,35 @@ import IO;
 // Relying on compiler to help finding if it's an array or not
 // Compiler gives error if expression is not Array/Collection
 // Therefore we only check if the expression is an Array
-public bool isIteratingOnCollection(Expression exp, set[MethodVar] localVariables) {
-	if (isExpAnIdentifier(exp))
-		return isIdentifierACollection(exp, localVariables);
+public bool isIteratingOnCollection(Expression exp, set[MethodVar] availableVariables) {
+	if (!isMethodInvocation(exp))
+		return isIdentifierACollection(exp, availableVariables);
 	else
 		return false;
 }
 
-private bool isExpAnIdentifier(Expression exp) {
-	expStr = unparse(exp);
-	return !contains(expStr, ".") && !contains(expStr, "(");
+// XXX Ignoring Casts too.
+// Redundant for now, because any method invocation will contain '('
+// But not everything that have '(' will be a method invocation. (Casts for instance)
+private bool isMethodInvocation(Expression exp) {
+	expStr = "<exp>";
+	return contains(expStr, "(") && parsesAsMethodInvocation(exp);
 }
 
-private bool isIdentifierACollection(Expression exp, set[MethodVar] localVariables) {
+private bool parsesAsMethodInvocation(str expStr) {
+	try {
+		parse(#MethodInvocation, expStr);
+		return true;
+	} catch:
+		return false;
+}
+
+private bool isIdentifierACollection(Expression exp, set[MethodVar] availableVariables) {
 	varName = trim(unparse(exp));
-	var = findByName(localVariables, varName);
+	// TODO eventually change/remove when dealing correctly with fields + local variables 
+	varName = replaceFirst(varName, "this.", "");
+	
+	var = findByName(availableVariables, varName);
 	return !isTypePlainArray(var) && !isIterable(var);
 }
 

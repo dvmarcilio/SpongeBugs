@@ -48,6 +48,7 @@ private void lookForEnhancedForStatementsInMethod(CompilationUnit unit, MethodDe
 	}
 }
 
+// TODO What happens when two for statements are refactored inside the same method?
 private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, MethodHeader methodHeader, MethodBody methodBody) {
 	set[MethodVar] availableVars = {};
 	alreadyComputedCurrentMethodAvailableVars = false;
@@ -97,9 +98,9 @@ private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, Meth
 	}
 }
 
-private bool isLoopRefactorable(set[MethodVar] methodLocalVariables, Expression collectionId, Statement loopBody) {
-	return loopBodyPassConditions(loopBody) && isIteratingOnCollection(collectionId, methodLocalVariables) &&
-		atMostOneReferenceToNonEffectiveFinalVar(methodLocalVariables, loopBody);
+private bool isLoopRefactorable(set[MethodVar] availableVariables, Expression collectionId, Statement loopBody) {
+	return loopBodyPassConditions(loopBody) && isIteratingOnCollection(collectionId, availableVariables) &&
+		atMostOneReferenceToNonEffectiveFinalVar(availableVariables, loopBody);
 }
 
 // TODO extract module and test it

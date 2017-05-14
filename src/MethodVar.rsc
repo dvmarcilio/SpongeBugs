@@ -90,6 +90,8 @@ public bool isEffectiveFinal(MethodVar methodVar) {
 
 // FIXME This will break if 'this.varName' is referenced, as we are removing the class field
 // Would need to treat 'this.*' and change how we find vars by name
+// One idea is to keep both localVariables AND classFields as separate lists.
+// if both exists, a reference to a field can only be made by 'this.field'
 public set[MethodVar] retainLocalVariablesIfDuplicates(set[MethodVar] classFields, set[MethodVar] localVars) {
 	duplicatedNames = retrieveAllNames(classFields) & retrieveAllNames(localVars);
 	duplicatedClassFields = { field | MethodVar field <- classFields, field.name in duplicatedNames };

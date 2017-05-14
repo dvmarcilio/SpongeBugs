@@ -6,6 +6,7 @@ import ParseTree;
 import MethodVar;
 import LocalVariablesFinder;
 import LocalVariablesFinderTestResources;
+import refactor::forloop::ClassFieldsFinder;
 import refactor::forloop::EnhancedLoopExpression;
 
 public test bool iterableShouldReturnFalse() {
@@ -39,4 +40,16 @@ public test bool iterableParamShouldReturnFalse() {
 	localVariables = findLocalVariables(methodHeader, methodBody);
 	
 	return isIteratingOnCollection(exp, localVariables) == false;
+}
+
+public test bool thisFieldListShouldReturnTrue() {
+	exp = parse(#Expression, "this.engineValves");
+	methodHeader = parse(#MethodHeader, "void configureEngine(Engine engine)");
+	methodBodyLoc = |project://rascal-Java8/testes/classFields/MethodBodyIteratingOnThisField2|;
+	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+	localVariables = findLocalVariables(methodHeader, methodBody);
+	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/classFields/TomcatServletWebServerFactory.java|)));
+	vars = localVariables + classFields;
+	
+	return isIteratingOnCollection(exp, vars) == true;
 }
