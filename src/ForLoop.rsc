@@ -120,7 +120,10 @@ private bool loopBodyPassConditions(Statement loopBody) {
 			
 			returnCount += 1;	
 		}
-	
+		
+		// TODO remove in case we refactor loops with if with continue
+		case ContinueStatement continueStmt: return false;
+		
 		// labeled continue. 
 		case (ContinueStatement) `continue <Identifier _>;`: return false;
 	}
