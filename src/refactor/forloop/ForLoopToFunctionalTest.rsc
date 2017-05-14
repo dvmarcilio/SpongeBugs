@@ -9,6 +9,7 @@ import MethodVar;
 import LocalVariablesFinder;
 import LocalVariablesFinderTestResources;
 import refactor::forloop::ProspectiveOperationTestResources;
+import refactor::forloop::ClassFieldsFinder;
 import ParseTreeVisualization;
 
 public test bool ex1() {
@@ -157,9 +158,43 @@ public test bool anotherIfThatIsMap() {
 	
 	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	
-	println(refactoredStatement);
-	
 	return "<refactoredStatement>" == "delegates.stream().filter(endpoint -\> isGenericEndpoint(endpoint.getClass()) && endpoint.isEnabled()).map(endpoint -\> {\nEndpointMvcAdapter adapter = new EndpointMvcAdapter(endpoint);\nString path = determinePath(endpoint,this.applicationContext.getEnvironment());\nif (path != null) {adapter.setPath(path);}\nreturn adapter;\n}).forEach(adapter -\> {\nthis.endpoints.add(adapter);\n});";
+}
+
+public test bool shouldRefactorLoopIteratingOnThisField() {
+	methodHeader = parse(#MethodHeader, "WebServer getWebServer(ServletContextInitializer... initializers)");
+	methodBodyLoc = |project://rascal-Java8/testes/classFields/MethodBodyIteratingOnThisField|;
+  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+  	methodVars = findLocalVariables(methodHeader, methodBody);
+  	fileForLoc = |project://rascal-Java8/testes/classFields/ForIteratingOnThisField|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "additionalConnector");
+	Expression collectionId = parse(#Expression, "this.additionalTomcatConnectors");
+	
+  	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/classFields/TomcatServletWebServerFactory.java|)));
+  	vars = methodVars + classFields;
+  	
+  	refactoredStatement = buildRefactoredEnhancedFor(vars, forStmt, methodBody, iteratedVarName, collectionId);
+  	
+  	return "<refactoredStatement>" == "this.additionalTomcatConnectors.forEach(additionalConnector -\> {\ntomcat.getService().addConnector(additionalConnector);\n});";
+}
+
+public test bool shouldRefactorLoopIteratingOnThisField2() {
+	methodHeader = parse(#MethodHeader, "void configureEngine(Engine engine)");
+	methodBodyLoc = |project://rascal-Java8/testes/classFields/MethodBodyIteratingOnThisField2|;
+	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
+  	methodVars = findLocalVariables(methodHeader, methodBody);
+  	fileForLoc = |project://rascal-Java8/testes/classFields/ForIteratingOnThisField2|;
+	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
+	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "valve");
+	Expression collectionId = parse(#Expression, "this.engineValves");
+	
+  	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/classFields/TomcatServletWebServerFactory.java|)));
+  	vars = methodVars + classFields;
+  	
+  	refactoredStatement = buildRefactoredEnhancedFor(vars, forStmt, methodBody, iteratedVarName, collectionId);
+  	
+  	return "<refactoredStatement>" == "this.engineValves.forEach(valve -\> {\nengine.getPipeline().addValve(valve);\n});";
 }
 
 //public test bool shouldRefactorToReduceWithPostIncrement() {

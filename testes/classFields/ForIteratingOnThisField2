@@ -1,0 +1,3 @@
+for (Valve valve : this.engineValves) {
+			engine.getPipeline().addValve(valve);
+		}

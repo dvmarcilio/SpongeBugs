@@ -1,0 +1,6 @@
+{
+		engine.setBackgroundProcessorDelay(this.backgroundProcessorDelay);
+		for (Valve valve : this.engineValves) {
+			engine.getPipeline().addValve(valve);
+		}
+	}
