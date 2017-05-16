@@ -3,7 +3,7 @@ module lang::java::refactoring::forloop::\test::BreakIntoStatementsTest
 import IO;
 import lang::java::refactoring::forloop::BreakIntoStatements;
 import lang::java::\syntax::Java18;
-import lang::java::refactoring::forloop::ProspectiveOperationTestResources; 
+import lang::java::refactoring::forloop::\test::resources::ProspectiveOperationTestResources; 
 import lang::java::refactoring::forloop::ForLoopBodyReferences;
 import ParseTree;
 import ParseTreeVisualization;
