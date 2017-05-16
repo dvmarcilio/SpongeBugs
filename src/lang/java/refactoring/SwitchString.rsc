@@ -1,4 +1,4 @@
-module SwitchString
+module lang::java::refactoring::SwitchString
 
 import lang::java::\syntax::Java18;
 import ParseTree; 
@@ -39,7 +39,6 @@ public tuple[int, CompilationUnit] refactorSwitchString(CompilationUnit unit) {
     }
     
   };
-  println("RESULTADO" + cu); 
   return <numberOfOccurences, cu>;
 }
 SwitchBlockStatementGroups buildSwitchGroups(stmt, id) {

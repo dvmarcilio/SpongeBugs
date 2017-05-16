@@ -69,7 +69,7 @@ public class HadoopCompat {
         final String PACKAGE = "org.apache.hadoop.mapreduce";
         try {
             Class.forName(PACKAGE + ".task.JobContextImpl");
-        } catch (ClassNotFoundException cnfe) {
+        } catch(ClassNotFoundException   cnfe) {
             v21 = false;
         }
         useV21 = v21;
@@ -100,7 +100,7 @@ public class HadoopCompat {
                         Class.forName("org.apache.hadoop.mapred.Counters$Counter");
 
             }
-        } catch (ClassNotFoundException e) {
+        } catch(ClassNotFoundException   e) {
             throw new IllegalArgumentException("Can't find class", e);
         }
         try {
@@ -130,7 +130,7 @@ public class HadoopCompat {
                 try {
                     get_counter = Class.forName(PACKAGE + ".TaskAttemptContext").getMethod("getCounter", String.class,
                             String.class);
-                } catch (Exception e) {
+                } catch(Exception   e) {
                     get_counter = Class.forName(PACKAGE + ".TaskInputOutputContext").getMethod("getCounter",
                             String.class, String.class);
                 }
@@ -163,14 +163,14 @@ public class HadoopCompat {
             PROGRESS_METHOD = Class.forName(PACKAGE+".TaskAttemptContext")
                     .getMethod("progress");
 
-        } catch (SecurityException e) {
-            throw new IllegalArgumentException("Can't run constructor ", e);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException("Can't find constructor ", e);
-        } catch (NoSuchFieldException e) {
-            throw new IllegalArgumentException("Can't find field ", e);
-        } catch (ClassNotFoundException e) {
+        } catch(ClassNotFoundException  e) {
             throw new IllegalArgumentException("Can't find class", e);
+        } catch(NoSuchFieldException  e) {
+            throw new IllegalArgumentException("Can't find field ", e);
+        } catch(NoSuchMethodException  e) {
+            throw new IllegalArgumentException("Can't find constructor ", e);
+        } catch(SecurityException   e) {
+            throw new IllegalArgumentException("Can't run constructor ", e);
         }
     }
 
@@ -184,11 +184,7 @@ public class HadoopCompat {
     private static Object newInstance(Constructor<?> constructor, Object...args) {
         try {
             return constructor.newInstance(args);
-        } catch (InstantiationException e) {
-            throw new IllegalArgumentException("Can't instantiate " + constructor, e);
-        } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("Can't instantiate " + constructor, e);
-        } catch (InvocationTargetException e) {
+        } catch(InstantiationException | IllegalAccessException | InvocationTargetException   e) {
             throw new IllegalArgumentException("Can't instantiate " + constructor, e);
         }
     }
@@ -234,7 +230,7 @@ public class HadoopCompat {
         try {
             return (Counter)
                     GENERIC_COUNTER_CONSTRUCTOR.newInstance(name, displayName, value);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        } catch(InstantiationException | IllegalAccessException | InvocationTargetException   e) {
             throw new IllegalArgumentException("Can't instantiate Counter", e);
         }
     }
@@ -245,7 +241,7 @@ public class HadoopCompat {
     private static Object invoke(Method method, Object obj, Object... args) {
         try {
             return method.invoke(obj, args);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch(IllegalAccessException | InvocationTargetException   e) {
             throw new IllegalArgumentException("Can't invoke method " + method.getName(), e);
         }
     }

@@ -1,6 +1,5 @@
-module MultiCatch
+module lang::java::refactoring::MultiCatch
 
-import lang::java::\syntax::Java18;
 import ParseTree; 
 import IO;
 import Map;
@@ -8,12 +7,10 @@ import Type;
 import List;
 import Set;
 
-// sure, I don't like global variables. 
-//
-// However I could not find a way to perform both 
-// a replacement and count the number of times 
-// it was applied in the same compilation unit. 
-//int numberOfOccurences = 0; 
+import lang::java::\syntax::Java18;
+
+import lang::java::analysis::ClassTable;
+import lang::java::analysis::GraphDependency;
 
 /**
  * Refactor a try-catch statement to use the 
@@ -21,11 +18,11 @@ import Set;
  */
 public tuple[int, CompilationUnit]  refactorMultiCatch(CompilationUnit unit) { 
   int numberOfOccurences = 0;  
-  CompilationUnit cu =  visit(unit) {
+  CompilationUnit cu = visit(unit) {
    case (TryStatement)`try <Block b1> <Catches c1>` : { 
      <app, mc> = computeMultiCatches(c1);
      if(app) numberOfOccurences += 1;
-     insert (TryStatement)`try <Block b1><Catches mc>`;
+     insert (TryStatement)`try <Block b1> <Catches mc>`;
    }
   };
   return <numberOfOccurences, cu>;
@@ -39,8 +36,8 @@ public tuple[int, CompilationUnit]  refactorMultiCatch(CompilationUnit unit) {
 private tuple[bool, Catches] computeMultiCatches(cs){
    map [Block, tuple[list[CatchType], VariableDeclaratorId, Block] ] mCatches = ();
    app = false;
-   visit(cs){
-      case(CatchClause)`catch (<CatchType t> <VariableDeclaratorId vId>) <Block b>` :{
+   top-down-break visit(cs) {
+   	  case (CatchClause)`catch (<CatchType t> <VariableDeclaratorId vId>) <Block b>` :{
          if (b in mCatches){
             <ts, vId, blk> = mCatches[b];
             ts += t;
@@ -58,6 +55,7 @@ private tuple[bool, Catches] computeMultiCatches(cs){
    return <false, cs>; // this return statement occurs when we find a try ... finally, without catch!
 }
 
+
 /*
  * Creates a syntactic catch clause (either a simple one or 
  * a multicatch). 
@@ -70,11 +68,29 @@ private tuple[bool, Catches] computeMultiCatches(cs){
  */
 private Catches generateMultiCatches([<ts, vId, b>]) = {
   types = parse(#CatchType, intercalate("| ", ts));
-  return (Catches)`catch(<CatchType types> <VariableDeclaratorId vId>) /*multi-catch refactor*/ <Block b>`; 
+  return (Catches)`catch(<CatchType types><VariableDeclaratorId vId>) <Block b>`; 
 };
 private Catches generateMultiCatches([<ts, vId, b>, C*]) = {
   catches = generateMultiCatches(C);
   types = parse(#CatchType, intercalate("| ", ts));
-  return (Catches)`catch(<CatchType types> <VariableDeclaratorId vId>) <Block b> <CatchClause+ catches>`;
+  return (Catches)`catch(<CatchType types><VariableDeclaratorId vId>) <Block b> <CatchClause+ catches>`;
 };
 
+bool isSuperClassOf(t, ts) {
+  return false;
+}
+
+/*
+ * Verifies whether a try-catch block has a nested 
+ * try-catch. If so, it should not be transformed. 
+ * TODO: implement more tests about that situation.
+ */ 
+bool notNestedTryCatch(Block b) {
+  res = false; 
+  visit(b) {
+      case (TryStatement)`try <Block b1> <Catches c1>` : { 
+         res = true;
+      } 
+  }
+  return res;
+}

@@ -1,4 +1,4 @@
-module VarArgs
+module lang::java::refactoring::VarArgs
 
 import lang::java::\syntax::Java18;
 import ParseTree; 

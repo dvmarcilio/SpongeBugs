@@ -1,4 +1,4 @@
-module AnonymousToLambda
+module lang::java::refactoring::AnonymousToLambda
 
 import lang::java::\syntax::Java18;
 import ParseTree; 

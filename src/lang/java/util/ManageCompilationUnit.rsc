@@ -1,4 +1,4 @@
-module ManageCompilationUnit
+module lang::java::util::ManageCompilationUnit
 
 import lang::java::\syntax::Java18;
 import ParseTree; 
@@ -8,7 +8,7 @@ import IO;
 /**
  * Load java files and generate the 'CompilationUnit' from each file.
  */
-list[CompilationUnit] listCompilations(loc location){
+list[CompilationUnit] loadCompilationUnities(loc location){
 	try{
 		entries = listJavaFiles(location);
 		list[CompilationUnit] listCompilations = [];

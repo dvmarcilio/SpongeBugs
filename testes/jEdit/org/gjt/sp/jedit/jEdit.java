@@ -153,16 +153,13 @@ public class jEdit
 		// Fix X11 windows class
 		if (OperatingSystem.isX11())
 		{
-			try
-			{
+			try {
 				Toolkit xToolkit = Toolkit.getDefaultToolkit();
 				Field awtAppClassNameField =
 					xToolkit.getClass().getDeclaredField("awtAppClassName");
 				awtAppClassNameField.setAccessible(true);
 				awtAppClassNameField.set(xToolkit, System.getProperty("x11.wmclass", "jedit"));
-			}
-			catch (Exception e)
-			{
+			} catch(Exception   e) {
 				Log.log(Log.ERROR, jEdit.class, e);
 			}
 		}
@@ -211,12 +208,9 @@ public class jEdit
 				}
 				else if(arg.startsWith("-log="))
 				{
-					try
-					{
+					try {
 						level = Integer.parseInt(arg.substring("-log=".length()));
-					}
-					catch(NumberFormatException nf)
-					{
+					} catch(NumberFormatException   nf) {
 						System.err.println("Malformed option: " + arg);
 					}
 				}
@@ -358,18 +352,14 @@ public class jEdit
 			finally
 			{
 				if(in != null)
-					try
-					{
+					try {
 						in.close();
-					}
-					catch (IOException e) {}
+					} catch(IOException   e) {}
 
 				if(out != null)
-					try
-					{
+					try {
 						out.close();
-					}
-					catch (IOException e) {}
+					} catch(IOException   e) {}
 			}
 		}
 
@@ -412,8 +402,7 @@ public class jEdit
 
 			backupSettingsFile(new File(logPath));
 
-			try
-			{
+			try {
 				stream = new BufferedWriter(new FileWriter(logPath));
 
 				// Write a warning message:
@@ -431,9 +420,7 @@ public class jEdit
 				stream.write("Utilities->Troubleshooting->Update "
 					+ "Activity Log on Disk command!");
 				stream.write(lineSep);
-			}
-			catch(Exception e)
-			{
+			} catch(Exception   e) {
 				e.printStackTrace();
 				stream = null;
 			}
@@ -600,12 +587,9 @@ public class jEdit
 		{
 			GUIUtilities.advanceSplashProgress("run script file");
 			scriptFile = MiscUtilities.constructPath(userDir,scriptFile);
-			try
-			{
+			try {
 				BeanShell.getNameSpace().setVariable("args",args);
-			}
-			catch(UtilEvalError e)
-			{
+			} catch(UtilEvalError   e) {
 				Log.log(Log.ERROR,jEdit.class,e);
 			}
 			BeanShell.runScript(null,scriptFile,null,false);
@@ -769,12 +753,9 @@ public class jEdit
 			return def;
 		else
 		{
-			try
-			{
+			try {
 				return Integer.parseInt(value.trim());
-			}
-			catch(NumberFormatException nf)
-			{
+			} catch(NumberFormatException   nf) {
 				return def;
 			}
 		}
@@ -788,12 +769,9 @@ public class jEdit
 			return def;
 		else
 		{
-			try
-			{
+			try {
 				return Double.parseDouble(value.trim());
-			}
-			catch(NumberFormatException nf)
-			{
+			} catch(NumberFormatException   nf) {
 				return def;
 			}
 		}
@@ -846,21 +824,15 @@ public class jEdit
 		{
 			int size, style;
 
-			try
-			{
+			try {
 				size = Integer.parseInt(sizeString);
-			}
-			catch(NumberFormatException nf)
-			{
+			} catch(NumberFormatException   nf) {
 				return def;
 			}
 
-			try
-			{
+			try {
 				style = Integer.parseInt(styleString);
-			}
-			catch(NumberFormatException nf)
-			{
+			} catch(NumberFormatException   nf) {
 				return def;
 			}
 
@@ -1633,20 +1605,13 @@ public class jEdit
 		if(editPane != null && parent == null && editPane.getBuffer() != null)
 			parent = editPane.getBuffer().getDirectory();
 
-		try
-		{
+		try {
 			URL u = new URL(path);
 			if ("file".equals(u.getProtocol()))
 			{
 				path = URLDecoder.decode(u.getPath(), "UTF-8");
 			}
-		}
-		catch(UnsupportedEncodingException e)
-		{
-			path = MiscUtilities.constructPath(parent,path);
-		}
-		catch (MalformedURLException e)
-		{
+		} catch(UnsupportedEncodingException | MalformedURLException   e) {
 			path = MiscUtilities.constructPath(parent,path);
 		}
 
@@ -2704,12 +2669,9 @@ public class jEdit
 		if(oldSettingsDir.exists() && !newSettingsDir.exists())
 		{
 			Log.log(Log.NOTICE,jEdit.class,"Old settings directory found (HOME/.jedit). Moving to new location ("+newSettingsDir+ ')');
-			try
-			{
+			try {
 				oldSettingsDir.renameTo(newSettingsDir);
-			}
-			catch(SecurityException se)
-			{
+			} catch(SecurityException   se) {
 				Log.log(Log.ERROR,jEdit.class,se);
 			}
 		}
@@ -3588,17 +3550,14 @@ public class jEdit
 	{
 		propMgr = new PropertyManager();
 
-		try
-		{
+		try {
 			propMgr.loadSystemProps(getResourceAsUTF8Text(
 				"/org/gjt/sp/jedit/jedit.props"));
 			propMgr.loadSystemProps(getResourceAsUTF8Text(
 				"/org/gjt/sp/jedit/jedit_gui.props"));
 			propMgr.loadSystemProps(getResourceAsUTF8Text(
 				"/org/jedit/localization/jedit_en.props"));
-		}
-		catch(Exception e)
-		{
+		} catch(Exception   e) {
 			Log.log(Log.ERROR,jEdit.class,
 				"Error while loading system properties!");
 			Log.log(Log.ERROR,jEdit.class,
@@ -3640,21 +3599,16 @@ public class jEdit
 			if (!snippet.toLowerCase().endsWith(".props"))
 				continue;
 
-			try
-			{
+			try {
 				String path = MiscUtilities.constructPath(siteSettingsDirectory, snippet);
 				Log.log(Log.DEBUG, jEdit.class, "Loading site snippet: " + path);
 
 				propMgr.loadSiteProps(new FileInputStream(new File(path)));
-			}
-			catch (FileNotFoundException fnf)
-			{
-				Log.log(Log.DEBUG, jEdit.class, fnf);
-			}
-			catch (IOException e)
-			{
+			} catch(IOException  e) {
 				Log.log(Log.ERROR, jEdit.class, "Cannot load site snippet " + snippet);
 				Log.log(Log.ERROR, jEdit.class, e);
+			} catch(FileNotFoundException   fnf) {
+				Log.log(Log.DEBUG, jEdit.class, fnf);
 			}
 		}
 	} //}}}
@@ -3716,18 +3670,13 @@ public class jEdit
 				settingsDirectory,"properties"));
 			propsModTime = file.lastModified();
 
-			try
-			{
+			try {
 				propMgr.loadUserProps(
 					new FileInputStream(file));
-			}
-			catch(FileNotFoundException fnf)
-			{
-				//Log.log(Log.DEBUG,jEdit.class,fnf);
-			}
-			catch(Exception e)
-			{
+			} catch(Exception  e) {
 				Log.log(Log.ERROR,jEdit.class,e);
+			} catch(FileNotFoundException   fnf) {
+				//Log.log(Log.DEBUG,jEdit.class,fnf);
 			}
 		}
 	} //}}}
@@ -3852,40 +3801,31 @@ public class jEdit
 		// been loaded yet.
 		if (EventQueue.isDispatchThread())
 		{
-			try 
-			{
+			try {
 				UIManager.setLookAndFeel(sLf);
-			}
-			catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) 
-			{
+			} catch(ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException   e) {
 				// ignored, there really isn't anything to do and this may be
 				// bogus, the lnf may be from the Look And Feel plugin
 			}
 		}
 		else 
 		{
-			try
-			{
+			try {
 				EventQueue.invokeAndWait(
 					new Runnable()
 					{
 						public void run() 
 						{
-							try
-							{
+							try {
 								UIManager.setLookAndFeel(sLf);
-							}
-							catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException e) 
-							{
+							} catch(ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException   e) {
 								// same as above, there really isn't anything to do and this may be
 								// bogus, the lnf may be from the Look And Feel plugin
 							}
 						}
 					}
 				);
-			}
-			catch (InterruptedException | InvocationTargetException e) 
-			{
+			} catch(InterruptedException | InvocationTargetException   e) {
 				// don't worry about this one either	
 			}
 		}
@@ -3960,12 +3900,9 @@ public class jEdit
 			int iWindow = 0;
 			for (Window window : Window.getWindows())
 			{
-				try
-				{
+				try {
 					SwingUtilities.updateComponentTreeUI(window);
-				}
-				catch(Exception e)
-				{
+				} catch(Exception   e) {
 					Log.log(Log.ERROR, jEdit.class,
 						"Window " + iWindow
 						+ ": " + window, e);
@@ -4003,14 +3940,11 @@ public class jEdit
 		{
 			if(buffer.getName().startsWith("Untitled-"))
 			{
-				try
-				{
+				try {
 					untitledCount = Math.max(untitledCount,
 						Integer.parseInt(buffer.getName()
 						.substring(9)));
-				}
-				catch(NumberFormatException nf)
-				{
+				} catch(NumberFormatException   nf) {
 				}
 			}
 			buffer = buffer.next;
@@ -4051,13 +3985,10 @@ public class jEdit
 			if (handler == null)
 				continue;
 
-			try
-			{
+			try {
 				Macros.Macro newMacro = handler.createMacro(snippet.getName(), snippet.getPath());
 				handler.runMacro(null, newMacro, false);
-			}
-			catch (Exception e)
-			{
+			} catch(Exception   e) {
 				Log.log(Log.ERROR, jEdit.class, e);
 			}
 		}
@@ -4306,8 +4237,7 @@ loop:
 				// Handle line number
 				if(marker.startsWith("+line:"))
 				{
-					try
-					{
+					try {
 						String arg = marker.substring(6);
 						String[] lineCol = arg.split(",");
 						int line, col;
@@ -4322,9 +4252,7 @@ loop:
 							col = 1;
 						}
 						pos = buffer.getLineStartOffset(line - 1) + (col - 1);
-					}
-					catch(Exception e)
-					{
+					} catch(Exception   e) {
 						return;
 					}
 				}
@@ -4580,17 +4508,14 @@ loop:
 				return mode;
 			}
 		};
-		try
-		{
+		try {
 			InputStream _in;
 			if(resource)
 				_in = jEdit.class.getResourceAsStream(path);
 			else
 				_in = new FileInputStream(path);
 			XMLUtilities.parseXML(_in, handler);
-		}
-		catch(IOException e)
-		{
+		} catch(IOException   e) {
 			Log.log(Log.ERROR,jEdit.class,e);
 		}
 	} //}}}

@@ -166,8 +166,7 @@ public class Registers
 			Transferable transferable = reg.getTransferable();
 			if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor))
 			{
-				try
-				{
+				try {
 					String registerContents = (String) transferable.getTransferData(DataFlavor.stringFlavor);
 					if(registerContents != null)
 					{
@@ -176,12 +175,8 @@ public class Registers
 						else
 							selection = registerContents + separator + selection;
 					}
-				}
-				catch (UnsupportedFlavorException e)
-				{
-				}
-				catch (IOException e)
-				{
+				} catch(UnsupportedFlavorException  e) {
+				} catch(IOException   e) {
 					Log.log(Log.ERROR, Registers.class, e);
 				}
 			}
@@ -247,18 +242,11 @@ public class Registers
 		String selection = null;
 		if (transferable.isDataFlavorSupported(JEditDataFlavor.jEditRichTextDataFlavor))
 		{
-			try
-			{
+			try {
 				JEditRichText data = (JEditRichText) transferable.getTransferData(JEditDataFlavor.jEditRichTextDataFlavor);
 				mode = data.getMode();
 				selection = data.getText();
-			}
-			catch (UnsupportedFlavorException e)
-			{
-				Log.log(Log.ERROR, Registers.class, e);
-			}
-			catch (IOException e)
-			{
+			} catch(UnsupportedFlavorException | IOException   e) {
 				Log.log(Log.ERROR, Registers.class, e);
 			}
 		}
@@ -410,17 +398,10 @@ public class Registers
 	//{{{ getTextFromTransferable() method
 	private static String getTextFromTransferable(Transferable transferable, DataFlavor dataFlavor)
 	{
-		try
-		{
+		try {
 			Object data = transferable.getTransferData(dataFlavor);
 			return stripEOLChars(data.toString());
-		}
-		catch (UnsupportedFlavorException e)
-		{
-			Log.log(Log.ERROR, Registers.class, e);
-		}
-		catch (IOException e)
-		{
+		} catch(UnsupportedFlavorException | IOException   e) {
 			Log.log(Log.ERROR, Registers.class, e);
 		}
 		return null;
@@ -740,8 +721,7 @@ public class Registers
 		@Override
 		public String toString()
 		{
-			try
-			{
+			try {
 
 				if (false)
 				{
@@ -764,9 +744,7 @@ public class Registers
 					DataFlavor.stringFlavor);
 
 				return stripEOLChars(selection);
-			}
-			catch(Exception e)
-			{
+			} catch(Exception   e) {
 				Log.log(Log.NOTICE,this,e);
 				return null;
 			}
@@ -821,16 +799,9 @@ public class Registers
 				return null;
 			if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor))
 			{
-				try
-				{
+				try {
 					return transferable.getTransferData(DataFlavor.stringFlavor).toString();
-				}
-				catch (UnsupportedFlavorException e)
-				{
-					Log.log(Log.ERROR, this, e);
-				}
-				catch (IOException e)
-				{
+				} catch(UnsupportedFlavorException | IOException   e) {
 					Log.log(Log.ERROR, this, e);
 				}
 			}

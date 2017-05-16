@@ -87,8 +87,7 @@ public class CommitLogSegmentReader implements Iterable<CommitLogSegmentReader.S
         {
             while (true)
             {
-                try
-                {
+                try {
                     final int currentStart = end;
                     end = readSyncMarker(descriptor, currentStart, reader);
                     if (end == -1)
@@ -102,34 +101,26 @@ public class CommitLogSegmentReader implements Iterable<CommitLogSegmentReader.S
                         end = (int) reader.length();
                     }
                     return segmenter.nextSegment(currentStart + SYNC_MARKER_SIZE, end);
-                }
-                catch(CommitLogSegmentReader.SegmentReadException e)
-                {
-                    try
-                    {
+                } catch(IOException | IOException  | IOException   | IOException    | IOException     | IOException      | IOException       | IOException        | IOException         | IOException          ioe) {
+                        throw new RuntimeException(ioe);
+                    } catch(CommitLogSegmentReader.SegmentReadException      e) {
+                    try {
                         handler.handleUnrecoverableError(new CommitLogReadException(
                                                     e.getMessage(),
                                                     CommitLogReadErrorReason.UNRECOVERABLE_DESCRIPTOR_ERROR,
                                                     !e.invalidCrc && tolerateTruncation));
-                    }
-                    catch (IOException ioe)
-                    {
+                    } catch(IOException           ioe) {
                         throw new RuntimeException(ioe);
                     }
-                }
-                catch (IOException e)
-                {
-                    try
-                    {
+                } catch(IOException           e) {
+                    try {
                         boolean tolerateErrorsInSection = tolerateTruncation & segmenter.tolerateSegmentErrors(end, reader.length());
                         // if no exception is thrown, the while loop will continue
                         handler.handleUnrecoverableError(new CommitLogReadException(
                                                     e.getMessage(),
                                                     CommitLogReadErrorReason.UNRECOVERABLE_DESCRIPTOR_ERROR,
                                                     tolerateErrorsInSection));
-                    }
-                    catch (IOException ioe)
-                    {
+                    } catch(IOException           ioe) {
                         throw new RuntimeException(ioe);
                     }
                 }
@@ -327,26 +318,20 @@ public class CommitLogSegmentReader implements Iterable<CommitLogSegmentReader.S
             compressor = encryptionContext.getCompressor();
             nextLogicalStart = reader.getFilePointer();
 
-            try
-            {
+            try {
                 cipher = encryptionContext.getDecryptor();
-            }
-            catch (IOException ioe)
-            {
+            } catch(IOException           ioe) {
                 throw new FSReadError(ioe, reader.getPath());
             }
 
             chunkProvider = () -> {
                 if (reader.getFilePointer() >= currentSegmentEndPosition)
                     return ByteBufferUtil.EMPTY_BYTE_BUFFER;
-                try
-                {
+                try {
                     decryptedBuffer = EncryptionUtils.decrypt(reader, decryptedBuffer, true, cipher);
                     uncompressedBuffer = EncryptionUtils.uncompress(decryptedBuffer, uncompressedBuffer, true, compressor);
                     return uncompressedBuffer;
-                }
-                catch (IOException e)
-                {
+                } catch(IOException           e) {
                     throw new FSReadError(e, reader.getPath());
                 }
             };
