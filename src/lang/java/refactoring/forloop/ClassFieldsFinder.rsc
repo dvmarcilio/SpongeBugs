@@ -1,11 +1,11 @@
-module refactor::forloop::ClassFieldsFinder
+module lang::java::refactoring::forloop::ClassFieldsFinder
 
 import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import String;
 import Set;
-import MethodVar;
+import lang::java::refactoring::forloop::MethodVar;
 
 // M3 isn't very helpful here.
 // We can't really get type + var name

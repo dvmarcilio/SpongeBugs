@@ -1,9 +1,9 @@
-module LocalVariablesFinderTestResources
+module lang::java::refactoring::forloop::\test::resources::LocalVariablesFinderTestResources
 
 import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import MethodVar;
+import lang::java::refactoring::forloop::MethodVar;
 
 public MethodHeader emptyMethodHeader() {
 	header = "void method()";
@@ -36,17 +36,17 @@ public MethodBody emptyMethodBody() {
 } 
 
 public MethodBody enhancedForLoopFinalVarDecl() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/EnhancedForLoopFinalVarDecl|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/EnhancedForLoopFinalVarDecl|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
 public MethodBody enhancedForLoopWithException() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/EnhancedForLoopWithException|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/EnhancedForLoopWithException|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
 public MethodBody arrayVariables() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/MultiplePlainArrayDeclarations|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/MultiplePlainArrayDeclarations|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -97,7 +97,7 @@ public MethodHeader varsWithinTheLoopMethodHeader() {
 }
 
 public MethodBody varsWithinTheLoopMethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/EnhancedForLoopVarsWithinLoop|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/EnhancedForLoopVarsWithinLoop|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -107,7 +107,7 @@ public MethodHeader nonEffectiveFinalUsedInEnhancedForMethodHeader() {
 }
 
 public MethodBody nonEffectiveFinalUsedInEnhancedForMethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/NonEffectiveFinalUsedInEnhancedFor|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/NonEffectiveFinalUsedInEnhancedFor|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -117,7 +117,7 @@ public MethodHeader iterableParameterMethodHeader() {
 }
 
 public MethodBody iterableParameterMethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/IterableParameterMethodBody|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/IterableParameterMethodBody|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -127,7 +127,7 @@ public MethodHeader methodWithAnonnymousInnerClassMethodHeader() {
 }
 
 public MethodBody methodWithAnonnymousInnerClassMethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyWithAnonnymousInnerClass|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/MethodBodyWithAnonnymousInnerClass|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -137,7 +137,7 @@ public MethodHeader postIncrementedVarMethodHeader() {
 }
 
 public MethodBody postIncrementedVarMethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostIncrementedVar|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/MethodBodyPostIncrementedVar|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -147,7 +147,7 @@ public MethodHeader postIncrementedVar2MethodHeader() {
 }
 
 public MethodBody postIncrementedVar2MethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostIncrementedVar2|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/MethodBodyPostIncrementedVar2|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -157,7 +157,7 @@ public MethodHeader postIncrementedVar3MethodHeader() {
 }
 
 public MethodBody postIncrementedVar3MethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostIncrementedVar3|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/MethodBodyPostIncrementedVar3|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -168,7 +168,7 @@ public MethodHeader postDecrementedVarMethodHeader() {
 }
 
 public MethodBody postDecrementedVarMethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostDecrementedVar|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/MethodBodyPostDecrementedVar|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -178,7 +178,7 @@ public MethodHeader assignmentInsideForMethodHeader() {
 }
 
 public MethodBody assignmentInsideForMethodBody() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/MethodBodyAssignmentInsideLoop|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/MethodBodyAssignmentInsideLoop|;
 	return parse(#MethodBody, readFile(fileLoc));
 }
 
@@ -188,6 +188,6 @@ public MethodHeader twoNonEffectiveFinalVarsInsideLoopMethodHeader() {
 }
 
 public MethodBody twoNonEffectiveFinalVarsInsideLoopMethodBody() {
-	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyWithTwoReferencesToOutsideNonEffectiveVars|;
+	methodBodyLoc = |project://rascal-Java8/testes/forloop/localVariables/MethodBodyWithTwoReferencesToOutsideNonEffectiveVars|;
   	return parse(#MethodBody, readFile(methodBodyLoc));
 }

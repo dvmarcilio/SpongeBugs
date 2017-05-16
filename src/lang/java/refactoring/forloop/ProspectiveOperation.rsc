@@ -1,14 +1,14 @@
-module refactor::forloop::ProspectiveOperation
+module lang::java::refactoring::forloop::ProspectiveOperation
 
 import IO;
 import List;
 import String;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import MethodVar;
-import refactor::forloop::OperationType;
 import ParseTreeVisualization;
-import refactor::forloop::BreakIntoStatements;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::OperationType;
+import lang::java::refactoring::forloop::BreakIntoStatements;
 
 public data ProspectiveOperation = prospectiveOperation(str stmt, str operation);
 

@@ -1,4 +1,4 @@
-module refactor::forloop::BreakIntoStatements
+module lang::java::refactoring::forloop::BreakIntoStatements
 
 import IO;
 import List;

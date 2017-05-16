@@ -1,10 +1,10 @@
-module refactor::forloop::EnhancedLoopExpression
+module lang::java::refactoring::forloop::EnhancedLoopExpression
 
 import lang::java::\syntax::Java18;
 import ParseTree;
-import MethodVar;
 import String;
 import IO;
+import lang::java::refactoring::forloop::MethodVar;
 
 // XXX Only checking iterable variables defined in method (local and parameter)
 // Need to verify class and instance variables too!

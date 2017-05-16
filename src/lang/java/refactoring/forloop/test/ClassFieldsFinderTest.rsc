@@ -1,13 +1,13 @@
-module refactor::forloop::ClassFieldsFinderTest
+module lang::java::refactoring::forloop::\test::ClassFieldsFinderTest
 
 import lang::java::\syntax::Java18;
 import ParseTree;
-import refactor::forloop::ClassFieldsFinder;
-import MethodVar;
+import lang::java::refactoring::forloop::ClassFieldsFinder;
+import lang::java::refactoring::forloop::MethodVar;
 import Set;
 
 public test bool shouldReturnAllClassFields() {
-	fileLoc = |project://rascal-Java8//testes/localVariables/ClassWithFields.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/localVariables/ClassWithFields.java|;
 	unit = parse(#CompilationUnit, fileLoc);
 	
 	classFields = findClassFields(unit);

@@ -1,15 +1,15 @@
-module refactor::forloop::\test::ForLoopBodyReferencesTest
+module lang::java::refactoring::forloop::\test::ForLoopBodyReferencesTest
 
 import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import Set;
-import refactor::forloop::ForLoopBodyReferences;
-import MethodVar;
-import LocalVariablesFinder;
+import lang::java::refactoring::forloop::ForLoopBodyReferences;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::LocalVariablesFinder;
 
 public test bool variablesReferenced1() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForWith3StatementsMapBody.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/ForWith3StatementsMapBody.java|;
 	forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	loopBody = retrieveLoopBodyFromEnhancedFor(forStmt);
 	
@@ -24,7 +24,7 @@ public test bool variablesReferenced1() {
 }
 
 public test bool variablesReferenced2() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForWithMultiStatementMap.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/ForWithMultiStatementMap.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	loopBody = retrieveLoopBodyFromEnhancedFor(forStmt);
 	
@@ -39,7 +39,7 @@ public test bool variablesReferenced2() {
 }
 
 public test bool variablesReferenced3() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For2.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T2For2.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	loopBody = retrieveLoopBodyFromEnhancedFor(forStmt);
 	
@@ -68,7 +68,7 @@ public test bool variablesReferenced4() {
 
 public test bool shouldBeRefactorableWhenOneReferenceFound() {
 	methodHeader = parse(#MethodHeader, "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)");
-  	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyWithTwoReferencesToOutsideNonEffectiveVars|;
+  	methodBodyLoc = |project://rascal-Java8/testes/forloop/localVariables/MethodBodyWithTwoReferencesToOutsideNonEffectiveVars|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
   	localVariables = findLocalVariables(methodHeader, methodBody);
   	forStmt = parse(#EnhancedForStatement, "for (Entry\<E\> entry : entries) {\n      elementsBuilder.add(entry.getElement());\n      cumulativeCounts[i + 1] = cumulativeCounts[i] + entry.getCount();\n      i++;\n    }");

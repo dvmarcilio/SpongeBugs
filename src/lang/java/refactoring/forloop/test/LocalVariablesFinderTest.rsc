@@ -1,10 +1,10 @@
-module LocalVariablesFinderTest
+module lang::java::refactoring::forloop::\test::LocalVariablesFinderTest
 
 import IO;
-import LocalVariablesFinderTestResources;
-import LocalVariablesFinder;
 import Set;
-import MethodVar;
+import lang::java::refactoring::forloop::\test::resources::LocalVariablesFinderTestResources;
+import lang::java::refactoring::forloop::LocalVariablesFinder;
+import lang::java::refactoring::forloop::MethodVar;
 
 public test bool shouldHaveTheEnhancedDeclaredVarAsFinal() {
 	methodBody = enhancedForLoopFinalVarDecl();

@@ -1,11 +1,11 @@
-module LocalVariablesFinder
+module lang::java::refactoring::forloop::LocalVariablesFinder
 
 import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import Set;
 import String;
-import MethodVar;
+import lang::java::refactoring::forloop::MethodVar;
 
 public set[MethodVar] findLocalVariables(MethodHeader methodHeader, MethodBody methodBody) {
 	return findVariablesAsParameters(methodHeader) + findVariablesInsideBody(methodBody);

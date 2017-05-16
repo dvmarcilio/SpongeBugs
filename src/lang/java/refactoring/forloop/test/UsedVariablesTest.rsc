@@ -1,11 +1,11 @@
-module refactor::forloop::UsedVariablesTest
+module lang::java::refactoring::forloop::\test::UsedVariablesTest
 
-import refactor::forloop::UsedVariables;
-import refactor::forloop::ProspectiveOperation;
-import refactor::forloop::OperationType;
-import MethodVar;
 import Set;
 import IO;
+import lang::java::refactoring::forloop::UsedVariables;
+import lang::java::refactoring::forloop::ProspectiveOperation;
+import lang::java::refactoring::forloop::OperationType;
+import lang::java::refactoring::forloop::MethodVar;
 
 public test bool methodInvocationWithArg() {
 	prOp = prospectiveOperation("writer.write(thing);", FOR_EACH);	

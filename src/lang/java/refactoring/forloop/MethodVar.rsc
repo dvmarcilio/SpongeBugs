@@ -1,4 +1,4 @@
-module MethodVar
+module lang::java::refactoring::forloop::MethodVar
 
 import Set;
 import String;

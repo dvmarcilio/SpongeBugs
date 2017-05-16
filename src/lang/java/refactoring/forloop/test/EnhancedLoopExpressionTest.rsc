@@ -1,13 +1,13 @@
-module refactor::forloop::EnhancedLoopExpressionTest
+module lang::java::refactoring::forloop::\test::EnhancedLoopExpressionTest
 
 import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import MethodVar;
-import LocalVariablesFinder;
-import LocalVariablesFinderTestResources;
-import refactor::forloop::ClassFieldsFinder;
-import refactor::forloop::EnhancedLoopExpression;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::LocalVariablesFinder;
+import lang::java::refactoring::forloop::\test::resources::LocalVariablesFinderTestResources;
+import lang::java::refactoring::forloop::ClassFieldsFinder;
+import lang::java::refactoring::forloop::EnhancedLoopExpression;
 
 public test bool iterableShouldReturnFalse() {
 	params = paramsEnhancedForOnIterable();
@@ -24,7 +24,7 @@ private tuple[Expression exp, set[MethodVar] localVariables] paramsEnhancedForOn
 }
 
 private tuple[MethodHeader methodHeader, MethodBody methodBody] getEnhancedForOnIterable() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/EnhancedForOnIterable.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/EnhancedForOnIterable.java|;
 	methodDeclaration = parse(#MethodDeclaration, readFile(fileLoc));
 	visit(methodDeclaration) {
 		case (MethodDeclaration) `<MethodModifier * _> <MethodHeader methodHeader> <MethodBody methodBody>`: {
@@ -45,10 +45,10 @@ public test bool iterableParamShouldReturnFalse() {
 public test bool thisFieldListShouldReturnTrue() {
 	exp = parse(#Expression, "this.engineValves");
 	methodHeader = parse(#MethodHeader, "void configureEngine(Engine engine)");
-	methodBodyLoc = |project://rascal-Java8/testes/classFields/MethodBodyIteratingOnThisField2|;
+	methodBodyLoc = |project://rascal-Java8/testes/forloop/classFields/MethodBodyIteratingOnThisField2|;
 	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	localVariables = findLocalVariables(methodHeader, methodBody);
-	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/classFields/TomcatServletWebServerFactory.java|)));
+	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/forloop/classFields/TomcatServletWebServerFactory.java|)));
 	vars = localVariables + classFields;
 	
 	return isIteratingOnCollection(exp, vars) == true;

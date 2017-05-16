@@ -1,12 +1,12 @@
-module refactor::forloop::ProspectiveOperationTest
+module lang::java::refactoring::forloop::\test::ProspectiveOperationTest
 
-import refactor::forloop::ProspectiveOperation;
-import refactor::forloop::ProspectiveOperationTestResources;
-import refactor::forloop::OperationType;
-import MethodVar;
 import lang::java::\syntax::Java18;
 import IO;
 import List;
+import lang::java::refactoring::forloop::ProspectiveOperation;
+import lang::java::refactoring::forloop::\test::resources::ProspectiveOperationTestResources;
+import lang::java::refactoring::forloop::OperationType;
+import lang::java::refactoring::forloop::MethodVar;
 
 public test bool shouldReturnAForEachOnSimpleShortExample() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] simpleShort = simpleShort();

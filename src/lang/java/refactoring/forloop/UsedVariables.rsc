@@ -1,12 +1,12 @@
-module refactor::forloop::UsedVariables
+module lang::java::refactoring::forloop::UsedVariables
 
 import IO;
 import String;
 import Set;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import MethodVar;
-import refactor::forloop::ProspectiveOperation;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::ProspectiveOperation;
 
 public set[str] retrieveUsedVariables(ProspectiveOperation prOp) {
 	set[str] usedVariables = {};

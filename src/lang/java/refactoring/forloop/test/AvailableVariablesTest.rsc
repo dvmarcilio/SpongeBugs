@@ -1,11 +1,11 @@
-module refactor::forloop::AvailableVariablesTest
+module lang::java::refactoring::forloop::\test::AvailableVariablesTest
 
-import refactor::forloop::AvailableVariables;
-import refactor::forloop::ProspectiveOperation;
-import refactor::forloop::OperationType;
-import MethodVar;
 import Set;
 import IO;
+import lang::java::refactoring::forloop::AvailableVariables;
+import lang::java::refactoring::forloop::ProspectiveOperation;
+import lang::java::refactoring::forloop::OperationType;
+import lang::java::refactoring::forloop::MethodVar;
 
 public test bool methodParamShouldBeAvailableVar() {
 	prOp = prospectiveOperation("writer.write(thing);", FOR_EACH);	

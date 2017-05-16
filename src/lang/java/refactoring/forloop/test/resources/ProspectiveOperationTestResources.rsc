@@ -1,19 +1,19 @@
-module refactor::forloop::ProspectiveOperationTestResources
+module lang::java::refactoring::forloop::\test::resources::ProspectiveOperationTestResources
 
 import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import MethodVar;
-import LocalVariablesFinder;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::LocalVariablesFinder;
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] simpleShort() {
-	fileLoc = |project://rascal-Java8//testes/ProspectiveOperation/SimpleShortEnhancedLoop|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/SimpleShortEnhancedLoop|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileLoc));
 	return <{}, enhancedForLoop>; 
 }
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] continueAndReturn() {
-	fileLoc = |project://rascal-Java8//testes/ProspectiveOperation/ContinueAndReturnEnhancedLoop|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/ContinueAndReturnEnhancedLoop|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileLoc));
 	return <continueAndReturnVars(), enhancedForLoop>; 
 }
@@ -25,7 +25,7 @@ private set[MethodVar] continueAndReturnVars() {
 }
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] filterMapReduce() {
-	fileLoc = |project://rascal-Java8//testes/ProspectiveOperation/FilterMapReduceEnhancedLoop|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/FilterMapReduceEnhancedLoop|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileLoc));
 	return <filterMapReduceVars(), enhancedForLoop>; 
 }
@@ -37,7 +37,7 @@ private set[MethodVar] filterMapReduceVars() {
 }
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] filterAndMergedForEach() {
-	fileLoc = |project://rascal-Java8//testes/ProspectiveOperation/FilterAndMergedForEach|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/FilterAndMergedForEach|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileLoc));
 	return <filterAndMergedForEachVars(), enhancedForLoop>; 
 }
@@ -49,52 +49,52 @@ private set[MethodVar] filterAndMergedForEachVars() {
 }
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] multipleMapsAndEndingReducer() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For2.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T2For2.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	return <multipleMapsAndEndingReducerVars(), forStmt>;
 }
 
 private set[MethodVar] multipleMapsAndEndingReducerVars() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
 	return findLocalVariables(methodHeader, methodBody);
 }
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] innerLoop1() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/InnerLoop1.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/InnerLoop1.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	return <innerLoop1Vars(), forStmt>;
 }
 
 private set[MethodVar] innerLoop1Vars() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyInnerLoop1.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/MethodBodyInnerLoop1.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "\<N\> Graph\<N\> transitiveClosure(Graph\<N\> graph)");
 	return findLocalVariables(methodHeader, methodBody);
 }
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] innerLoop2() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/InnerLoop2.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/InnerLoop2.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	return <innerLoop2Vars(), forStmt>;
 }
 
 private set[MethodVar] innerLoop2Vars() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyInnerLoop2.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/MethodBodyInnerLoop2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "ImmutableList\<Method\> getAnnotatedMethodsNotCached(Class\<?\> clazz)");
 	return findLocalVariables(methodHeader, methodBody);
 }
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithInnerWhile() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/LoopWithInnerWhile.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/LoopWithInnerWhile.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	return <loopWithInnerWhileVars(), forStmt>;
 }
 
 private set[MethodVar] loopWithInnerWhileVars() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyLoopWithInnerWhile.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/MethodBodyLoopWithInnerWhile.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "ImmutableList\<Method\> getAnnotatedMethodsNotCached(Class\<?\> clazz)");
 	return findLocalVariables(methodHeader, methodBody);
@@ -107,7 +107,7 @@ public tuple [set[MethodVar] vars, EnhancedForStatement loop] loopReduceWithPost
 
 private set[MethodVar] loopReduceWithPostIncrementVars() {
 	methodHeader = parse(#MethodHeader, "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)");
-	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyReduceWithPostIncrement|;
+	methodBodyLoc = |project://rascal-Java8/testes/forloop/localVariables/MethodBodyReduceWithPostIncrement|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	return findLocalVariables(methodHeader, methodBody);
 }
@@ -119,20 +119,20 @@ public tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithThrowState
 
 private set[MethodVar] loopWithThrowStatementVars() {
 	methodHeader = parse(#MethodHeader, "ImmutableMap\<K, V\> getAll(Iterable\<? extends K\> keys) throws ExecutionException");
-	methodBodyLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostDecrementedVar|;
+	methodBodyLoc = |project://rascal-Java8//testes/forloop/localVariables/MethodBodyPostDecrementedVar|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	return findLocalVariables(methodHeader, methodBody);
 }
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithIfWithTwoStatementsInsideBlock() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/ForIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	return <loopWithIfWithTwoStatementsInsideBlockVars(), forStmt>;
 }
 
 private set[MethodVar] loopWithIfWithTwoStatementsInsideBlockVars() {
 	methodHeader = parse(#MethodHeader, "String[] getPaths(EndpointHandlerMapping endpointHandlerMapping)");
-	methodBodyLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+	methodBodyLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/MethodBodyIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	return findLocalVariables(methodHeader, methodBody);
 }

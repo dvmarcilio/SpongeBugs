@@ -1,15 +1,15 @@
-module refactor::forloop::\test::BreakIntoStatementsTest
+module lang::java::refactoring::forloop::\test::BreakIntoStatementsTest
 
 import IO;
-import refactor::forloop::BreakIntoStatements;
+import lang::java::refactoring::forloop::BreakIntoStatements;
 import lang::java::\syntax::Java18;
-import refactor::forloop::ProspectiveOperationTestResources; 
-import refactor::forloop::ForLoopBodyReferences;
+import lang::java::refactoring::forloop::ProspectiveOperationTestResources; 
+import lang::java::refactoring::forloop::ForLoopBodyReferences;
 import ParseTree;
 import ParseTreeVisualization;
 
 public test bool ex1() {
-	fileLoc = |project://rascal-Java8//testes/ProspectiveOperation/SimpleShortEnhancedLoop|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/SimpleShortEnhancedLoop|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileLoc));
 	loopBody = retrieveLoopBodyFromEnhancedFor(enhancedForLoop);
 	
@@ -22,7 +22,7 @@ public test bool ex1() {
 }
 
 public test bool ex2() {
-	fileLoc = |project://rascal-Java8//testes/ProspectiveOperation/ContinueAndReturnEnhancedLoop|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/ContinueAndReturnEnhancedLoop|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileLoc));
 	loopBody = retrieveLoopBodyFromEnhancedFor(enhancedForLoop);
 	
@@ -36,7 +36,7 @@ public test bool ex2() {
 }
 
 public test bool ex3() {
-	fileLoc = |project://rascal-Java8//testes/ProspectiveOperation/FilterMapReduceEnhancedLoop|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/FilterMapReduceEnhancedLoop|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileLoc));
 	loopBody = retrieveLoopBodyFromEnhancedFor(enhancedForLoop);
 	
@@ -77,7 +77,7 @@ public test bool ex5() {
 }
 
 public test bool ex6() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/ForIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileForLoc));
 	loopBody = retrieveLoopBodyFromEnhancedFor(enhancedForLoop);
 	
@@ -90,7 +90,7 @@ public test bool ex6() {
 
 // inside the if after the loop from previous example
 public test bool ex7() {
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/ForIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
 	enhancedForLoop = parse(#EnhancedForStatement, readFile(fileForLoc));
 	loopBody = retrieveLoopBodyFromEnhancedFor(enhancedForLoop);
 	list[Stmt] stmts = [];

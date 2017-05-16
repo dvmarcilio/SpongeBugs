@@ -1,4 +1,4 @@
-module refactor::forloop::ForLoopToFunctional
+module lang::java::refactoring::forloop::ForLoopToFunctional
 
 import IO;
 import List;
@@ -6,13 +6,13 @@ import Set;
 import String;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import MethodVar;
-import refactor::forloop::ProspectiveOperation;
-import refactor::forloop::UsedVariables;
-import refactor::forloop::AvailableVariables;
-import refactor::forloop::OperationType;
-import refactor::forloop::ForLoopBodyReferences;
-import refactor::forloop::BreakIntoStatements;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::ProspectiveOperation;
+import lang::java::refactoring::forloop::UsedVariables;
+import lang::java::refactoring::forloop::AvailableVariables;
+import lang::java::refactoring::forloop::OperationType;
+import lang::java::refactoring::forloop::ForLoopBodyReferences;
+import lang::java::refactoring::forloop::BreakIntoStatements;
 
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 

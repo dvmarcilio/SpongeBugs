@@ -1,4 +1,4 @@
-module refactor::forloop::OperationType
+module lang::java::refactoring::forloop::OperationType
 
 public str FILTER = "filter";
 public str MAP = "map";

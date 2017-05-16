@@ -1,10 +1,10 @@
-module refactor::forloop::AvailableVariables
+module lang::java::refactoring::forloop::AvailableVariables
 
 import Set;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import MethodVar;
-import refactor::forloop::ProspectiveOperation;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::ProspectiveOperation;
 
 // XXX assess the necessity to verify these others conditions:
 	// fields declared in class, inherited and visible from imported classes ??

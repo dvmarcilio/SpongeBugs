@@ -1,11 +1,11 @@
-module refactor::forloop::ForLoopBodyReferences
+module lang::java::refactoring::forloop::ForLoopBodyReferences
 
 import lang::java::\syntax::Java18;
 import String;
 import ParseTree;
 import IO;
 import Set;
-import MethodVar;
+import lang::java::refactoring::forloop::MethodVar;
 
 public bool atMostOneReferenceToNonEffectiveFinalVar(set[MethodVar] localVariables, Statement loopBody) {
 	return getTotalOfNonEffectiveFinalVarsReferenced(localVariables, loopBody) <= 1;

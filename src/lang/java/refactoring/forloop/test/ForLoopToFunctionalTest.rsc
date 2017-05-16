@@ -1,19 +1,21 @@
-module refactor::forloop::ForLoopToFunctionalTest
+module lang::java::refactoring::forloop::\test::ForLoopToFunctionalTest
 
 import IO;
 import String;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import refactor::forloop::ForLoopToFunctional;
-import MethodVar;
-import LocalVariablesFinder;
-import LocalVariablesFinderTestResources;
-import refactor::forloop::ProspectiveOperationTestResources;
-import refactor::forloop::ClassFieldsFinder;
 import ParseTreeVisualization;
 
+import lang::java::refactoring::forloop::ForLoopToFunctional;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::LocalVariablesFinder;
+import lang::java::refactoring::forloop::ClassFieldsFinder;
+import lang::java::refactoring::forloop::\test::resources::LocalVariablesFinderTestResources;
+import lang::java::refactoring::forloop::\test::resources::ProspectiveOperationTestResources;
+
+
 public test bool ex1() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T1.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T1.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "TestSuite createTestSuite()");
 	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
@@ -27,11 +29,11 @@ public test bool ex1() {
 }
 
 public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
 	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T2For.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "key");
 	Expression collectionId = parse(#Expression, "keySet");
@@ -46,11 +48,11 @@ public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
 }
 
 public test bool shouldRefactorReduceWithCompoundPlusAssignmentOperator() {
-	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2.java|;
+	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T2.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "void assertInvariants(Map\<K, V\> map)");
 	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For2.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T2For2.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "entry");
 	Expression collectionId = parse(#Expression, "entrySet");
@@ -61,11 +63,11 @@ public test bool shouldRefactorReduceWithCompoundPlusAssignmentOperator() {
 }
 
 public test bool shouldAddReturnToMapWithMoreThanOneStatement() {
-	methodBodyLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyWithMultiStatementMap.java|;
+	methodBodyLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/MethodBodyWithMultiStatementMap.java|;
 	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	methodHeader = parse(#MethodHeader, "Iterable\<Metric\<?\>\> findAll()");
 	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForWithMultiStatementMap.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/ForWithMultiStatementMap.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "v");
 	Expression collectionId = parse(#Expression, "values");
@@ -76,11 +78,11 @@ public test bool shouldAddReturnToMapWithMoreThanOneStatement() {
 }
 
 public test bool shouldAddCorrectReturnTo3StmtsMapBody() {
-	methodBodyLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyWIth3StatementsMapBody.java|;
+	methodBodyLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/MethodBodyWIth3StatementsMapBody.java|;
 	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	methodHeader = parse(#MethodHeader, "void updateSnapshots(Collection\<FolderSnapshot\> snapshots)");
 	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
-	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/ForWith3StatementsMapBody.java|;
+	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/ForWith3StatementsMapBody.java|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "snapshot");
 	Expression collectionId = parse(#Expression, "snapshots");
@@ -108,7 +110,7 @@ public test bool shouldThrowExceptionWhenALoopWithOnlyOneReferenceToOutsideNonEf
 
 public test bool shouldThrowExceptionWhenALoopWithOnlyOneReferenceToOutsideNonEffectiveFinalVarIsNotAReducer2() {
 	methodHeader = parse(#MethodHeader, "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)");
-  	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyWithTwoReferencesToOutsideNonEffectiveVars|;
+  	methodBodyLoc = |project://rascal-Java8/testes/forloop/localVariables/MethodBodyWithTwoReferencesToOutsideNonEffectiveVars|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
   	methodVars = findLocalVariables(methodHeader, methodBody);
   	forStmt = parse(#EnhancedForStatement, "for (Entry\<E\> entry : entries) {\n      elementsBuilder.add(entry.getElement());\n      cumulativeCounts[i + 1] = cumulativeCounts[i] + entry.getCount();\n      i++;\n    }");
@@ -125,7 +127,7 @@ public test bool shouldThrowExceptionWhenALoopWithOnlyOneReferenceToOutsideNonEf
 
 public test bool shouldWorkWithThrowStatementInsideAnIfThatIsNotTheLastStatement() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] loopWithThrowStatement = loopWithThrowStatement();
-	methodBodyLoc = |project://rascal-Java8//testes/localVariables/MethodBodyPostDecrementedVar|;
+	methodBodyLoc = |project://rascal-Java8//testes/forloop/localVariables/MethodBodyPostDecrementedVar|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "key");
 	Expression collectionId = parse(#Expression, "keysToLoad");
@@ -137,7 +139,7 @@ public test bool shouldWorkWithThrowStatementInsideAnIfThatIsNotTheLastStatement
 
 public test bool loopWithIfWithTwoStatementsInsideBlockShouldRefactorInnerIfAsMap() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] loop = loopWithIfWithTwoStatementsInsideBlock();
-	methodBodyLoc = |project://rascal-Java8//testes/ForLoopToFunctional/MethodBodyIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
+	methodBodyLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/MethodBodyIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "endpoint");
 	Expression collectionId = parse(#Expression, "endpoints");
@@ -149,7 +151,7 @@ public test bool loopWithIfWithTwoStatementsInsideBlockShouldRefactorInnerIfAsMa
 
 public test bool anotherIfThatIsMap() {
 	methodHeader = parse(#MethodHeader, "void afterPropertiesSet() throws Exception");
-  	methodBodyLoc = |project://rascal-Java8/testes/ForLoopToFunctional/MethodBodyIfAsNotAFilter|;
+  	methodBodyLoc = |project://rascal-Java8/testes/forloop/ForLoopToFunctional/MethodBodyIfAsNotAFilter|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
   	methodVars = findLocalVariables(methodHeader, methodBody);
   	forStmt = parse(#EnhancedForStatement, "for (Endpoint\<?\> endpoint : delegates) {if (isGenericEndpoint(endpoint.getClass()) && endpoint.isEnabled()) {EndpointMvcAdapter adapter = new EndpointMvcAdapter(endpoint);String path = determinePath(endpoint,this.applicationContext.getEnvironment());if (path != null) {adapter.setPath(path);}this.endpoints.add(adapter);}}");
@@ -163,15 +165,15 @@ public test bool anotherIfThatIsMap() {
 
 public test bool shouldRefactorLoopIteratingOnThisField() {
 	methodHeader = parse(#MethodHeader, "WebServer getWebServer(ServletContextInitializer... initializers)");
-	methodBodyLoc = |project://rascal-Java8/testes/classFields/MethodBodyIteratingOnThisField|;
+	methodBodyLoc = |project://rascal-Java8/testes/forloop/classFields/MethodBodyIteratingOnThisField|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
   	methodVars = findLocalVariables(methodHeader, methodBody);
-  	fileForLoc = |project://rascal-Java8/testes/classFields/ForIteratingOnThisField|;
+  	fileForLoc = |project://rascal-Java8/testes/forloop/classFields/ForIteratingOnThisField|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "additionalConnector");
 	Expression collectionId = parse(#Expression, "this.additionalTomcatConnectors");
 	
-  	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/classFields/TomcatServletWebServerFactory.java|)));
+  	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/forloop/classFields/TomcatServletWebServerFactory.java|)));
   	vars = methodVars + classFields;
   	
   	refactoredStatement = buildRefactoredEnhancedFor(vars, forStmt, methodBody, iteratedVarName, collectionId);
@@ -181,15 +183,15 @@ public test bool shouldRefactorLoopIteratingOnThisField() {
 
 public test bool shouldRefactorLoopIteratingOnThisField2() {
 	methodHeader = parse(#MethodHeader, "void configureEngine(Engine engine)");
-	methodBodyLoc = |project://rascal-Java8/testes/classFields/MethodBodyIteratingOnThisField2|;
+	methodBodyLoc = |project://rascal-Java8/testes/forloop/classFields/MethodBodyIteratingOnThisField2|;
 	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
   	methodVars = findLocalVariables(methodHeader, methodBody);
-  	fileForLoc = |project://rascal-Java8/testes/classFields/ForIteratingOnThisField2|;
+  	fileForLoc = |project://rascal-Java8/testes/forloop/classFields/ForIteratingOnThisField2|;
 	EnhancedForStatement forStmt = parse(#EnhancedForStatement, readFile(fileForLoc));
 	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "valve");
 	Expression collectionId = parse(#Expression, "this.engineValves");
 	
-  	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/classFields/TomcatServletWebServerFactory.java|)));
+  	classFields = findClassFields(parse(#CompilationUnit, readFile(|project://rascal-Java8/testes/forloop/classFields/TomcatServletWebServerFactory.java|)));
   	vars = methodVars + classFields;
   	
   	refactoredStatement = buildRefactoredEnhancedFor(vars, forStmt, methodBody, iteratedVarName, collectionId);
@@ -201,7 +203,7 @@ public test bool shouldRefactorLoopIteratingOnThisField2() {
 //	throw "Not yet implemented";
 //
 //	methodHeader = parse(#MethodHeader, "\<E\> ImmutableSortedMultiset\<E\> copyOfSortedEntries(Comparator\<? super E\> comparator, Collection\<Entry\<E\>\> entries)");
-//  	methodBodyLoc = |project://rascal-Java8/testes/localVariables/MethodBodyReduceWithPostIncrement|;
+//  	methodBodyLoc = |project://rascal-Java8/testes/forloop/localVariables/MethodBodyReduceWithPostIncrement|;
 //  	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 //  	methodVars = findLocalVariables(methodHeader, methodBody);
 //  	forStmt = parse(#EnhancedForStatement, "for (Entry\<E\> entry : entries) {\n      elementsBuilder.add(entry.getElement());\n      // cumulativeCounts[i + 1] = cumulativeCounts[i] + entry.getCount();\n      i++;\n    }");
@@ -218,11 +220,11 @@ public test bool shouldRefactorLoopIteratingOnThisField2() {
 
 // TODO nested loops needed to be changed in ProspectiveOperation
 //public test bool nestedLoops() {
-//	fileLoc = |project://rascal-Java8//testes/ForLoopToFunctional/NestedLoops.java|;
+//	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/NestedLoops.java|;
 //	methodBody = parse(#MethodBody, readFile(fileLoc));
 //	methodHeader = parse(#MethodHeader, "void testComplexBuilder()");
 //	set[MethodVar] methodVars = findLocalVariables(methodHeader, methodBody);
-//	fileForLoc = |project://rascal-Java8//testes/ForLoopToFunctional/T2For.java|;	
+//	fileForLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T2For.java|;	
 //	EnhancedForStatement forStmt = parse(#EnhancedForStatement, "for (Integer red : colorElem) {\n      for (Integer green : colorElem) {\n        for (Integer blue : colorElem) {\n          webSafeColorsBuilder.add((red \<\< 16) + (green \<\< 8) + blue);\n        }\n      }\n    }");
 //	VariableDeclaratorId iteratedVarName = parse(#VariableDeclaratorId, "red");
 //	Expression collectionId = parse(#Expression, "colorElem");
