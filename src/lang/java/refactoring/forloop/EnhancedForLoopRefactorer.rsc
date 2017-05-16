@@ -1,15 +1,15 @@
-module ForLoop
+module lang::java::refactoring::forloop::EnhancedForLoopRefactorer
 
 import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import LocalVariablesFinder;
-import refactor::forloop::EnhancedLoopExpression;
-import refactor::forloop::ForLoopBodyReferences;
-import refactor::forloop::ForLoopToFunctional;
-import refactor::forloop::ClassFieldsFinder;
-import MethodVar;
 import util::Math;
+import lang::java::refactoring::forloop::LocalVariablesFinder;
+import lang::java::refactoring::forloop::EnhancedLoopExpression;
+import lang::java::refactoring::forloop::ForLoopBodyReferences;
+import lang::java::refactoring::forloop::ForLoopToFunctional;
+import lang::java::refactoring::forloop::ClassFieldsFinder;
+import lang::java::refactoring::forloop::MethodVar;
 
 private set[str] checkedExceptionClasses;
 
@@ -19,7 +19,7 @@ private bool alreadyComputedClassFields;
 
 private int refactoredCount = 0;
 
-public void findForLoops(list[loc] locs, set[str] checkedExceptions) {
+public void forLoopToFunctional(list[loc] locs, set[str] checkedExceptions) {
 	refactoredCount = 0;
 	checkedExceptionClasses = checkedExceptions;
 	for(fileLoc <- locs) {
