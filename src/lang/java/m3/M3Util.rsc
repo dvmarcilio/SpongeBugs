@@ -18,6 +18,10 @@ list[loc] listAllClassFiles(loc location) {
     return findAllFiles(location, "class");
 }
 
+list[loc] listAllJavaFiles(loc location) {
+	return findAllFiles(location, "java");
+}
+
 /*
  * computes a list of class names from a classpath, 
  * that is, a list of Jar files. 
