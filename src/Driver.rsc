@@ -40,7 +40,7 @@ public void refactorProjects(loc input, bool verbose = true) {
        logMessage("[Project Analyzer] processing project: " + projectDescriptor[0]);
       
        list[loc] projectFiles = findAllFiles(|file:///| + projectDescriptor[4], "java");
-    
+       println("Processing " + projectDescriptor[0] + ...");
        switch(projectDescriptor[2]) {
           case /MC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorMultiCatch, "multicatch");
           case /SS/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorSwitchString, "switchstring");
@@ -74,10 +74,12 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
        if(res[0] > 0) {
          totalOfTransformations = totalOfTransformations + res[0];
          processedFiles += <res[0], file, res[1]>;
+         println("  " + toString(res[0]) + " of " + size(files) + " processed succesfully!");
        }
      }
      catch : { 
      	errors += 1; 
+        println("  file processed with errors!");
      };
   }
   int total = size(processedFiles);
