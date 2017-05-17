@@ -15,9 +15,10 @@ import lang::java::refactoring::SwitchString;
 import lang::java::refactoring::VarArgs; 
 import lang::java::refactoring::Diamond;
 
+import lang::java::util::ManageCompilationUnit;
 import lang::java::m3::M3Util;
 import lang::java::\syntax::Java18;
-
+datetime  t0, t1;
 str logFile = "";
 
 /**
@@ -33,13 +34,13 @@ public void refactorProjects(loc input, bool verbose = true) {
        if(startsWith(p, "#")) {
          continue;
        }
-       
+       t0 = now();
        list[str] projectDescriptor = split(",", p);
        println("[Project Analyzer] project: " + projectDescriptor[0]);
        logMessage("[Project Analyzer] processing project: " + projectDescriptor[0]);
       
        list[loc] projectFiles = findAllFiles(|file:///| + projectDescriptor[4], "java");
-    
+       println("Processing " + projectDescriptor[0] + "...");
        switch(projectDescriptor[2]) {
           case /MC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorMultiCatch, "multicatch");
           case /SS/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorSwitchString, "switchstring");
@@ -73,16 +74,19 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
        if(res[0] > 0) {
          totalOfTransformations = totalOfTransformations + res[0];
          processedFiles += <res[0], file, res[1]>;
+         println("  " + toString(res[0]) + " of " + size(files) + " processed succesfully!");
        }
      }
      catch : { 
      	errors += 1; 
+        println("  file processed with errors!");
      };
   }
   int total = size(processedFiles);
   int toExecute = numberOfTransformationsToApply(total, percent);
   set[int] toApply = generateRandomNumbers(toExecute, total);
   int totalOfChangedFiles = exportResults(toApply, processedFiles, verbose, name);
+  t1 = now();
   logMessage("- Number of files:  " + toString(size(files)));
   logMessage("- Processed Filies: " + toString(size(processedFiles)));
   logMessage("- Exported Files:   " + toString(size(toApply))); 
@@ -90,6 +94,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   logMessage("- Total of transformations: " + toString(totalOfTransformations));
   logMessage("- Errors: " + toString(errors));
   logMessage("- Final Time: " + printTime(now(), "YYYYMMDDHHmmss"));
+  logMessage("- Elapsed Time: " + prettyPrinterDuration(t1 - t0, "ms") + "ms");
 }
 
 /**
