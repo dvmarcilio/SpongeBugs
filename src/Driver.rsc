@@ -7,6 +7,7 @@ import List;
 import Set;
 import ParseTree; 
 import util::Math;
+import util::Benchmark;
 
 import io::IOUtil; 
 
@@ -66,6 +67,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   list[tuple[int, loc, CompilationUnit]] processedFiles = [];
   int errors = 0; 
   int totalOfTransformations = 0;
+  int acc = 0;
   for(file <- files) {
      contents = readFile(file);
      try {
@@ -74,13 +76,15 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
        if(res[0] > 0) {
          totalOfTransformations = totalOfTransformations + res[0];
          processedFiles += <res[0], file, res[1]>;
-         println("  " + toString(res[0]) + " of " + size(files) + " processed succesfully!");
+         println("  " + toString(acc) + " of " + toString((size(files))) + " processed succesfully!");
        }
+       acc += 1;
      }
      catch : { 
      	errors += 1; 
         println("  file processed with errors!");
      };
+     //if(acc == 200) break;
   }
   int total = size(processedFiles);
   int toExecute = numberOfTransformationsToApply(total, percent);
@@ -94,7 +98,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   logMessage("- Total of transformations: " + toString(totalOfTransformations));
   logMessage("- Errors: " + toString(errors));
   logMessage("- Final Time: " + printTime(now(), "YYYYMMDDHHmmss"));
-  logMessage("- Elapsed Time: " + prettyPrinterDuration(t1 - t0, "ms") + "ms");
+  logMessage("- Elapsed Time: " + toString(prettyPrinterDuration(t1 - t0, "ms")) + "ms");
 }
 
 /**

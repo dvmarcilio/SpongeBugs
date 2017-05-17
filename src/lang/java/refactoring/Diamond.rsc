@@ -13,11 +13,10 @@ public tuple[int, CompilationUnit] refactorDiamond(CompilationUnit unit) {
   int numberOfOccurences = 0;
   CompilationUnit cu = visit(unit) 
   {
-    case (FieldDeclaration)`<FieldModifier* fm> <Identifier idt> <TypeArguments tas><VariableDeclaratorList vdl> ;` : {
-      visit(vdl){ //case lvalue is a generic type
+    case (FieldDeclaration)`<FieldModifier* fm><Identifier idt><TypeArguments tas><VariableDeclaratorList vdl>;` : {
+      VariableDeclaratorList v2 = visit(vdl){ //case lvalue is a generic type
         //Case where generics isn't especified
-        case (ClassOrInterfaceTypeToInstantiate)`<{AnnotatedType "."}* aType>` : {
-          println("Casou lvalue com tipo 1(inferencia de tipo: " + vdl);
+        case (ClassOrInterfaceTypeToInstantiate)`<{AnnotatedType "."}* aType>//Diammond` : {
           numberOfOccurences += 1; 
           insert (ClassOrInterfaceTypeToInstantiate)`<{AnnotatedType "."}* aType>\<\>`;
         }
@@ -28,11 +27,12 @@ public tuple[int, CompilationUnit] refactorDiamond(CompilationUnit unit) {
       	      insert (ClassOrInterfaceTypeToInstantiate)`<{AnnotatedType "."}* aType>\<\>`;
           }
         }
-      } 
+      };
+      insert((FieldDeclaration)`<FieldModifier* fm> <Identifier idt><TypeArguments tas> <VariableDeclaratorList v2>;`);
     }
    
-    case (LocalVariableDeclaration)`<VariableModifier* fm> <Identifier idt> <TypeArguments tas> <VariableDeclaratorList vdl>` : {
-      visit(vdl){ //case lvalue is a generic type
+    case (LocalVariableDeclaration)`<Identifier idt> <TypeArguments tas> <VariableDeclaratorList vdl>` : {
+      VariableDeclaratorList v2 = visit(vdl){ //case lvalue is a generic type
         //Case where generics isn't especified
         case (ClassOrInterfaceTypeToInstantiate)`<{AnnotatedType "."}* aType>` : {
           numberOfOccurences += 1; 
@@ -45,7 +45,8 @@ public tuple[int, CompilationUnit] refactorDiamond(CompilationUnit unit) {
       	    insert (ClassOrInterfaceTypeToInstantiate)`<{AnnotatedType "."}* aType>\<\>`;
           }
         }
-      }    
+      };  
+      insert((LocalVariableDeclaration)`<Identifier idt><TypeArguments tas> <VariableDeclaratorList v2>`);  
     }    
   };
   return <numberOfOccurences, cu>;
