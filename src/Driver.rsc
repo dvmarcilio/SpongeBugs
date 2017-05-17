@@ -18,7 +18,7 @@ import lang::java::refactoring::Diamond;
 import lang::java::util::ManageCompilationUnit;
 import lang::java::m3::M3Util;
 import lang::java::\syntax::Java18;
-DateTime t0, t1;
+datetime  t0, t1;
 str logFile = "";
 
 /**
@@ -40,7 +40,7 @@ public void refactorProjects(loc input, bool verbose = true) {
        logMessage("[Project Analyzer] processing project: " + projectDescriptor[0]);
       
        list[loc] projectFiles = findAllFiles(|file:///| + projectDescriptor[4], "java");
-       println("Processing " + projectDescriptor[0] + ...");
+       println("Processing " + projectDescriptor[0] + "...");
        switch(projectDescriptor[2]) {
           case /MC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorMultiCatch, "multicatch");
           case /SS/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorSwitchString, "switchstring");
