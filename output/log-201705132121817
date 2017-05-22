@@ -1,0 +1,18 @@
+[Project Analyzer] processing project: orientdb
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/client/src/main/java/com/orientechnologies/orient/client/binary/OChannelBinaryAsynchClient.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/tests/src/test/java/com/orientechnologies/orient/test/database/auto/SchemaTest.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/core/src/main/java/com/orientechnologies/orient/core/storage/impl/local/paginated/wal/OWALRecordsFactory.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/client/src/main/java/com/orientechnologies/orient/client/remote/OStorageRemote.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/core/src/main/java/com/orientechnologies/orient/core/serialization/serializer/string/OStringSerializerEmbedded.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/core/src/main/java/com/orientechnologies/common/concur/resource/OSharedResourceAdaptive.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/core/src/main/java/com/orientechnologies/orient/core/storage/impl/local/statistic/OPerformanceStatisticManager.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/distributed/src/main/java/com/orientechnologies/orient/server/distributed/impl/ODistributedTransactionManager.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/core/src/main/java/com/orientechnologies/orient/core/command/script/OCommandExecutorScript.java
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/orientdb/distributed/src/main/java/com/orientechnologies/orient/server/distributed/impl/ODistributedWorker.java
+- Number of files:  3248
+- Processed Filies: 34
+- Exported Files:   10
+- Total of files changed: 14
+- Total of transformations: 57
+- Errors: 10
+- Final Time: 201705132122201

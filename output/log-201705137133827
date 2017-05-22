@@ -1,0 +1,18 @@
+[Project Analyzer] processing project: graylog2-server
+- Number of files:  1397
+- Processed Filies: 0
+- Exported Files:   0
+- Total of files changed: 0
+- Total of transformations: 0
+- Errors: 11
+- Final Time: 201705137133911
+- Elapsed Time: 43616.0ms
+[Project Analyzer] processing project: smile
+- Number of files:  796
+- Processed Filies: 0
+- Exported Files:   0
+- Total of files changed: 0
+- Total of transformations: 0
+- Errors: 3
+- Final Time: 201705137134001
+- Elapsed Time: 50295.0ms

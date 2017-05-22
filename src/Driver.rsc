@@ -19,6 +19,10 @@ import lang::java::refactoring::Diamond;
 import lang::java::util::ManageCompilationUnit;
 import lang::java::m3::M3Util;
 import lang::java::\syntax::Java18;
+
+import util::PrettyPrinter
+
+
 datetime  t0, t1;
 str logFile = "";
 

@@ -6,6 +6,7 @@ import lang::java::jdt::m3::AST;
 
 import IO;
 import String; 
+import List;
 
 import io::IOUtil;
 
@@ -20,9 +21,46 @@ list[loc] listAllClassFiles(loc location) {
     return findAllFiles(location, "class");
 }
 
-map[str, str] classesHierarchy(list[loc] classPath) {
-   list[M3] models = createM3FromClassPath(classPath);
-   return (replaceFirst(replaceAll(C.path, "/", "."), ".", "") : replaceFirst(replaceAll(S.path, "/", "."), ".", "") | m <- models, <C, S> <- m@extends);
+map[str, map[str,str]] classesHierarchy(list[loc] classPath) {
+   list[M3] models = createM3FromClassPath(classPath); 
+   map[str, map[str,str]] res = ();
+   for(m <- models) {
+     for(<C,S> <- m@extends) {
+        p = packageFromFullQualifiedName(javaPathSeparator(C));
+        c = typeNameFromFullQualifiedName(javaPathSeparator(C)); 
+        s = javaPathSeparator(S);
+        if(p in res) {
+           res[p] += (c:s); 
+        }
+        else {
+           map[str, str] v = (c:s);
+           res += (p : v);
+        }
+     }
+   }
+   return res; 
+   //return ( p : <c, s>  
+   //       | m <- models
+   //       , <C, S> <- m@extends
+   //       , c := typeNameFromFullQualifiedName(javaPathSeparator(C))
+   //       , s := javaPathSeparator(S)
+   //       , p := packageFromFullQualifiedName(javaPathSeparator(C)));
+}
+
+
+
+private str javaPathSeparator(loc l) { 
+  return replaceFirst(replaceAll(l.path, "/", "."), ".", "");
+}
+
+private str typeNameFromFullQualifiedName(str fullQualifiedName) {
+   return last(split(".", fullQualifiedName));
+}
+
+private str packageFromFullQualifiedName(str fullQualifiedName) {
+   int idx = findLast(fullQualifiedName, ".");
+   if(idx > 0) return substring(fullQualifiedName, 0, idx);
+   else return fullQualifiedName;
 }
 
 /*

@@ -16,7 +16,7 @@ map[str, str] projectClassTable = ();
 
 // the library class table considered in the source 
 // code analysis and transformations. 
-map[str, str] libClassTable = ();
+map[str, tuple[str,str]] libClassTable = ();
 
 
 /**
@@ -24,7 +24,7 @@ map[str, str] libClassTable = ();
  * It uses a simple cache mechanism to avoid loading the 
  * class table each time it is necessary. 
  */ 
-map[str, str] loadLibClassTable(list[loc] jars) {
+map[str, tuple[str,str]] loadLibClassTable(list[loc] jars) {
   if(size(libClassTable) == 0) {
       libClassTable = classesHierarchy(jars);
   }

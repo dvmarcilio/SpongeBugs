@@ -1,0 +1,16 @@
+[Project Analyzer] processing project: orientdb
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/core/src/main/java/com/orientechnologies/common/directmemory/OByteBufferPool.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/object/src/main/java/com/orientechnologies/orient/object/enhancement/OObjectEntitySerializer.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/core/src/main/java/com/orientechnologies/orient/core/record/ORecordAbstract.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/core/src/main/java/com/orientechnologies/orient/core/sql/OCommandExecutorSQLUpdate.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/distributed/src/main/java/com/orientechnologies/orient/server/distributed/impl/ODistributedWorker.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/core/src/main/java/com/orientechnologies/orient/core/storage/impl/local/paginated/wal/OWALRecordsFactory.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/distributed/src/main/java/com/orientechnologies/orient/server/distributed/impl/ODistributedStorage.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/distributed/src/main/java/com/orientechnologies/orient/server/hazelcast/OHazelcastPlugin.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/core/src/main/java/com/orientechnologies/orient/core/serialization/serializer/record/string/ORecordSerializerJSON.java
+- applying multicatch into /Users/rbonifacio/Documents/scriptsMSR/scam-2017/orientdb/client/src/main/java/com/orientechnologies/orient/client/binary/OChannelBinaryClientAbstract.java
+- Number of files:  3235
+- Processed Filies: 33
+- Exported Files:   10
+- Total of applied transformations: 27
+- Errors: 11
