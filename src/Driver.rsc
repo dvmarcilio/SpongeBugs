@@ -16,6 +16,7 @@ import lang::java::refactoring::SwitchString;
 import lang::java::refactoring::VarArgs; 
 import lang::java::refactoring::Diamond;
 import lang::java::refactoring::AnonymousToLambda;
+import lang::java::refactoring::FilterPatternToLambda;
 
 import lang::java::util::ManageCompilationUnit;
 import lang::java::m3::M3Util;
@@ -51,7 +52,8 @@ public void refactorProjects(loc input, bool verbose = true) {
           case /SS/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorSwitchString, "switchstring");
           case /VA/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorVarArgs, "varargs");
           case /DI/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorDiamond, "diamond");
-          case /AC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorAnonymousInnerClass, "diamond");
+          case /AC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorAnonymousInnerClass, "aic");
+          case /FP/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorFilterPattern, "filter pattern");
           default: logMessage(" ... nothing to be done");
        }
     }  

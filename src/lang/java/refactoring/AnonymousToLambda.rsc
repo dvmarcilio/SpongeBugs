@@ -18,22 +18,35 @@ void findAnonymousInnerClass(CompilationUnit unit) {
 public tuple[int, CompilationUnit] refactorAnonymousInnerClass(CompilationUnit unit) {
    list[ImportClause] imports = listOfImports(unit);
    int total = 0;
+   list[int] fails = [0, 0, 0, 0, 0, 0];
    CompilationUnit res = visit(unit) {
      case (Expression)`new <ClassOrInterfaceTypeToInstantiate id>() {<MethodModifier m> <Result res> <Identifier methodName> () { <Statement stmt> } }` : 
-     {
-       if(!checkConstraints(stmt, methodName, imports)) { 
+     { check = checkConstraints(stmt, methodName, imports); 
+       if(check == 0) { 
          total += 1;
          insert (Expression)`()-\> { <Statement stmt >}`;
        }
+       else {
+          fails[check] = fails[check] + 1;
+       }
      }
      case (Expression)`new <ClassOrInterfaceTypeToInstantiate id>() {<MethodModifier m> <Result res> <Identifier methodName> (<FormalParameter fp>) {<Statement stmt>}}` : 
-     { 
-     	if(!checkConstraints(stmt, methodName, imports)) {
+     {  check = checkConstraints(stmt, methodName, imports); 
+     	if(check == 0) {
      	  total += 1;
           insert (Expression)`(<FormalParameter fp>)-\>{ <Statement stmt>}`;
+        }
+        else {
+           fails[check] = fails[check] + 1;
         }   
      }
    };
+   //if some check failed to the compilation unit, we can calculate the fail. 
+   //in this way, we are able to estimate the occurence of constraints that 
+   //often fail.
+   if(!(true | it && (v == 0) | int v <- fails)) { 
+     println(fails);
+   } 
    return <total, res>;
 }
 
@@ -41,14 +54,14 @@ public tuple[int, CompilationUnit] refactorAnonymousInnerClass(CompilationUnit u
  * Check the constraints related to the 
  * annonymousToLambda refactoring. 
  */
-bool checkConstraints(Statement stmt, Identifier methodName, list[ImportClause] imports)  {
-  res = false; 
+int checkConstraints(Statement stmt, Identifier methodName, list[ImportClause] imports)  {
+  res = 0; 
   visit(stmt) { 
-    case (Expression)`this` : res = true;
-    case (FieldAccess)`super.<Identifier id>` : res = true;
-    case (MethodInvocation)`super.<TypeArguments args><Identifier id>(<ArgumentList args>)` : res = true;
-    case (MethodInvocation)`methodName(<ArgumentList args>)` : res = true;  
-    case (ThrowStatement)`throw <Expression e>;` : { println("throws in annonymous"); res = true; } 
+    case (Expression)`this` : res = 1;
+    case (FieldAccess)`super.<Identifier id>` : res = 2;
+    case (MethodInvocation)`super.<TypeArguments args><Identifier id>(<ArgumentList args>)` : res = 3;
+    case (MethodInvocation)`methodName(<ArgumentList args>)` : res = 4;  
+    case (ThrowStatement)`throw <Expression e>;` : { println("throws in annonymous"); res = 5; } 
   };
   return res; 
 }

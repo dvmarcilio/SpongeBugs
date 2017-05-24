@@ -1,8 +1,7 @@
 import java.util.ArrayList;
 
-import java.util.HashMap;
-import java.util.Collection;
-import java.util.Iterator;
+
+import java.util.*;
 
 import com.sun.corba.se.impl.presentation.rmi.ExceptionHandlerImpl.ExceptionRWRMIImpl;
 
@@ -29,6 +28,9 @@ public class BasicTest {
 		while (iterator.hasNext()) {
 			String value = (String) iterator.next();
 			System.out.println(value);
+		}
+		
+		for(int s : list) { if(s.length()) { return true; }
 		}
 	}
 
