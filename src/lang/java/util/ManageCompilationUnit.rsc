@@ -4,7 +4,8 @@ import lang::java::\syntax::Java18;
 import ParseTree; 
 import List;
 import IO;
-
+import DateTime;
+import util::Math;
 /**
  * Load java files and generate the 'CompilationUnit' from each file.
  */
@@ -52,6 +53,3 @@ list[loc] listJavaFiles(loc location) {
 
 	return listFiles; 
 }
-
-
-// local = |project://find-class/testes|;

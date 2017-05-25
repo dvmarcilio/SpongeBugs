@@ -1,0 +1,10 @@
+[Project Analyzer] processing project: UltimateAndroid
+- applying multicatch into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/listviewanimations/ListAnimationActivity.java
+- Number of files:  2964
+- Processed Filies: 1
+- Exported Files:   1
+- Total of files changed: 2
+- Total of transformations: 2
+- Errors: 0
+- Final Time: 201705137145418
+- Elapsed Time: 13478.0ms

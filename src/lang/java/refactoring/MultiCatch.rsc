@@ -16,7 +16,7 @@ import lang::java::analysis::GraphDependency;
  * Refactor a try-catch statement to use the 
  * MultiCatch construct of Java 7. 
  */
-public tuple[int, CompilationUnit]  refactorMultiCatch(CompilationUnit unit) { 
+public tuple[int, CompilationUnit] refactorMultiCatch(CompilationUnit unit) { 
   int numberOfOccurences = 0;  
   CompilationUnit cu = visit(unit) {
    case (TryStatement)`try <Block b1> <Catches c1>` : { 

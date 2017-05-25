@@ -1,6 +1,7 @@
 module lang::java::analysis::ClassTable
 
 import Map;
+import String;
 import ParseTree;
 import IO;
 
@@ -16,7 +17,7 @@ map[str, str] projectClassTable = ();
 
 // the library class table considered in the source 
 // code analysis and transformations. 
-map[str, str] libClassTable = ();
+map[str, map[str,str]] libClassTable = ();
 
 
 /**
@@ -24,15 +25,20 @@ map[str, str] libClassTable = ();
  * It uses a simple cache mechanism to avoid loading the 
  * class table each time it is necessary. 
  */ 
-map[str, str] loadLibClassTable(list[loc] jars) {
+map[str, map[str,str]] loadLibClassTable(list[loc] jars) {
   if(size(libClassTable) == 0) {
       libClassTable = classesHierarchy(jars);
   }
   return libClassTable;
 }
 
-map[str, tuple[str, str]] allProjectDeclarations(loc dir) {
-   map[str, tuple[str, str]] decls = ();
+/**
+ * Returns a list of all declarations within a 
+ * project. The resulting map relates a package 
+ * names to a map of class name to its super-class. 
+ */
+map[str, map[str, str]] allProjectDeclarations(loc dir) {
+   map[str, map[str, str]] decls = ();
    list[CompilationUnit] unities = [];
    list[loc] files = findAllFiles(dir, "java");
    for(f <- files) { 
@@ -42,10 +48,22 @@ map[str, tuple[str, str]] allProjectDeclarations(loc dir) {
   	 catch : { println("erro"); continue; };
   }
   for(u <- unities) {
-     decls += declarations(u);
+     //TODO: FIX THIS CODE REMOVING TEMP VARIABLE
+     map[str, map[str, str]] temp = declarations(u);
+     for(k <- temp) {
+        if(k in decls) {
+           map[str, str] temp2 = temp[k];
+           decls[k] = decls[k] + temp2; 
+        }
+        else {
+           decls[k] = temp[k];
+        }
+     }
+     //decls += declarations(u);
   }
   return decls; 
 }
+
 
 map[str, str] loadProjectClassTable(loc dir) {
   list[CompilationUnit] unities = [];
@@ -80,27 +98,49 @@ tuple[str, str] classTableEntryFromTypeDeclaration(td) {
  * querying type declarations, and it maps full 
  * qualified type names into tuples of (package name, type name). 
  */                      
-public map[str, tuple[str, str]] declarations(CompilationUnit unit) {
+public map[str, map[str, str]] declarations(CompilationUnit unit) {
    str package = "";
-   map[str, tuple[str,str]] decls = ();
+   map[str, map[str,str]] decls = ();
    visit(unit) {
      case (PackageDeclaration)`package <{Identifier "."}+ ids>;` : { 
         package = unparse(ids); 
      }
      case normalClassDeclaration(mds, id, typeParameters, superClass, superInterfaces, body) : {
          str typeName = unparse(id);
-         str qualifiedName = package + "." + typeName;
-         decls = decls + (qualifiedName : <package, typeName>);
+         str super = trim(replaceAll(unparse(superClass), "extends", ""));
+         //str qualifiedName = package + "." + typeName;
+         if(package in decls) {
+            map[str, str] mapped = decls[package];
+            decls[package] = (typeName:super) + mapped;
+         }
+         else {
+            decls[package] = (typeName:super);
+         };
+         //decls = decls + (qualifiedName : <package, typeName>);
      }
      case enumDeclaration(mds, id, superInterfaces, body) : {
          str typeName = unparse(id);
-         str qualifiedName = package + "." + typeName;
-         decls = decls + (qualifiedName : <package, typeName>);
+         //str qualifiedName = package + "." + typeName;
+         if(package in decls) {
+            map[str, str] mapped = decls[package];
+            decls[package] = (typeName : "-") + mapped;
+         }
+         else {
+            decls[package] = (typeName: "-");
+         };
+         //decls = decls + (qualifiedName : <package, typeName>);
      }
      case normalInterfaceDeclaration(mds, id, typeParameters, superInterfaces, body) : {
          str typeName = unparse(id);
-         str qualifiedName = package + "." + typeName;
-         decls = decls + (qualifiedName : <package, typeName>);
+         //str qualifiedName = package + "." + typeName;
+         if(package in decls) {
+            map[str, str] mapped = decls[package];
+            decls[package] = (typeName : "-") + mapped;
+         }
+         else {
+            decls[package] = (typeName: "-");
+         };
+         //decls = decls + (qualifiedName : <package, typeName>);
      }
      // TODO: I am not sure if we should also visit annotation declarations. 
    }

@@ -44,11 +44,6 @@ The input file is in the CSV format, with at least the following columns:
    * project name
    * project revision (to help on reproducibility) 
    * type of tranformation (DI for diamond operator, AC for anonymous to lambda, MC for multi-catch)
-   * percentage (just a number, with the percentage of transformations with respect to the oportunities
-   * absolute path to the project 
+   * percentage (just a number, with the percentage of transformations with respect to the oportunities)   * absolute path to the project 
 
-### Output 
-
-A log of the transformations is generated on the output folder. The files of the original project are 
-changed in place. 
 

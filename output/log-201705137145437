@@ -1,0 +1,19 @@
+[Project Analyzer] processing project: UltimateAndroid
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/artbook/layouts/ArtbookLayout.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/easyandroidanimations/AnimationDetailFragment.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/androidprogresslayout/HandlerFragment.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/fadingactionbar/ListViewActivity.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/circularfloatingactionmenu/CircularFloatingActivity.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/observablescrollview/ViewPagerTabListViewFragment.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/listviewanimations/GoogleCardsActivity.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/fadingactionbar/HomeActivity.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/fadingactionbar/HeaderOverlayActivity.java
+- applying diamond into /Users/rbonifacio/Documents/scam-2017/UltimateAndroid/deprecated/UltimateAndroidGradle/demoofui/src/main/java/com/marshalchen/common/demoofui/listbuddies/ListBuddiesActivity.java
+- Number of files:  2964
+- Processed Filies: 33
+- Exported Files:   10
+- Total of files changed: 21
+- Total of transformations: 54
+- Errors: 0
+- Final Time: 201705137145444
+- Elapsed Time: 6583.0ms
