@@ -31,7 +31,9 @@ public class BasicTest {
 		}
 		
 		for(int s : list) { if(s.length()) { return true; }
-		}
+		} return false;
+		
+		//for(int s: list) { if(s.lenght()) { return true; } } 
 	}
 
 	public static void ifElseStatement(String string, int number, boolean bool) {
