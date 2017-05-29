@@ -5,6 +5,7 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
+import lang::java::refactoring::forloop::ClassFieldsFinder;
 
 public tuple [set[MethodVar] vars, EnhancedForStatement loop] simpleShort() {
 	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/SimpleShortEnhancedLoop|;
@@ -135,4 +136,25 @@ private set[MethodVar] loopWithIfWithTwoStatementsInsideBlockVars() {
 	methodBodyLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/MethodBodyIfWithTwoStmtsInsideAndStmtAfterBlock.java|;
   	methodBody = parse(#MethodBody, readFile(methodBodyLoc));
 	return findLocalVariables(methodHeader, methodBody);
+}
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] outerLoopWithInnerLoop() {
+	methodHeader = parse(#MethodHeader, "void scanPackage(ClassPathScanningCandidateComponentProvider componentProvider, String packageToScan)");
+	loopLoc = |project://rascal-Java8//testes/forloop/Refactorer/LoopRefactorableInnerLoopButNotOuter|;
+	loopStr = readFile(loopLoc);
+	forStmt = parse(#EnhancedForStatement, loopStr);
+	methodBody = parse(#MethodBody, "{" + loopStr + "}");
+	
+	localVars = findLocalVariables(methodHeader, methodBody);
+	classLoc = |project://rascal-Java8//testes/forloop/Refactorer/ClassRefactorableInnerLoopButNotOuter|;
+	classFields = findClassFields(parse(#CompilationUnit, classLoc));
+	availableVars = localVars + classFields;
+	
+	return <availableVars, forStmt>;
+}
+
+public tuple [set[MethodVar] vars, EnhancedForStatement loop] innerLoopInsideOuter() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] loop = outerLoopWithInnerLoop();
+	loop.loop = "for (ServletComponentHandler handler : HANDLERS) {\n					handler.handle(((ScannedGenericBeanDefinition) candidate),\n							(BeanDefinitionRegistry) this.applicationContext);\n				}";
+	return loop;
 }

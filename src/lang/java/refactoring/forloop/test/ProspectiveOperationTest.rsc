@@ -141,6 +141,17 @@ public test bool innerIfAsNotTheLastStatementShouldBeAMap() {
 		prospectiveOperations[4].operation == FOR_EACH;
 }
 
+public void shouldThrowExceptionOnLoopWithInnerLoop() {
+	tuple [set[MethodVar] vars, EnhancedForStatement loop] loop = outerLoopWithInnerLoop();
+	
+	try {
+		prospectiveOperations = retrieveProspectiveOperations(loop.vars, loop.loop);
+		return false;
+	} catch:
+		return true;
+	
+}
+
 //public test bool shouldIdentifyPostIncrementAsReduce() {
 //	throw "Not yet implemented";
 //	

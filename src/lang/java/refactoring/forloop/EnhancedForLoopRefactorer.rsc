@@ -55,7 +55,9 @@ private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, Meth
 	
 	top-down visit(methodBody) {
 		case EnhancedForStatement forStmt: {
-			
+			println("for");
+			println(forStmt);
+			println();
 			if(!alreadyComputedClassFields) {
 				currentClassFields = findClassFields(unit);
 				alreadyComputedClassFields = true;
