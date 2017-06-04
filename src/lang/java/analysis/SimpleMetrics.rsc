@@ -1,4 +1,4 @@
-module SimpleMetrics
+module lang::analysis::SimpleMetrics
 
 import lang::java::\syntax::Java18;
 import ManageCompilationUnit;

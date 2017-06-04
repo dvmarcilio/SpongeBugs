@@ -15,7 +15,7 @@
 
 module lang::java::\syntax::Java18
 
-start syntax CompilationUnit = PackageDeclaration? ImportDeclaration* TypeDeclaration* LAYOUT?;
+start syntax CompilationUnit = PackageDeclaration? Imports TypeDeclaration* LAYOUT?;
 
 syntax Literal = IntegerLiteral
   			   | FloatingPointLiteral
@@ -24,6 +24,8 @@ syntax Literal = IntegerLiteral
   			   | StringLiteral
   			   | NullLiteral
   			   ;
+  		
+syntax Imports = ImportDeclaration*;
   		
 /*
  * Productions from §4 (Types, Values, and Variables)

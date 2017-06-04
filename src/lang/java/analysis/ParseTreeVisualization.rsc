@@ -1,4 +1,4 @@
-module ParseTreeVisualization
+module lang::java::analysis::ParseTreeVisualization
 
 import lang::java::\syntax::Java18;
 import ParseTree;

@@ -1,4 +1,4 @@
-module AllTestes
+module tests::Parser
 
 import lang::java::\syntax::Java18;
 import ParseTree; 
