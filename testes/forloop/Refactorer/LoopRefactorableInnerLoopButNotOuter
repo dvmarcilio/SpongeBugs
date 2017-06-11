@@ -1,0 +1,9 @@
+for (BeanDefinition candidate : componentProvider
+				.findCandidateComponents(packageToScan)) {
+			if (candidate instanceof ScannedGenericBeanDefinition) {
+				for (ServletComponentHandler handler : HANDLERS) {
+					handler.handle(((ScannedGenericBeanDefinition) candidate),
+							(BeanDefinitionRegistry) this.applicationContext);
+				}
+			}
+		}

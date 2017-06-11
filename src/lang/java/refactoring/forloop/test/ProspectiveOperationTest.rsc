@@ -141,7 +141,7 @@ public test bool innerIfAsNotTheLastStatementShouldBeAMap() {
 		prospectiveOperations[4].operation == FOR_EACH;
 }
 
-public void shouldThrowExceptionOnLoopWithInnerLoop() {
+public test bool shouldThrowExceptionOnLoopWithInnerLoop() {
 	tuple [set[MethodVar] vars, EnhancedForStatement loop] loop = outerLoopWithInnerLoop();
 	
 	try {

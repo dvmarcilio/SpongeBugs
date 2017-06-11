@@ -146,7 +146,7 @@ public tuple [set[MethodVar] vars, EnhancedForStatement loop] outerLoopWithInner
 	methodBody = parse(#MethodBody, "{" + loopStr + "}");
 	
 	localVars = findLocalVariables(methodHeader, methodBody);
-	classLoc = |project://rascal-Java8//testes/forloop/Refactorer/ClassRefactorableInnerLoopButNotOuter|;
+	classLoc = |project://rascal-Java8//testes/forloop/Refactorer/ServletComponentRegisteringPostProcessor.java|;
 	classFields = findClassFields(parse(#CompilationUnit, classLoc));
 	availableVars = localVars + classFields;
 	
