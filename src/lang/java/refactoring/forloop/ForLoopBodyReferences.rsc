@@ -16,7 +16,7 @@ public int getTotalOfNonEffectiveFinalVarsReferenced(set[MethodVar] localVariabl
 }
 
 public Statement retrieveLoopBodyFromEnhancedFor(EnhancedForStatement forStmt) {
-	visit (forStmt) {
+	top-down-break visit (forStmt) {
 		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _>: <Expression _> ) <Statement loopBody>`:
 		return loopBody;
 	}	
