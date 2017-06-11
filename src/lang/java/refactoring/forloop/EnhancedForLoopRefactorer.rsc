@@ -36,79 +36,76 @@ public void forLoopToFunctional(list[loc] locs, set[str] checkedExceptions) {
 }
 
 // Losing formatting after a method is refactored.
-public CompilationUnit refactorEnhancedForStatements(CompilationUnit unit) {
+public tuple[CompilationUnit unit, int occurrences]  refactorEnhancedForStatements(CompilationUnit unit) {
+	int occurrences = 0;
 	alreadyComputedClassFields = false;
 	CompilationUnit refactoredUnit = visit(unit) {
 		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
 			MethodBody refactoredMethodBody = visit(mBody) {
-				case MethodBody methodBody: insert refactorEnhancedForStatementsInMethodBody(unit, methodHeader, methodBody); 	  		
+				case MethodBody methodBody: {
+					refactored = refactorEnhancedForStatementsInMethodBody(unit, methodHeader, methodBody);
+					occurrences += refactored.occurrences;
+					insert refactored.body; 	  				
+				}
 			};
 			
 			insert((MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody refactoredMethodBody>`);
 		}
 	};
 	
-	return refactoredUnit;
+	return <refactoredUnit, occurrences>;
 }
 
 // TODO What happens when two for statements are refactored inside the same method?
-public MethodBody refactorEnhancedForStatementsInMethodBody(CompilationUnit unit, MethodHeader methodHeader, MethodBody methodBody) {
+public tuple[MethodBody body, int occurrences] refactorEnhancedForStatementsInMethodBody(CompilationUnit unit, MethodHeader methodHeader, MethodBody methodBody) {
 	set[MethodVar] availableVars = {};
 	alreadyComputedCurrentMethodAvailableVars = false;
+	occurrences = 0;
+	
 	MethodBody refactoredMethodBody = methodBody; 
 	
 	top-down visit(methodBody) {
-		case EnhancedForStatement forStmt: {
-			if(PRINT_DEBUG) {
-				println("for");
-				println(forStmt);
-				println();
-			}
+		case EnhancedForStatement enhancedForStmt: 
+			visit(enhancedForStmt) {
 			
-			if(!alreadyComputedClassFields) {
-				currentClassFields = findClassFields(unit);
-				alreadyComputedClassFields = true;
-			}
-			
-			if(!alreadyComputedCurrentMethodAvailableVars) { 
-				methodVars = findLocalVariables(methodHeader, methodBody);
-				availableVars = retainLocalVariablesIfDuplicates(currentClassFields, methodVars);
-				alreadyComputedAvailableVars = true;
-			}
-			
-			top-down visit(forStmt) {
-				case EnhancedForStatement enhancedForStmt: {
-					visit(enhancedForStmt) {
-						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement loopBody>`: {
-							
-							if(isLoopRefactorable(availableVars, collectionId, loopBody)) {
-							
-								try {
-									refactoredMethodBody = refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
-									refactoredCount += 1;
+				case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression collectionId> ) <Statement loopBody>`: {
+					
+					if(!alreadyComputedClassFields) {
+						currentClassFields = findClassFields(unit);
+						alreadyComputedClassFields = true;
+					}
+					
+					if(!alreadyComputedCurrentMethodAvailableVars) { 
+						methodVars = findLocalVariables(methodHeader, methodBody);
+						availableVars = retainLocalVariablesIfDuplicates(currentClassFields, methodVars);
+						alreadyComputedAvailableVars = true;
+					}
 									
-									if(PRINT_DEBUG) {
-										println("refactored: " + toString(refactoredCount));
-										println(enhancedForStmt);
-										println("---");
-										println(refactoredMethodBody);
-										println();
-									}
-								} catch:
-									continue;
-								
+					if(isLoopRefactorable(availableVars, collectionId, loopBody)) {
+					
+						try {
+							refactoredMethodBody = refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
+							occurrences += 1;
+							
+							if(PRINT_DEBUG) {
+								println("refactored: " + toString(occurrences));
+								println(enhancedForStmt);
+								println("---");
+								println(refactoredMethodBody);
+								println();
 							}
-						}
+						} catch: 
+							continue;
 					}
 				}
+				
 			}
-		}
 		
 		case (EnhancedForStatementNoShortIf) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _> ) <StatementNoShortIf stmt>`:
 			println("TODO");
 	}
 	
-	return refactoredMethodBody;
+	return <refactoredMethodBody, occurrences>;
 }
 
 private bool isLoopRefactorable(set[MethodVar] availableVariables, Expression collectionId, Statement loopBody) {
