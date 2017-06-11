@@ -5,7 +5,7 @@ import List;
 import String;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import ParseTreeVisualization;
+import java::lang::analysis::ParseTreeVisualization;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::OperationType;
 import lang::java::refactoring::forloop::BreakIntoStatements;
@@ -17,6 +17,7 @@ private list[MethodVar] methodLocalVars;
 public list[ProspectiveOperation] retrieveProspectiveOperations(set[MethodVar] localVars, EnhancedForStatement forStmt) {
 	methodLocalVars = localVars;
 	list[ProspectiveOperation] prospectiveOperations = [];
+	// TODO can receive as parameter only the loopBody from Refactorer. saving a visit. 
 	top-down visit(forStmt) {
 		case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _> ) <Statement stmt>`: {
 			prospectiveOperations = retrieveProspectiveOperationsFromStatement(stmt);
@@ -91,6 +92,10 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatem
 							foundReturn = true;
 							prOps += createAnyMatchOrNoneMatchPrOp("<returnExp>", "<ifExp>");
 						}
+						
+						case IfThenElseStatement ifElseStmt: throw "Not Refactoring If/Else for now";
+						case ForStatement _: throw "Not Refactoring Inner Loops for now";
+						case WhileStatement _: throw "Not Refactoring While Loops inside ForStatement for now";
 					}
 						
 					if (!foundReturn) {
@@ -102,6 +107,7 @@ private list[ProspectiveOperation] retrieveProspectiveOperationsFromIfThenStatem
 						}
 					}
 				}
+				
 			}
 		}
 	}
