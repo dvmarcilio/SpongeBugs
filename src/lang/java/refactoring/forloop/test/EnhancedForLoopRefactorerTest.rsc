@@ -8,7 +8,7 @@ import lang::java::refactoring::forloop::\test::resources::RefactorerTestResourc
 // comparing methods then
 // but definitely should automate test for entire compilation unit 
 public test bool shouldRefactorInnerLoopButNoutOuterLoop() {
-	refactorable = innerLoopButNotOuterLoop();
+	RefactorableFor refactorable = innerLoopButNotOuterLoop();
 	
 	refactored = refactorEnhancedForStatementsInMethodBody(refactorable.unit, refactorable.header, refactorable.body);
 	

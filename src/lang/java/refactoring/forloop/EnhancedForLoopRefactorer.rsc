@@ -94,8 +94,11 @@ public tuple[MethodBody body, int occurrences] refactorEnhancedForStatementsInMe
 								println(refactoredMethodBody);
 								println();
 							}
-						} catch: 
-							continue;
+						} catch: {
+							// ignore. continuing
+							// 'continue' do not works as expected in 'visit' statements
+							;	
+						}
 					}
 				}
 				
