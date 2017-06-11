@@ -35,16 +35,16 @@ public void forLoopToFunctional(list[loc] locs, set[str] checkedExceptions) {
 	println("refactoredCount: " + toString(refactoredCount));
 }
 
-// Losing format after a method is refactored.
+// Losing formatting after a method is refactored.
 public CompilationUnit refactorEnhancedForStatements(CompilationUnit unit) {
 	alreadyComputedClassFields = false;
 	CompilationUnit refactoredUnit = visit(unit) {
 		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
-			MethodBody refactoredMethoBody = visit(mBody) {
+			MethodBody refactoredMethodBody = visit(mBody) {
 				case MethodBody methodBody: insert refactorEnhancedForStatementsInMethodBody(unit, methodHeader, methodBody); 	  		
 			};
 			
-			insert((MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody refactoredMethoBody>`);
+			insert((MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody refactoredMethodBody>`);
 		}
 	};
 	
