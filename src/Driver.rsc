@@ -62,15 +62,7 @@ public void refactorProjects(loc input, bool verbose = true) {
 }
 
 /**
- * Aplica a transformacao multicatch a todos os arquivos de 
- * um projeto. Acredito que essa funcao possa ser generalizada, 
- * uma vez que apenas a linha que chama "refactorMultiCatch" e 
- * uma que realiza o println precisam ser alteradas para as 
- * demais transformacoes. Algor para ser investigado posteriormente. 
- *
- * Alem disso, deve ser possivel utilizar um estilo mais funcional 
- * nessa implementacao. Mas ok, eh a primeira tentativa. Depois 
- * melhoramos. 
+ * Run the transformations according to a specific pattern.
  */ 
 public void executeTransformations(list[loc] files, int percent, bool verbose, tuple[int, CompilationUnit](CompilationUnit) transformation, str name) {
   list[tuple[int, loc, CompilationUnit]] processedFiles = [];
