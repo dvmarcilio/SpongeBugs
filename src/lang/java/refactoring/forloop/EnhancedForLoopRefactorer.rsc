@@ -11,7 +11,7 @@ import lang::java::refactoring::forloop::ForLoopToFunctional;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
 import lang::java::refactoring::forloop::MethodVar;
 
-private bool PRINT_DEBUG = false;
+private bool PRINT_DEBUG = true;
 
 private set[str] checkedExceptionClasses = {};
 
@@ -87,8 +87,10 @@ public tuple[MethodBody body, int occurrences] refactorEnhancedForStatementsInMe
 							refactoredMethodBody = refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
 							occurrences += 1;
 							
+							refactoredCount += 1;
+							
 							if(PRINT_DEBUG) {
-								println("refactored: " + toString(occurrences));
+								println("refactored: " + toString(refactoredCount));
 								println(enhancedForStmt);
 								println("---");
 								println(refactoredMethodBody);

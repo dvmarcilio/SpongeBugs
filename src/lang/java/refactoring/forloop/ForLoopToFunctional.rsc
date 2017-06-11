@@ -17,10 +17,6 @@ import lang::java::refactoring::forloop::BreakIntoStatements;
 public data ComposableProspectiveOperation = composableProspectiveOperation(ProspectiveOperation prOp, set[str] neededVars, set[str] availableVars);
 
 public MethodBody refactorEnhancedToFunctional(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {	
-	return buildRefactoredMethodBody(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
-}
-
-private MethodBody buildRefactoredMethodBody(set[MethodVar] methodVars, EnhancedForStatement forStmt, MethodBody methodBody, VariableDeclaratorId iteratedVarName, Expression collectionId) {
 	refactored = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	forStatement = parse(#Statement, unparse(forStmt));
 	refactoredMethodBody = refactorToFunctional(methodBody, forStatement, refactored);	
@@ -86,7 +82,6 @@ private list[ComposableProspectiveOperation] mergeIntoComposableOperations(list[
 					ComposableProspectiveOperation beforeLast = composablePrOps[opsSize - 2];
 					
 					merged = mergeComposablePrOps(beforeLast, last);
-					// XXX analyze if this "merging" is correct. probably not
 					composablePrOps = slice(composablePrOps, 0, opsSize - 2) + merged;
 					
 					opsSize = size(composablePrOps);
@@ -321,7 +316,7 @@ private str getLambdaBodyForMapWhenLocalVariableDeclaration(str stmt) {
 	throw "No variable initializer in MAP";
 }
 
-// TODO check for prefix and postfix increment/decrement after ProspectiveOperation is working 
+// TODO check if prefix and postfix increment/decrement after ProspectiveOperation is working 
 private str buildMapReduceOperation(set[MethodVar] methodVars, ComposableProspectiveOperation cPrOp) {
 	mapOperation = "";
 	reduceOperation = "";
