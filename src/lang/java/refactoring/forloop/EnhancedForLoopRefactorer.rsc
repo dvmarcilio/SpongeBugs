@@ -11,7 +11,9 @@ import lang::java::refactoring::forloop::ForLoopToFunctional;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
 import lang::java::refactoring::forloop::MethodVar;
 
-private set[str] checkedExceptionClasses;
+private bool PRINT_DEBUG = false;
+
+private set[str] checkedExceptionClasses = {};
 
 private set[MethodVar] currentClassFields = {};
 
@@ -26,38 +28,43 @@ public void forLoopToFunctional(list[loc] locs, set[str] checkedExceptions) {
 		javaFileContent = readFile(fileLoc);
 		try {
 			unit = parse(#CompilationUnit, javaFileContent);
-			alreadyComputedClassFields = false;
-			lookForForStatements(unit);
+			refactorEnhancedForStatements(unit);
 		} catch:
 			continue;	
 	}
 	println("refactoredCount: " + toString(refactoredCount));
 }
 
-private void lookForForStatements(CompilationUnit unit) {
-	visit(unit) {
-		case MethodDeclaration methodDeclaration:
-			lookForEnhancedForStatementsInMethod(unit, methodDeclaration);
-	}
-}
-
-private void lookForEnhancedForStatementsInMethod(CompilationUnit unit, MethodDeclaration methodDeclaration) {
-	visit(methodDeclaration) {
-		case (MethodDeclaration) `<MethodModifier* _> <MethodHeader methodHeader> <MethodBody methodBody>`:
-			lookForEnhancedForStatementsInMethodBody(unit, methodHeader, methodBody);
-	}
+// Losing format after a method is refactored.
+public CompilationUnit refactorEnhancedForStatements(CompilationUnit unit) {
+	alreadyComputedClassFields = false;
+	CompilationUnit refactoredUnit = visit(unit) {
+		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
+			MethodBody refactoredMethoBody = visit(mBody) {
+				case MethodBody methodBody: insert refactorEnhancedForStatementsInMethodBody(unit, methodHeader, methodBody); 	  		
+			};
+			
+			insert((MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody refactoredMethoBody>`);
+		}
+	};
+	
+	return refactoredUnit;
 }
 
 // TODO What happens when two for statements are refactored inside the same method?
-private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, MethodHeader methodHeader, MethodBody methodBody) {
+private MethodBody refactorEnhancedForStatementsInMethodBody(CompilationUnit unit, MethodHeader methodHeader, MethodBody methodBody) {
 	set[MethodVar] availableVars = {};
 	alreadyComputedCurrentMethodAvailableVars = false;
+	MethodBody refactoredMethodBody = methodBody; 
 	
 	top-down visit(methodBody) {
 		case EnhancedForStatement forStmt: {
-			println("for");
-			println(forStmt);
-			println();
+			if(PRINT_DEBUG) {
+				println("for");
+				println(forStmt);
+				println();
+			}
+			
 			if(!alreadyComputedClassFields) {
 				currentClassFields = findClassFields(unit);
 				alreadyComputedClassFields = true;
@@ -77,27 +84,31 @@ private void lookForEnhancedForStatementsInMethodBody(CompilationUnit unit, Meth
 							if(isLoopRefactorable(availableVars, collectionId, loopBody)) {
 							
 								try {
-									refactored = refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
+									refactoredMethodBody = refactorEnhancedToFunctional(availableVars, enhancedForStmt, methodBody, iteratedVarName, collectionId);
 									refactoredCount += 1;
-									println("refactored: " + toString(refactoredCount));
-									println(enhancedForStmt);
-									println("---");
-									println(refactored);
-									println();
-								} catch: {
+									
+									if(PRINT_DEBUG) {
+										println("refactored: " + toString(refactoredCount));
+										println(enhancedForStmt);
+										println("---");
+										println(refactoredMethodBody);
+										println();
+									}
+								} catch:
 									continue;
-								}
 								
 							}
 						}
 					}
 				}
-			}		
+			}
 		}
 		
 		case (EnhancedForStatementNoShortIf) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId _> : <Expression _> ) <StatementNoShortIf stmt>`:
 			println("TODO");
 	}
+	
+	return refactoredMethodBody;
 }
 
 private bool isLoopRefactorable(set[MethodVar] availableVariables, Expression collectionId, Statement loopBody) {
