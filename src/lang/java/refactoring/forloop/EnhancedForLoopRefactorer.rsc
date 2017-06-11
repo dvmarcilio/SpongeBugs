@@ -17,7 +17,7 @@ private set[str] checkedExceptionClasses = {};
 
 private set[MethodVar] currentClassFields = {};
 
-private bool alreadyComputedClassFields;
+private bool alreadyComputedClassFields = false;
 
 private int refactoredCount = 0;
 
@@ -52,7 +52,7 @@ public CompilationUnit refactorEnhancedForStatements(CompilationUnit unit) {
 }
 
 // TODO What happens when two for statements are refactored inside the same method?
-private MethodBody refactorEnhancedForStatementsInMethodBody(CompilationUnit unit, MethodHeader methodHeader, MethodBody methodBody) {
+public MethodBody refactorEnhancedForStatementsInMethodBody(CompilationUnit unit, MethodHeader methodHeader, MethodBody methodBody) {
 	set[MethodVar] availableVars = {};
 	alreadyComputedCurrentMethodAvailableVars = false;
 	MethodBody refactoredMethodBody = methodBody; 

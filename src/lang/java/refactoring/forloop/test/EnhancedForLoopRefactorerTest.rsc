@@ -1,17 +1,15 @@
 module lang::java::refactoring::forloop::\test::EnhancedForLoopRefactorerTest
 
-import IO;
-import ParseTree;
-import lang::java::\syntax::Java18;
 import lang::java::refactoring::forloop::EnhancedForLoopRefactorer;
+import lang::java::refactoring::forloop::\test::resources::RefactorerTestResources;
 
-public test bool refactorableInnerLoopButNotOuterLoop() {
-	classLoc = |project://rascal-Java8//testes/forloop/Refactorer/ClassRefactorableInnerLoopButNotOuter|;
-	unit = parse(#CompilationUnit, classLoc);
-	refactored = refactorEnhancedForStatements(unit);
+// comparing an entire file is not that practical
+// comparing methods then
+// but definitely should automate test for entire compilation unit 
+public test bool shouldRefactorInnerLoopButNoutOuterLoop() {
+	refactorable = innerLoopButNotOuterLoop();
 	
-	println("\n\n printando teste \n\n");
-	println(refactored);
+	refactored = refactorEnhancedForStatementsInMethodBody(refactorable.unit, refactorable.header, refactorable.body);
 	
-	return false;
+	return refactored == refactorable.refactored;
 }
