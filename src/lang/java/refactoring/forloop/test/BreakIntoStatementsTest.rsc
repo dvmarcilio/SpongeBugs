@@ -6,7 +6,7 @@ import lang::java::\syntax::Java18;
 import lang::java::refactoring::forloop::\test::resources::ProspectiveOperationTestResources; 
 import lang::java::refactoring::forloop::ForLoopBodyReferences;
 import ParseTree;
-import ParseTreeVisualization;
+import java::lang::analysis::ParseTreeVisualization;
 
 public test bool ex1() {
 	fileLoc = |project://rascal-Java8//testes/forloop/ProspectiveOperation/SimpleShortEnhancedLoop|;

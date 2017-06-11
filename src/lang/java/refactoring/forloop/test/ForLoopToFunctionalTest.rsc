@@ -4,7 +4,7 @@ import IO;
 import String;
 import lang::java::\syntax::Java18;
 import ParseTree;
-import ParseTreeVisualization;
+import java::lang::analysis::ParseTreeVisualization;
 
 import lang::java::refactoring::forloop::ForLoopToFunctional;
 import lang::java::refactoring::forloop::MethodVar;
