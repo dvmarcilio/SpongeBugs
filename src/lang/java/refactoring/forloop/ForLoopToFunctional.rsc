@@ -217,7 +217,7 @@ private ComposableProspectiveOperation addReturnToMapBody(ComposableProspectiveO
 	else
 		stmts += stmt;
 		
-	varName = isEmpty(nextNeededVars) ? "_item" : getOneFrom(nextNeededVars);
+	varName = retrieveLambdaParameterNameWhenNotSingleStmtVarDecl(nextNeededVars);
 	stmts += "return <varName>;";
 	block = transformStatementsInBlock(stmts);
 	
@@ -268,7 +268,11 @@ private str buildChainableOperation(set[MethodVar] methodVars, ComposableProspec
 }
 
 private str retrieveLambdaParameterName(ComposableProspectiveOperation cPrOp) {
-	return isEmpty(cPrOp.neededVars) ? "_item" : getOneFrom(cPrOp.neededVars);
+	return retrieveLambdaParameterNameWhenNotSingleStmtVarDecl(cPrOp.neededVars);
+}
+
+private str retrieveLambdaParameterNameWhenNotSingleStmtVarDecl(set[str] neededVars) {
+	return isEmpty(neededVars) ? "_item" : getOneFrom(neededVars);
 }
 
 private str retrieveLambdaBody(ProspectiveOperation prOp) {

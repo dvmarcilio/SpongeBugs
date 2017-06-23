@@ -14,7 +14,7 @@ import lang::java::refactoring::forloop::\test::resources::LocalVariablesFinderT
 import lang::java::refactoring::forloop::\test::resources::ProspectiveOperationTestResources;
 
 
-public test bool ex1() {
+public test bool shouldNameLambdaArgWithTheSameNameWhenMapIsASingleStmtVarDeclaration() {
 	fileLoc = |project://rascal-Java8//testes/forloop/ForLoopToFunctional/T1.java|;
 	methodBody = parse(#MethodBody, readFile(fileLoc));
 	methodHeader = parse(#MethodHeader, "TestSuite createTestSuite()");
@@ -25,7 +25,7 @@ public test bool ex1() {
 	
 	refactoredStatement = buildRefactoredEnhancedFor(methodVars, forStmt, methodBody, iteratedVarName, collectionId);
 	
-	return "<refactoredStatement>" == "testers.stream().map(testerClass -\> makeSuiteForTesterClass((Class\<? extends AbstractTester\<?\>\>) testerClass)).filter(testerSuite -\> testerSuite.countTestCases() \> 0).forEach(testerSuite -\> {\n        suite.addTest(testerSuite);\n      });";
+	return "<refactoredStatement>" == "testers.stream().map(testerSuite -\> makeSuiteForTesterClass((Class\<? extends AbstractTester\<?\>\>) testerClass)).filter(testerSuite -\> testerSuite.countTestCases() \> 0).forEach(testerSuite -\> {\n        suite.addTest(testerSuite);\n      });";
 }
 
 public test bool reduceAsNotTheLastOperationShouldNotBeRefactored() {
@@ -146,7 +146,7 @@ public test bool loopWithIfWithTwoStatementsInsideBlockShouldRefactorInnerIfAsMa
   	
   	refactoredStatement = buildRefactoredEnhancedFor(loop.vars, loop.loop, methodBody, iteratedVarName, collectionId);
 	
-	return "<refactoredStatement>" == "endpoints.stream().filter(endpoint -\> isIncluded(endpoint)).map(endpoint -\> endpointHandlerMapping.getPath(endpoint.getPath())).map(path -\> {\npaths.add(path);\nreturn path;\n}).map(path -\> {\nif (!path.equals(\"\")) {\r\n\t\t\t\t\t\tpaths.add(path + \"/**\");\r\n\t\t\t\t\t\t// Add Spring MVC-generated additional paths\r\n\t\t\t\t\t\tpaths.add(path + \".*\");\r\n\t\t\t\t\t}\nreturn path;\n}).forEach(path -\> {\npaths.add(path + \"/\");\n});";
+	return "<refactoredStatement>" == "endpoints.stream().filter(endpoint -\> isIncluded(endpoint)).map(path -\> endpointHandlerMapping.getPath(endpoint.getPath())).map(path -\> {\npaths.add(path);\nreturn path;\n}).map(path -\> {\nif (!path.equals(\"\")) {\r\n\t\t\t\t\t\tpaths.add(path + \"/**\");\r\n\t\t\t\t\t\t// Add Spring MVC-generated additional paths\r\n\t\t\t\t\t\tpaths.add(path + \".*\");\r\n\t\t\t\t\t}\nreturn path;\n}).forEach(path -\> {\npaths.add(path + \"/\");\n});";
 }
 
 public test bool anotherIfThatIsMap() {
