@@ -1,4 +1,4 @@
-module ExceptionFinder
+module lang::java::analysis::ExceptionFinder
 
 import IO;
 import lang::java::m3::M3Util;
@@ -16,7 +16,7 @@ private data ClassAndSuperClass = classAndSuperClass(str className, str superCla
 
 private bool printAllFileNamesThatCouldNotBeParsed = false;
 
-set[str] findCheckedExceptions(list[loc] javaFilesLocations) {
+public set[str] findCheckedExceptions(list[loc] javaFilesLocations) {
 	initializeClassesFound();
 	for(javaFileLocation <- javaFilesLocations)
 		tryToVisitFileLookingForClassesWithSubClasses(javaFileLocation);
