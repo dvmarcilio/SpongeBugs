@@ -100,7 +100,7 @@ public void executeTransformations(list[loc] files, int percent, bool verbose, t
   int totalOfChangedFiles = exportResults(toApply, processedFiles, verbose, name);
   t1 = now();
   logMessage("- Number of files:  " + toString(size(files)));
-  logMessage("- Processed Filies: " + toString(size(processedFiles)));
+  logMessage("- Processed Files: " + toString(size(processedFiles)));
   logMessage("- Exported Files:   " + toString(size(toApply))); 
   logMessage("- Total of files changed: " + toString(totalOfChangedFiles));
   logMessage("- Total of transformations: " + toString(totalOfTransformations));
