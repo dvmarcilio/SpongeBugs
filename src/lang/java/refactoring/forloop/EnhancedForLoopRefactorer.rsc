@@ -11,9 +11,9 @@ import lang::java::refactoring::forloop::ForLoopToFunctional;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
 import lang::java::refactoring::forloop::MethodVar;
 
-private bool PRINT_DEBUG = true;
+private bool PRINT_DEBUG = false;
 
-private set[str] checkedExceptionClasses = {};
+public set[str] checkedExceptionClasses = {};
 
 private set[MethodVar] currentClassFields = {};
 
@@ -21,6 +21,7 @@ private bool alreadyComputedClassFields = false;
 
 private int refactoredCount = 0;
 
+// Method for debugging. Not used by driver
 public void forLoopToFunctional(list[loc] locs, set[str] checkedExceptions) {
 	refactoredCount = 0;
 	checkedExceptionClasses = checkedExceptions;
@@ -28,7 +29,7 @@ public void forLoopToFunctional(list[loc] locs, set[str] checkedExceptions) {
 		javaFileContent = readFile(fileLoc);
 		try {
 			unit = parse(#CompilationUnit, javaFileContent);
-			refactorEnhancedForStatements(unit);
+			refactorForLoopToFunctional(unit);
 		} catch:
 			continue;	
 	}
@@ -36,7 +37,7 @@ public void forLoopToFunctional(list[loc] locs, set[str] checkedExceptions) {
 }
 
 // Losing formatting after a method is refactored.
-public tuple[CompilationUnit unit, int occurrences]  refactorEnhancedForStatements(CompilationUnit unit) {
+public tuple[int occurrences, CompilationUnit unit] refactorForLoopToFunctional(CompilationUnit unit) {
 	int occurrences = 0;
 	alreadyComputedClassFields = false;
 	CompilationUnit refactoredUnit = visit(unit) {
@@ -53,7 +54,7 @@ public tuple[CompilationUnit unit, int occurrences]  refactorEnhancedForStatemen
 		}
 	};
 	
-	return <refactoredUnit, occurrences>;
+	return <occurrences, refactoredUnit>;
 }
 
 // TODO What happens when two for statements are refactored inside the same method?

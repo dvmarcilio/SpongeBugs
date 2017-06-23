@@ -19,6 +19,9 @@ import lang::java::refactoring::AnonymousToLambda;
 import lang::java::refactoring::ExistPatternToLambda;
 import lang::java::refactoring::FilterPattern;
 
+import lang::java::refactoring::forloop::EnhancedForLoopRefactorer;
+import lang::java::analysis::ExceptionFinder;
+
 import lang::java::util::ManageCompilationUnit;
 import lang::java::m3::M3Util;
 import lang::java::\syntax::Java18;
@@ -55,7 +58,11 @@ public void refactorProjects(loc input, bool verbose = true) {
           case /DI/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorDiamond, "diamond");
           case /AC/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorAnonymousInnerClass, "aic");
           case /EP/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorExistPattern, "exist pattern");
-          case /FP/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorFilterPattern, "filter pattern");
+          case /FP/: executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorFilterPattern, "filter pattern");          
+          case /FUNC/: {
+          	  checkedExceptionClasses = findCheckedExceptions(projectFiles);
+              executeTransformations(projectFiles, toInt(projectDescriptor[3]), verbose, refactorForLoopToFunctional, "ForLoopToFunctional");
+          }
           default: logMessage(" ... nothing to be done");
        }
     }  
