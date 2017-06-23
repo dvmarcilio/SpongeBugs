@@ -42,6 +42,8 @@ public tuple[int occurrences, CompilationUnit unit] refactorForLoopToFunctional(
 	alreadyComputedClassFields = false;
 	CompilationUnit refactoredUnit = visit(unit) {
 		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
+			refactoredCountBeforeCurrentMethod = refactoredCount;
+			
 			MethodBody refactoredMethodBody = visit(mBody) {
 				case MethodBody methodBody: {
 					refactored = refactorEnhancedForStatementsInMethodBody(unit, methodHeader, methodBody);
@@ -50,7 +52,11 @@ public tuple[int occurrences, CompilationUnit unit] refactorForLoopToFunctional(
 				}
 			};
 			
-			insert((MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody refactoredMethodBody>`);
+			// Avoiding adding extra blank spaces when method is not refactored.
+			// Not sure why, also not a big deal, but is annoying
+			methodWasRefactored = refactoredCountBeforeCurrentMethod != refactoredCount;
+			if (methodWasRefactored)
+				insert((MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody refactoredMethodBody>`);
 		}
 	};
 	
