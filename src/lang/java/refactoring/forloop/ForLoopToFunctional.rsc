@@ -268,7 +268,26 @@ private str buildChainableOperation(set[MethodVar] methodVars, ComposableProspec
 }
 
 private str retrieveLambdaParameterName(ComposableProspectiveOperation cPrOp) {
+	singleStmtVarDecl = checkIfSingleStmtVarDecl(cPrOp.prOp.stmt);
+	if (singleStmtVarDecl.condition) 
+		return singleStmtVarDecl.name;
 	return retrieveLambdaParameterNameWhenNotSingleStmtVarDecl(cPrOp.neededVars);
+}
+
+private tuple[bool condition, str name] checkIfSingleStmtVarDecl(str stmt) {
+	semiCollonOccurrences = findAll("<stmt>", ";");
+	isSingleStmt = size(semiCollonOccurrences) == 1;
+	if(isSingleStmt) {
+		try {
+			lvdl = parse(#LocalVariableDeclarationStatement, stmt);
+			visit (lvdl) {
+				case (VariableDeclaratorId) `<Identifier varName>`: 
+					return <true, "<varName>">;			
+			}			
+		} catch:
+			return <false, "">;
+	}
+	return <false, "">;
 }
 
 private str retrieveLambdaParameterNameWhenNotSingleStmtVarDecl(set[str] neededVars) {
