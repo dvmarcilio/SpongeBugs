@@ -1,8 +1,8 @@
-module ExceptionFinderTest
+module lang::java::analysis::\test::ExceptionFinderTest
 
 import lang::java::m3::M3Util;
 import IO;
-import ExceptionFinder;
+import lang::java::analysis::ExceptionFinder;
 
 private loc zipFile = |jar:///D:/exception-hierarchy.zip!|;
 private list[loc] javaClassesLocations = listAllJavaFiles(zipFile);
