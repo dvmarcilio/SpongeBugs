@@ -7,50 +7,58 @@ import String;
 import util::Math;
 import List;
 
+public data GettersAndSetters = newGettersAndSetters(list[MethodDeclaration] getters, list[MethodDeclaration] setters);
+
+private data GetterOrSetter = newGetterOrSetter(bool isGetter, bool isSetter);
+
 // debugging
-public void findGetters(list[loc] locs) {
-	list[MethodDeclaration] getters = [];
+public void findGettersAndSetters(list[loc] locs) {
+	GettersAndSetters gettersAndSetters = newGettersAndSetters([], []);
+	
 	for(fileLoc <- locs) {
 		javaFileContent = readFile(fileLoc);
 		try {
 			unit = parse(#CompilationUnit, javaFileContent);
-			getters += retrieveGetterMethods(unit);
+			currGettersAndSetters = retrieveGetterOrSetters(unit);
+			gettersAndSetters.getters += currGettersAndSetters.getters;
+			gettersAndSetters.setters += currGettersAndSetters.setters;
 		} catch:
 			continue;
 	}
+	
+	println(size(gettersAndSetters.getters));
+	println(size(gettersAndSetters.setters));
 }
 
-public list[MethodDeclaration] retrieveGetterMethods(CompilationUnit unit) {
+public GettersAndSetters retrieveGetterOrSetters(CompilationUnit unit) {
 	list [MethodDeclaration] getters = [];
+	list [MethodDeclaration] setters = [];
 	visit(unit) {
 		case MethodDeclaration mdl: {
-			if (isGetterMethod(mdl)) getters += mdl;
+			top-down-break visit(mdl) {		
+				case (MethodDeclaration) `public <MethodHeader mHeader> <MethodBody _>`: {
+					getterOrSetter = checkIfGetterOrSetter(mHeader);
+					if(getterOrSetter.isGetter)
+						getters += mdl;
+					else if(getterOrSetter.isSetter)
+						setters += mdl;
+				}
+			}
 		}
 	}
-	//if (size(getters) > 0) {
-	//	println("size: " + toString(size(getters)));
-	//	for (getter <- getters) {
-	//		println("<getter>");
-	//	}
-	//	println();		
-	//}
-	return getters;
+	return newGettersAndSetters(getters, setters);
 }
 
-
-private bool isGetterMethod(MethodDeclaration mdl) {
-	top-down visit(mdl) {
-		case MethodModifier mdf: {
-			if ("<mdf>" != "public") return false;
-		}
-		
+private GetterOrSetter checkIfGetterOrSetter(MethodHeader methodHeader) {
+	GetterOrSetter getterOrSetter = newGetterOrSetter(false, false);
+	top-down-break visit(methodHeader) {
 		case MethodDeclarator mDecl: {
-			if (!startsWith("<mDecl>", "get")) return false;
-		}
+			mDeclStr = "<mDecl>";
+			if (startsWith(mDeclStr, "get"))
+				getterOrSetter.isGetter = true;
+			else if(startsWith(mDeclStr, "set"))
+				getterOrSetter.isSetter = true;
+		}	
 	}
-	return true;
-} 
-
-public list[MethodDeclaration] retrieveSetterMethods(CompilationUnit unit) {
-
+	return getterOrSetter;
 }
