@@ -26,8 +26,7 @@ public void findGettersAndSetters(list[loc] locs) {
 			continue;
 	}
 	
-	println(size(gettersAndSetters.getters));
-	println(size(gettersAndSetters.setters));
+	printGettersAndSetters(gettersAndSetters);
 }
 
 public GettersAndSetters retrieveGetterOrSetters(CompilationUnit unit) {
@@ -36,7 +35,7 @@ public GettersAndSetters retrieveGetterOrSetters(CompilationUnit unit) {
 	visit(unit) {
 		case MethodDeclaration mdl: {
 			top-down-break visit(mdl) {		
-				case (MethodDeclaration) `public <MethodHeader mHeader> <MethodBody _>`: {
+				case (MethodDeclaration) `<Annotation _> public <MethodHeader mHeader> <MethodBody _>`: {
 					getterOrSetter = checkIfGetterOrSetter(mHeader);
 					if(getterOrSetter.isGetter)
 						getters += mdl;
@@ -46,7 +45,8 @@ public GettersAndSetters retrieveGetterOrSetters(CompilationUnit unit) {
 			}
 		}
 	}
-	return newGettersAndSetters(getters, setters);
+	GettersAndSetters gas = newGettersAndSetters(getters, setters);
+	return gas;
 }
 
 private GetterOrSetter checkIfGetterOrSetter(MethodHeader methodHeader) {
@@ -61,4 +61,16 @@ private GetterOrSetter checkIfGetterOrSetter(MethodHeader methodHeader) {
 		}	
 	}
 	return getterOrSetter;
+}
+
+public void printGettersAndSetters(GettersAndSetters gas) {
+	println(toString(size(gas.getters)) + " getters");
+	for (getter <- gas.getters) {
+		println("<getter>");
+	}
+	println();
+	println(toString(size(gas.setters)) + " setters");
+	for (setter <- gas.setters) {
+		println("<setter>");
+	}
 }
