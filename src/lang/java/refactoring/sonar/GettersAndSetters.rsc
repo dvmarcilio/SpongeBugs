@@ -74,3 +74,61 @@ public void printGettersAndSetters(GettersAndSetters gas) {
 		println("<setter>");
 	}
 }
+
+// -----------------------------------------------
+
+
+public void findGettersAndSettersFunctional(list[loc] locs) {
+	GettersAndSetters gettersAndSetters = newGettersAndSetters([], []);
+	
+	for(fileLoc <- locs) {
+		javaFileContent = readFile(fileLoc);
+		try {
+			unit = parse(#CompilationUnit, javaFileContent);
+			currGettersAndSetters = retrieveGettersAndSettersFunctional(unit, isGetter, isSetter);
+			gettersAndSetters.getters += currGettersAndSetters.getters;
+			gettersAndSetters.setters += currGettersAndSetters.setters;
+		} catch:
+			continue;
+	}
+	
+	printGettersAndSetters(gettersAndSetters);
+}
+
+public GettersAndSetters retrieveGettersAndSettersFunctional(CompilationUnit unit,
+ bool (MethodHeader) getterChecker, bool (MethodHeader) setterChecker) {
+	list [MethodDeclaration] getters = [];
+	list [MethodDeclaration] setters = [];
+	top-down visit(unit) {
+		case MethodDeclaration mdl: {
+			top-down-break visit(mdl) {		
+				case (MethodDeclaration) `<Annotation _> public <MethodHeader mHeader> <MethodBody _>`: {
+					if(getterChecker(mHeader))
+						getters += mdl;
+					else if(setterChecker(mHeader))
+						setters += mdl;
+				}
+			}
+		}
+	}
+	GettersAndSetters gas = newGettersAndSetters(getters, setters);
+	return gas;
+}
+
+public bool isGetter(MethodHeader mHeader) {
+	top-down-break visit(mHeader) {
+		case MethodDeclarator mDecl: {
+			return startsWith("<mDecl>", "get");
+		}
+	}
+	return false;
+}
+
+public bool isSetter(MethodHeader mHeader) {
+	top-down-break visit(mHeader) {
+		case MethodDeclarator mDecl: {
+			return startsWith("<mDecl>", "set");
+		}
+	}
+	return false;
+}
