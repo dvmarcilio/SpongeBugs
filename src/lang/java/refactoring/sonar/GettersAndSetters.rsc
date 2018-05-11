@@ -67,11 +67,13 @@ public void printGettersAndSetters(GettersAndSetters gas) {
 	println(toString(size(gas.getters)) + " getters");
 	for (getter <- gas.getters) {
 		println("<getter>");
+		println("Return Type: " + retrieveReturnTypeFromMethodDeclaration(getter));
 	}
 	println();
 	println(toString(size(gas.setters)) + " setters");
 	for (setter <- gas.setters) {
 		println("<setter>");
+		println("Return Type: " + retrieveReturnTypeFromMethodDeclaration(setter));
 	}
 }
 
@@ -117,6 +119,10 @@ public GettersAndSetters retrieveGettersAndSettersFunctional(CompilationUnit uni
 
 public bool isGetter(MethodHeader mHeader) {
 	top-down-break visit(mHeader) {
+		case Result returnType: {
+			if ("<returnType>" == "void")
+				return false;
+		}
 		case MethodDeclarator mDecl: {
 			return startsWith("<mDecl>", "get");
 		}
@@ -126,9 +132,20 @@ public bool isGetter(MethodHeader mHeader) {
 
 public bool isSetter(MethodHeader mHeader) {
 	top-down-break visit(mHeader) {
+		case Result returnType: {
+			if ("<returnType>" != "void")
+				return false;
+		}
 		case MethodDeclarator mDecl: {
 			return startsWith("<mDecl>", "set");
 		}
 	}
 	return false;
+}
+
+public str retrieveReturnTypeFromMethodDeclaration(MethodDeclaration mdl) {
+	visit(mdl) {
+		case Result result:
+			return "<result>";		
+	}
 }
