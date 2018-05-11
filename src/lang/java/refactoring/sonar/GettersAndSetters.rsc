@@ -66,12 +66,14 @@ private GetterOrSetter checkIfGetterOrSetter(MethodHeader methodHeader) {
 public void printGettersAndSetters(GettersAndSetters gas) {
 	println(toString(size(gas.getters)) + " getters");
 	for (getter <- gas.getters) {
+		println("-------");
 		println("<getter>");
 		println("Return Type: " + retrieveReturnTypeFromMethodDeclaration(getter));
 	}
 	println();
 	println(toString(size(gas.setters)) + " setters");
 	for (setter <- gas.setters) {
+		println("-------");
 		println("<setter>");
 		println("Return Type: " + retrieveReturnTypeFromMethodDeclaration(setter));
 	}
