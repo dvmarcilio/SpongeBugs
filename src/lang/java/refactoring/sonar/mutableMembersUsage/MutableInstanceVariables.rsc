@@ -1,4 +1,4 @@
-module lang::java::refactoring::sonar::mutableMembersUsage::MutableMembersUsage
+module lang::java::refactoring::sonar::mutableMembersUsage::MutableInstanceVariables
 
 import IO;
 import lang::java::\syntax::Java18;
@@ -26,11 +26,6 @@ public void findMutableInstanceVariables(list[loc] locs) {
 	for (instanceVar <- instanceVars) {
 		println(instanceVar.varType + " " + instanceVar.name);
 	}
-	
-}
-
-public tuple[int occurrences, str fullyQualifiedClass] refactor(CompilationUnit unit) {
-	mutableInstanceVars = retrieveMutableInstanceVars(unit);
 	
 }
 
