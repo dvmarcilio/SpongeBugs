@@ -4,24 +4,28 @@ import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import String;
+import List;
 import Set;
 
 // TODO change when we can check subtype relation realiably
 // some of the most used types to get started
 private set[str] mutableTypes = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "Map", "HashMap", "Date"};
 
-public data InstanceVar = newInstanceVar(str name, str varType);
+public data InstanceVar = newInstanceVar(str varType, str name);
 
 public void findMutableInstanceVariables(list[loc] locs) {
+	list[InstanceVar] instanceVars = [];
 	for(fileLoc <- locs) {
 		javaFileContent = readFile(fileLoc);
 		try {
 			unit = parse(#CompilationUnit, javaFileContent);
-			instanceVars = retrieveMutableInstanceVars(unit);
+			instanceVars += retrieveMutableInstanceVars(unit);
 		} catch:
 			continue;
 	}
-	
+	for (instanceVar <- instanceVars) {
+		println(instanceVar.varType + " " + instanceVar.name);
+	}
 	
 }
 
@@ -35,10 +39,9 @@ public list[InstanceVar] retrieveMutableInstanceVars(CompilationUnit unit) {
 	visit(unit) {
 		case (FieldDeclaration) `<FieldModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>;`: {
 			if (isInstanceVariable(varMod) && isMutableType(varType)) {
-				println("both conditions true");
 				visit(vdl) {
 					case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
-						instanceVars += newInstanceVar(varId, varType);
+						instanceVars += newInstanceVar("<varType>", "<varId>");
 					}
 				}		
 			}
