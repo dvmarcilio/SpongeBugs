@@ -116,6 +116,12 @@ public GettersAndSetters doRetrieveGettersAndSettersFunctional(CompilationUnit u
 					else if(setterChecker(mHeader))
 						setters += mdl;
 				}
+				case (MethodDeclaration) `public <MethodHeader mHeader> <MethodBody _>`: {
+					if(getterChecker(mHeader))
+						getters += mdl;
+					else if(setterChecker(mHeader))
+						setters += mdl;
+				}
 			}
 		}
 	}
