@@ -89,7 +89,7 @@ public void findGettersAndSettersFunctional(list[loc] locs) {
 		javaFileContent = readFile(fileLoc);
 		try {
 			unit = parse(#CompilationUnit, javaFileContent);
-			currGettersAndSetters = retrieveGettersAndSettersFunctional(unit, isGetter, isSetter);
+			currGettersAndSetters = retrieveGettersAndSettersFunctional(unit);
 			gettersAndSetters.getters += currGettersAndSetters.getters;
 			gettersAndSetters.setters += currGettersAndSetters.setters;
 		} catch:
@@ -99,7 +99,11 @@ public void findGettersAndSettersFunctional(list[loc] locs) {
 	printGettersAndSetters(gettersAndSetters);
 }
 
-public GettersAndSetters retrieveGettersAndSettersFunctional(CompilationUnit unit,
+public GettersAndSetters retrieveGettersAndSettersFunctional(CompilationUnit unit) {
+	return doRetrieveGettersAndSettersFunctional(unit, isGetter, isSetter);
+}
+
+public GettersAndSetters doRetrieveGettersAndSettersFunctional(CompilationUnit unit,
  bool (MethodHeader) getterChecker, bool (MethodHeader) setterChecker) {
 	list [MethodDeclaration] getters = [];
 	list [MethodDeclaration] setters = [];
@@ -115,8 +119,7 @@ public GettersAndSetters retrieveGettersAndSettersFunctional(CompilationUnit uni
 			}
 		}
 	}
-	GettersAndSetters gas = newGettersAndSetters(getters, setters);
-	return gas;
+	return newGettersAndSetters(getters, setters);
 }
 
 public bool isGetter(MethodHeader mHeader) {

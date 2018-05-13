@@ -29,8 +29,8 @@ public void findMutableInstanceVariables(list[loc] locs) {
 	
 }
 
-public list[InstanceVar] retrieveMutableInstanceVars(CompilationUnit unit) {
-	list[InstanceVar] instanceVars = [];
+public set[InstanceVar] retrieveMutableInstanceVars(CompilationUnit unit) {
+	set[InstanceVar] instanceVars = {};
 	visit(unit) {
 		case (FieldDeclaration) `<FieldModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>;`: {
 			if (isInstanceVariable(varMod) && isMutableType(varType)) {
