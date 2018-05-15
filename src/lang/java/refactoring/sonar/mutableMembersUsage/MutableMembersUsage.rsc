@@ -45,15 +45,10 @@ private bool emptyGettersAndSetters(GettersAndSetters gas) {
 
 public GettersAndSetters filterGettersAndSettersForMutableInstanceVars(GettersAndSetters gas, set[InstanceVar] instanceVars) {
 	GettersAndSetters gasForMutableVars = newGettersAndSetters([], []);
-	for(getter <- gas.getters) {
-		if(isGetterOrSetterForMutableVar(getter, instanceVars))
-			gasForMutableVars.getters += [getter];
-	}
 	
-	for(setter <- gas.setters) {
-		if(isGetterOrSetterForMutableVar(setter, instanceVars))
-			gasForMutableVars.setters += [setter];
-	}
+	gasForMutableVars.getters = [ getter | getter <- gas.getters,  isGetterOrSetterForMutableVar(getter, instanceVars)];
+
+	gasForMutableVars.setters = [ setter | setter <- gas.setters,  isGetterOrSetterForMutableVar(setter, instanceVars)];
 	
 	return gasForMutableVars;
 }
