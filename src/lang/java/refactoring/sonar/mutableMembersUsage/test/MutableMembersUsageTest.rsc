@@ -45,19 +45,23 @@ public test bool shouldFindAllSettersViolations() {
 }
 
 public test bool shouldFindGetterListViolation() {
-	return "getStrs" in violationsGettersNames;
+	return "getStrs" in violationsGettersNames &&
+		"getStrsNonViolation" notin violationsGettersNames;
 }
 
 public test bool shouldFindSetterListViolation() {
-	return "setStrs" in violationsSettersNames;
+	return "setStrs" in violationsSettersNames &&
+		"setStrsNonViolation" notin violationsSettersNames;
 }
 
 public test bool shouldFindGetterSetViolation() {
-	return "getInts" in violationsGettersNames;
+	return "getInts" in violationsGettersNames &&
+		"getIntsNonViolation" notin violationsGettersNames;
 }
 
 public test bool shouldFindSetterSetViolation() {
-	return "setInts" in violationsSettersNames;
+	return "setInts" in violationsSettersNames &&
+		"setIntsNonViolation" notin violationsSettersNames;
 }
 
 public test bool shouldFindGetterDateViolation() {

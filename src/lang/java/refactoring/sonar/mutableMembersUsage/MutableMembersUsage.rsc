@@ -30,7 +30,23 @@ public void findMutableGettersAndSettersForEachLoc(list[loc] locs) {
 }
 
 public GettersAndSetters findGettersAndSettersMutableMembersViolations(CompilationUnit unit) {
-	return newGettersAndSetters([], []);
+	mutableGaS = findGettersAndSettersForMutableInstanceVars(unit);
+	violationsGaS = newGettersAndSetters([], []);
+	
+	violationsGaS.getters = [ getter | getter <- mutableGaS.getters,  isGetterViolation(getter)];
+	
+	return violationsGaS;
+}
+
+private bool isGetterViolation(MethodDeclaration mdl) {
+	// FIXME not working for Date yet
+	returnExp = retrieveReturnExpression(mdl);
+	top-down-break visit(returnExp) {
+		case (MethodInvocation) methodInvocation: {
+			return !contains("<methodInvocation>", "Collections.unmodifiable");
+		} 
+	}
+	return true;
 }
 
 public GettersAndSetters findGettersAndSettersForMutableInstanceVars(CompilationUnit unit) {
