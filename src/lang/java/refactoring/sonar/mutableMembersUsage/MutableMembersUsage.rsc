@@ -29,6 +29,10 @@ public void findMutableGettersAndSettersForEachLoc(list[loc] locs) {
 	}
 }
 
+public GettersAndSetters findGettersAndSettersMutableMembersViolations(CompilationUnit unit) {
+	return newGettersAndSetters([], []);
+}
+
 public GettersAndSetters findGettersAndSettersForMutableInstanceVars(CompilationUnit unit) {
 	gas = retrieveGettersAndSettersFunctional(unit);
 	if (emptyGettersAndSetters(gas)) {
