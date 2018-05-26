@@ -9,7 +9,7 @@ import Set;
 
 // TODO change when we can check subtype relation realiably
 // some of the most used types to get started
-private set[str] mutableTypes = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "Map", "HashMap", "Date"};
+private set[str] mutableTypes = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "TreeSet"};
 
 public data InstanceVar = newInstanceVar(str varType, str name);
 

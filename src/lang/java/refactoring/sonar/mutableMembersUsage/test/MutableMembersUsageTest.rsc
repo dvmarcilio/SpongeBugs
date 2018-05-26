@@ -19,29 +19,27 @@ set[str] violationsGettersNames = { retrieveMethodName(getter) | MethodDeclarati
 set[str] violationsSettersNames = { retrieveMethodName(setter) | MethodDeclaration setter <- violationsGaS.setters };
 
 public test bool shouldFindAllGettersForMutableInstanceVars() {
-	return size(allGaS.getters) == 5 &&
+	return size(allGaS.getters) == 4 &&
 		"getStrs" in gettersNames && 
 		"getInts" in gettersNames &&
-		"getDate" in gettersNames &&
 		"getStrsNonViolation" in gettersNames && 
 		"getIntsNonViolation" in gettersNames;
 }
 
 public test bool shouldFindAllSettersForMutableInstanceVars() {
-	return size(allGaS.setters) == 5 &&
+	return size(allGaS.setters) == 4 &&
 		"setStrs" in settersNames && 
 		"setInts" in settersNames &&
-		"setDate" in settersNames &&
 		"setStrsNonViolation" in settersNames && 
 		"setIntsNonViolation" in settersNames;
 }
 
 public test bool shouldFindAllGettersViolations() {
-	return size(violationsGaS.getters) == 3;
+	return size(violationsGaS.getters) == 2;
 }
 
 public test bool shouldFindAllSettersViolations() {
-	return size(violationsGaS.setters) == 3;
+	return size(violationsGaS.setters) == 2;
 }
 
 public test bool shouldFindGetterListViolation() {
@@ -62,12 +60,4 @@ public test bool shouldFindGetterSetViolation() {
 public test bool shouldFindSetterSetViolation() {
 	return "setInts" in violationsSettersNames &&
 		"setIntsNonViolation" notin violationsSettersNames;
-}
-
-public test bool shouldFindGetterDateViolation() {
-	return "getDate" in violationsGettersNames;
-}
-
-public test bool shouldFindSetterDateViolation() {
-	return "setDate" in violationsSettersNames;
 }

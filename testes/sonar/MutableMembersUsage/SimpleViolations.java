@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,8 +13,6 @@ public class SimpleViolations {
 	private List<String> strs = new ArrayList<>();
 
 	private Set<Integer> ints = new HashSet<>();
-
-	private Date date = new Date();
 
 	private List<String> strsNonViolation = new ArrayList<>();
 
@@ -52,15 +49,7 @@ public class SimpleViolations {
 	public void setInts(Set<Integer> ints) {
 		this.ints = ints;
 	}
-
-	public Date getDate() {
-		return date;
-	}
-
-	public void setDate(Date date) {
-		this.date = date;
-	}
-
+	
 	public List<String> getStrsNonViolation() {
 		return Collections.unmodifiableList(strsNonViolation);
 	}
@@ -76,4 +65,5 @@ public class SimpleViolations {
 	public void setIntsNonViolation(Set<Integer> intsNonViolation) {
 		this.intsNonViolation = new HashSet<>(intsNonViolation);
 	}
+	
 }
