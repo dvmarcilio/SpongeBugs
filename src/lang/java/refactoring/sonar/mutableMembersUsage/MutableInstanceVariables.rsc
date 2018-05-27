@@ -6,15 +6,14 @@ import ParseTree;
 import String;
 import List;
 import Set;
+import lang::java::analysis::DataStructures;
 
 // TODO change when we can check subtype relation realiably
 // some of the most used types to get started
 private set[str] mutableTypes = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "TreeSet"};
 
-public data InstanceVar = newInstanceVar(str varType, str name);
-
 public void findMutableInstanceVariables(list[loc] locs) {
-	list[InstanceVar] instanceVars = [];
+	list[Variable] instanceVars = [];
 	for(fileLoc <- locs) {
 		javaFileContent = readFile(fileLoc);
 		try {
@@ -29,14 +28,14 @@ public void findMutableInstanceVariables(list[loc] locs) {
 	
 }
 
-public set[InstanceVar] retrieveMutableInstanceVars(CompilationUnit unit) {
-	set[InstanceVar] instanceVars = {};
+public set[Variable] retrieveMutableInstanceVars(CompilationUnit unit) {
+	set[Variable] instanceVars = {};
 	visit(unit) {
 		case (FieldDeclaration) `<FieldModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>;`: {
 			if (isInstanceVariable(varMod) && isMutableType(varType)) {
 				visit(vdl) {
 					case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
-						instanceVars += newInstanceVar("<varType>", "<varId>");
+						instanceVars += variable("<varType>", "<varId>");
 					}
 				}		
 			}
