@@ -11,6 +11,34 @@ import String;
 import List;
 import Set;
 
+private data RefactorData = refactorData(str method, str newType);
+
+private str listMethod = "Collections.unmodifiableList";
+private str setMethod = "Collections.unmodifiableSet";
+private str treeSetMethod = "Collections.unmodifiableSortedSet";
+
+private map[str, RefactorData] typeToRefactorData = (
+	"List": refactorData(listMethod, "ArrayList"),
+	"ArrayList": refactorData(listMethod, "ArrayList"),
+	"LinkedList": refactorData(listMethod, "LinkedList"),
+	"Set": refactorData(setMethod, "HashSet"),
+	"HashSet": refactorData(setMethod, "HashSet"),
+	"TreeSet": refactorData(treeSetMethod, "TreeSet")
+);
+
+private bool refactoredGetters = false;
+
+private str importForGetters = "java.util.Collections";
+
+private set[str] usedTypesForSetters = {};
+
+private map[str, str] importForSetterType = (
+	"ArrayList": "java.util.ArrayList",
+	"LinkedList": "java.util.LinkedList",
+	"HashSet": "java.util.HashSet",
+	"TreeSet": "java.util.TreeSet"
+);
+
 public void findMutableGettersAndSettersForEachLoc(list[loc] locs) {
 	for(fileLoc <- locs) {
 		javaFileContent = readFile(fileLoc);
@@ -92,7 +120,7 @@ private bool isSetterViolation(MethodDeclaration mdl, instanceVars) {
 	if (isAssignmentInstantiation(assignmentRightHandSide)) {
 		visit(assignmentRightHandSide) {
 			case (UnqualifiedClassInstanceCreationExpression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<Expression constructorArg>)`: {
-				assignedFieldType = stripGenericTypeParameterFromType(getAssignedFieldType(assignedFieldName, instanceVars));
+				assignedFieldType = stripGenericTypeParameterFromType(getFieldType(assignedFieldName, instanceVars));
 				isCorrectTypeInstantiated = contains("<typeInstantiated>", assignedFieldType);
 				isArgumentCopied = constructorArg == singleParam.name;
 				
@@ -115,13 +143,41 @@ private str stripGenericTypeParameterFromType(str varType) {
 		return varType;	
 }
 
-private str getAssignedFieldType(str fieldName, set[Variable] instanceVars) {
-	Variable assignedField = findVarByName(instanceVars, fieldName);
-	return assignedField.varType;
+private str getFieldType(str fieldName, set[Variable] instanceVars) {
+	Variable field = findVarByName(instanceVars, fieldName);
+	return field.varType;
 }
 
 public void refactorMutableUsageMembersViolations(CompilationUnit unit) {
 	instanceVars = retrieveMutableInstanceVars(unit);
 	violationsGaS = findGettersAndSettersMutableMembersViolations(unit, instanceVars);
 	
+	for(getter <- violationsGaS.getters) {
+		println("--- Pre Refactor ---");
+		println("<getter>");
+		
+		println("--- Post Refactor ---");
+		refactored = refactorGetter(getter, instanceVars);
+		println("<refactored>");
+		println();
+	}
+}
+
+public MethodDeclaration refactorGetter(MethodDeclaration mdl, set[Variable] instanceVars) {
+	MethodDeclaration refactoredMdl = visit(mdl) {
+		case (ReturnStatement) `return <Expression fieldName>;`: {
+			
+			Expression refactoredReturnExpression = visit(fieldName) {
+				case Expression exp: {
+					returnedFieldType = stripGenericTypeParameterFromType(getFieldType("<fieldName>", instanceVars));
+					rData = typeToRefactorData[returnedFieldType];
+					method = rData.method;
+					insert(parse(#Expression, "<method>(<fieldName>)"));
+				}				
+			};
+		
+			insert((ReturnStatement) `return <Expression refactoredReturnExpression>;`); 
+		}	
+	};
+	return refactoredMdl;
 }
