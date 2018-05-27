@@ -13,11 +13,12 @@ import lang::java::util::MethodDeclarationUtils;
 import lang::java::analysis::DataStructures;
 
 set[Variable] instanceVars = retrieveMutableInstanceVars(simpleViolationsUnit());
+
 GettersAndSetters allGaS = findGettersAndSettersForMutableInstanceVars(simpleViolationsUnit(), instanceVars);
 set[str] gettersNames = { retrieveMethodName(getter) | MethodDeclaration getter <- allGaS.getters };
 set[str] settersNames = { retrieveMethodName(setter) | MethodDeclaration setter <- allGaS.setters };
 
-GettersAndSetters violationsGaS = findGettersAndSettersMutableMembersViolations(simpleViolationsUnit());
+GettersAndSetters violationsGaS = findGettersAndSettersMutableMembersViolations(simpleViolationsUnit(), instanceVars);
 set[str] violationsGettersNames = { retrieveMethodName(getter) | MethodDeclaration getter <- violationsGaS.getters };
 set[str] violationsSettersNames = { retrieveMethodName(setter) | MethodDeclaration setter <- violationsGaS.setters };
 

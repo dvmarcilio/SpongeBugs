@@ -28,8 +28,7 @@ public void findMutableGettersAndSettersForEachLoc(list[loc] locs) {
 	}
 }
 
-public GettersAndSetters findGettersAndSettersMutableMembersViolations(CompilationUnit unit) {
-	instanceVars = retrieveMutableInstanceVars(unit);
+public GettersAndSetters findGettersAndSettersMutableMembersViolations(CompilationUnit unit, set[Variable] instanceVars) {
 	mutableGaS = findGettersAndSettersForMutableInstanceVars(unit, instanceVars);
 	violationsGaS = newGettersAndSetters([], []);
 	
@@ -121,3 +120,8 @@ private str getAssignedFieldType(str fieldName, set[Variable] instanceVars) {
 	return assignedField.varType;
 }
 
+public void refactorMutableUsageMembersViolations(CompilationUnit unit) {
+	instanceVars = retrieveMutableInstanceVars(unit);
+	violationsGaS = findGettersAndSettersMutableMembersViolations(unit, instanceVars);
+	
+}
