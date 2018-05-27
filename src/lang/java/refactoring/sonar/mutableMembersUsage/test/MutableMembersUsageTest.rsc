@@ -7,10 +7,13 @@ import Set;
 import IO;
 import lang::java::refactoring::sonar::GettersAndSetters;
 import lang::java::refactoring::sonar::mutableMembersUsage::\test::MutableMembersUsageTestResources;
+import lang::java::refactoring::sonar::mutableMembersUsage::MutableInstanceVariables;
 import lang::java::refactoring::sonar::mutableMembersUsage::MutableMembersUsage;
 import lang::java::util::MethodDeclarationUtils;
+import lang::java::analysis::DataStructures;
 
-GettersAndSetters allGaS = findGettersAndSettersForMutableInstanceVars(simpleViolationsUnit());
+set[Variable] instanceVars = retrieveMutableInstanceVars(simpleViolationsUnit());
+GettersAndSetters allGaS = findGettersAndSettersForMutableInstanceVars(simpleViolationsUnit(), instanceVars);
 set[str] gettersNames = { retrieveMethodName(getter) | MethodDeclaration getter <- allGaS.getters };
 set[str] settersNames = { retrieveMethodName(setter) | MethodDeclaration setter <- allGaS.setters };
 
