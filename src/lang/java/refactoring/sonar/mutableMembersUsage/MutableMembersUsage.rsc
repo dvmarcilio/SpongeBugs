@@ -161,6 +161,16 @@ public void refactorMutableUsageMembersViolations(CompilationUnit unit) {
 		println("<refactored>");
 		println();
 	}
+	
+	for (setter <- violationsGaS.setters) {
+		println("--- Pre Refactor ---");
+		println("<setter>");
+		
+		println("--- Post Refactor ---");
+		refactored = refactorSetter(setter, instanceVars);
+		println("<refactored>");
+		println();
+	}
 }
 
 public MethodDeclaration refactorGetter(MethodDeclaration mdl, set[Variable] instanceVars) {
@@ -179,5 +189,27 @@ public MethodDeclaration refactorGetter(MethodDeclaration mdl, set[Variable] ins
 			insert((ReturnStatement) `return <Expression refactoredReturnExpression>;`); 
 		}	
 	};
+	return refactoredMdl;
+}
+
+public MethodDeclaration refactorSetter(MethodDeclaration mdl, set[Variable] instanceVars) {
+	Variable parameter = retrieveMethodParameters(mdl)[0];
+	assignedFieldName = retrieveAssignedFieldName(mdl);
+	
+	MethodDeclaration refactoredMdl = visit(mdl) {
+		case (Assignment) `this.<Identifier fieldName> = <Expression rhsAssignment>`: {
+			Expression rhsRefactored = visit(rhsAssignment) {
+				case Expression rhs: {
+					settedFieldType = stripGenericTypeParameterFromType(getFieldType("<fieldName>", instanceVars));
+					rData = typeToRefactorData[settedFieldType];
+					newType = rData.newType;
+					insert(parse(#Expression, "new <newType>\<\>(<fieldName>)"));
+				}
+			};
+			
+			insert((Assignment) `this.<Identifier fieldName> = <Expression rhsRefactored>`);	
+		}		
+	};
+	
 	return refactoredMdl;
 }
