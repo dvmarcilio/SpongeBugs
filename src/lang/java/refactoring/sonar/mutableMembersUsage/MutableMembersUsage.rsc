@@ -39,21 +39,20 @@ private map[str, str] importForSetterType = (
 	"TreeSet": "java.util.TreeSet"
 );
 
-public void findMutableGettersAndSettersForEachLoc(list[loc] locs) {
+public void refactorMutableGettersAndSettersViolationsForEachLoc(list[loc] locs) {
 	for(fileLoc <- locs) {
-		javaFileContent = readFile(fileLoc);
 		try {
-			unit = parse(#CompilationUnit, javaFileContent);
-			gas = findGettersAndSettersForMutableInstanceVars(unit);
-			//if (!emptyGettersAndSetters(gas)) {
-			//	println(fileLoc);
-			//	println();
-			//	printGettersAndSetters(gas);
-			//	println("\n*********************\n");
-			//}
+			refactorMutableGettersAndSettersViolations(fileLoc);
 		} catch:
 			continue;
 	}
+}
+
+public void refactorMutableGettersAndSettersViolations(loc fileLoc) {
+	javaFileContent = readFile(fileLoc);
+	unit = parse(#CompilationUnit, javaFileContent);
+	refactoredUnit = refactorMutableUsageMembersViolations(unit);
+	writeFile(fileLoc, refactoredUnit);	
 }
 
 public GettersAndSetters findGettersAndSettersMutableMembersViolations(CompilationUnit unit, set[Variable] instanceVars) {
@@ -148,32 +147,17 @@ private str getFieldType(str fieldName, set[Variable] instanceVars) {
 	return field.varType;
 }
 
-public void refactorMutableUsageMembersViolations(CompilationUnit unit) {
+public CompilationUnit refactorMutableUsageMembersViolations(CompilationUnit unit) {
 	instanceVars = retrieveMutableInstanceVars(unit);
 	violationsGaS = findGettersAndSettersMutableMembersViolations(unit, instanceVars);
 	
-	for(getter <- violationsGaS.getters) {
-		println("--- Pre Refactor ---");
-		println("<getter>");
-		
-		println("--- Post Refactor ---");
-		refactored = refactorGetter(getter, instanceVars);
-		println("<refactored>");
-		println();
-	}
+	unit = refactorMethod(unit, violationsGaS.getters, instanceVars, refactorGetter);
+	unit = refactorMethod(unit, violationsGaS.setters, instanceVars, refactorSetter);	
 	
-	for (setter <- violationsGaS.setters) {
-		println("--- Pre Refactor ---");
-		println("<setter>");
-		
-		println("--- Post Refactor ---");
-		refactored = refactorSetter(setter, instanceVars);
-		println("<refactored>");
-		println();
-	}
+	return unit; 
 }
 
-public MethodDeclaration refactorGetter(MethodDeclaration mdl, set[Variable] instanceVars) {
+private MethodDeclaration refactorGetter(MethodDeclaration mdl, set[Variable] instanceVars) {
 	MethodDeclaration refactoredMdl = visit(mdl) {
 		case (ReturnStatement) `return <Expression fieldName>;`: {
 			
@@ -192,7 +176,7 @@ public MethodDeclaration refactorGetter(MethodDeclaration mdl, set[Variable] ins
 	return refactoredMdl;
 }
 
-public MethodDeclaration refactorSetter(MethodDeclaration mdl, set[Variable] instanceVars) {
+private MethodDeclaration refactorSetter(MethodDeclaration mdl, set[Variable] instanceVars) {
 	Variable parameter = retrieveMethodParameters(mdl)[0];
 	assignedFieldName = retrieveAssignedFieldName(mdl);
 	
@@ -212,4 +196,18 @@ public MethodDeclaration refactorSetter(MethodDeclaration mdl, set[Variable] ins
 	};
 	
 	return refactoredMdl;
+}
+
+private CompilationUnit refactorMethod(CompilationUnit unit, list[MethodDeclaration] methods, set[Variable] instanceVars, refactorFunction) {
+	for(method <- methods) {
+		unit = visit(unit) {
+			case MethodDeclaration mdl: {
+				if (mdl == method) {
+					refactored = refactorFunction(method, instanceVars);
+					insert (MethodDeclaration) `<MethodDeclaration refactored>`;
+				}
+			}
+		};
+	}
+	return unit;
 }
