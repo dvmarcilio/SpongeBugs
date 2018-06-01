@@ -5,6 +5,7 @@ import lang::java::\syntax::Java18;
 import lang::java::refactoring::sonar::GettersAndSetters;
 import lang::java::refactoring::sonar::mutableMembersUsage::MutableInstanceVariables;
 import lang::java::util::MethodDeclarationUtils;
+import lang::java::util::CompilationUnitUtils;
 import lang::java::analysis::DataStructures;
 import ParseTree;
 import String;
@@ -53,6 +54,18 @@ public void refactorMutableGettersAndSettersViolations(loc fileLoc) {
 	unit = parse(#CompilationUnit, javaFileContent);
 	refactoredUnit = refactorMutableUsageMembersViolations(unit);
 	writeFile(fileLoc, refactoredUnit);	
+}
+
+public CompilationUnit refactorMutableUsageMembersViolations(CompilationUnit unit) {
+	instanceVars = retrieveMutableInstanceVars(unit);
+	violationsGaS = findGettersAndSettersMutableMembersViolations(unit, instanceVars);
+	
+	unit = refactorMethod(unit, violationsGaS.getters, instanceVars, refactorGetter);
+	unit = refactorMethod(unit, violationsGaS.setters, instanceVars, refactorSetter);	
+	
+	unit = addNeededImports(unit, violationsGaS);
+	
+	return unit; 
 }
 
 public GettersAndSetters findGettersAndSettersMutableMembersViolations(CompilationUnit unit, set[Variable] instanceVars) {
@@ -147,14 +160,18 @@ private str getFieldType(str fieldName, set[Variable] instanceVars) {
 	return field.varType;
 }
 
-public CompilationUnit refactorMutableUsageMembersViolations(CompilationUnit unit) {
-	instanceVars = retrieveMutableInstanceVars(unit);
-	violationsGaS = findGettersAndSettersMutableMembersViolations(unit, instanceVars);
-	
-	unit = refactorMethod(unit, violationsGaS.getters, instanceVars, refactorGetter);
-	unit = refactorMethod(unit, violationsGaS.setters, instanceVars, refactorSetter);	
-	
-	return unit; 
+private CompilationUnit refactorMethod(CompilationUnit unit, list[MethodDeclaration] methods, set[Variable] instanceVars, refactorFunction) {
+	for(method <- methods) {
+		unit = visit(unit) {
+			case MethodDeclaration mdl: {
+				if (mdl == method) {
+					refactored = refactorFunction(method, instanceVars);
+					insert (MethodDeclaration) `<MethodDeclaration refactored>`;
+				}
+			}
+		};
+	}
+	return unit;
 }
 
 private MethodDeclaration refactorGetter(MethodDeclaration mdl, set[Variable] instanceVars) {
@@ -198,16 +215,31 @@ private MethodDeclaration refactorSetter(MethodDeclaration mdl, set[Variable] in
 	return refactoredMdl;
 }
 
-private CompilationUnit refactorMethod(CompilationUnit unit, list[MethodDeclaration] methods, set[Variable] instanceVars, refactorFunction) {
-	for(method <- methods) {
-		unit = visit(unit) {
-			case MethodDeclaration mdl: {
-				if (mdl == method) {
-					refactored = refactorFunction(method, instanceVars);
-					insert (MethodDeclaration) `<MethodDeclaration refactored>`;
-				}
-			}
-		};
+private CompilationUnit addNeededImports(CompilationUnit unit, GettersAndSetters violationsGaS) {
+	importDecls = retrieveImportDeclarations(unit);
+	if(size(violationsGaS.getters) > 0)
+		unit = addNeededImportsForGetters(unit, importDecls);
+	if(size(violationsGaS.setters) > 0)
+		unit = addNeededImportsForSetters(unit, importDecls);
+		
+	return unit;	
+}
+
+private CompilationUnit addNeededImportsForGetters(CompilationUnit unit, list[ImportDeclaration] importDecls) {
+	if (!isImportPresent(unit, "java.util.*", importForGetters))
+		unit = addImport(unit, importDecls, importForGetters);
+	return unit;
+}
+
+private CompilationUnit addImport(CompilationUnit unit, list[ImportDeclaration] importDecls, str importPackageOrType) {
+	importDecls += parse(#ImportDeclaration, "import <importPackageOrType>;");
+	importDeclsStrs = [ unparse(importDecl) | ImportDeclaration importDecl <- importDecls ];
+	unit = top-down-break visit(unit) {
+		case Imports _ => parse(#Imports, intercalate("\n", importDeclsStrs))
 	}
+	return unit;
+}
+
+private CompilationUnit addNeededImportsForSetters(CompilationUnit unit, list[ImportDeclaration] importDecls) {
 	return unit;
 }
