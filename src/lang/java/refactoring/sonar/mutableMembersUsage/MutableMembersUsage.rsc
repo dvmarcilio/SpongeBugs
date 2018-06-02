@@ -201,9 +201,10 @@ private MethodDeclaration refactorSetter(MethodDeclaration mdl, set[Variable] in
 		case (Assignment) `this.<Identifier fieldName> = <Expression rhsAssignment>`: {
 			Expression rhsRefactored = visit(rhsAssignment) {
 				case Expression rhs: {
-					settedFieldType = stripGenericTypeParameterFromType(getFieldType("<fieldName>", instanceVars));
-					rData = typeToRefactorData[settedFieldType];
+					setFieldType = stripGenericTypeParameterFromType(getFieldType("<fieldName>", instanceVars));
+					rData = typeToRefactorData[setFieldType];
 					newType = rData.newType;
+					usedTypesForSetters += newType;
 					insert(parse(#Expression, "new <newType>\<\>(<fieldName>)"));
 				}
 			};
@@ -216,17 +217,16 @@ private MethodDeclaration refactorSetter(MethodDeclaration mdl, set[Variable] in
 }
 
 private CompilationUnit addNeededImports(CompilationUnit unit, GettersAndSetters violationsGaS) {
-	importDecls = retrieveImportDeclarations(unit);
 	if(size(violationsGaS.getters) > 0)
-		unit = addNeededImportsForGetters(unit, importDecls);
+		unit = addNeededImportsForGetters(unit, retrieveImportDeclarations(unit));
 	if(size(violationsGaS.setters) > 0)
-		unit = addNeededImportsForSetters(unit, importDecls);
+		unit = addNeededImportsForSetters(unit, retrieveImportDeclarations(unit));
 		
 	return unit;	
 }
 
 private CompilationUnit addNeededImportsForGetters(CompilationUnit unit, list[ImportDeclaration] importDecls) {
-	if (!isImportPresent(unit, "java.util.*", importForGetters))
+	if (!isImportPresent(importDecls, "java.util.*", importForGetters))
 		unit = addImport(unit, importDecls, importForGetters);
 	return unit;
 }
@@ -241,5 +241,14 @@ private CompilationUnit addImport(CompilationUnit unit, list[ImportDeclaration] 
 }
 
 private CompilationUnit addNeededImportsForSetters(CompilationUnit unit, list[ImportDeclaration] importDecls) {
+	if (!isImportPresent(importDecls, "java.util.*")) {
+		for (usedTypeForSetter <- usedTypesForSetters) {
+			importForSetter = importForSetterType[usedTypeForSetter];
+			if(!isImportPresent(importDecls, importForSetter)) {
+				unit = addImport(unit, importDecls, importForSetter);
+				importDecls = retrieveImportDeclarations(unit);
+			}
+		}
+	}
 	return unit;
 }
