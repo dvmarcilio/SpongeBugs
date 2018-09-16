@@ -161,6 +161,7 @@ private str getFieldType(str fieldName, set[Variable] instanceVars) {
 }
 
 private CompilationUnit refactorMethod(CompilationUnit unit, list[MethodDeclaration] methods, set[Variable] instanceVars, refactorFunction) {
+	// FIXME inneficient. O(methods * methodsToBeRefactored) really?
 	for(method <- methods) {
 		unit = visit(unit) {
 			case MethodDeclaration mdl: {
