@@ -37,7 +37,7 @@ public GettersAndSetters doRetrieveGettersAndSettersFunctional(CompilationUnit u
 	list [MethodDeclaration] getters = [];
 	list [MethodDeclaration] setters = [];
 	top-down visit(unit) {
-		case MethodDeclaration mdl: {
+		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			top-down-break visit(mdl) {		
 				case (MethodDeclaration) `<Annotation _> public <MethodHeader mHeader> <MethodBody _>`: {
 					if(getterChecker(mHeader))
@@ -59,11 +59,11 @@ public GettersAndSetters doRetrieveGettersAndSettersFunctional(CompilationUnit u
 
 public bool isGetter(MethodHeader mHeader) {
 	top-down-break visit(mHeader) {
-		case Result returnType: {
+		case (Result) `<Result returnType>`: {
 			if ("<returnType>" == "void")
 				return false;
 		}
-		case MethodDeclarator mDecl: {
+		case (MethodDeclarator) `<MethodDeclarator mDecl>`: {
 			return startsWith("<mDecl>", "get");
 		}
 	}
@@ -72,11 +72,11 @@ public bool isGetter(MethodHeader mHeader) {
 
 public bool isSetter(MethodHeader mHeader) {
 	top-down-break visit(mHeader) {
-		case Result returnType: {
+		case (Result) `<Result returnType>`: {
 			if ("<returnType>" != "void")
 				return false;
 		}
-		case MethodDeclarator mDecl: {
+		case (MethodDeclarator) `<MethodDeclarator mDecl>`: {
 			return startsWith("<mDecl>", "set");
 		}
 	}
@@ -85,7 +85,7 @@ public bool isSetter(MethodHeader mHeader) {
 
 public str retrieveReturnTypeFromMethodDeclaration(MethodDeclaration mdl) {
 	visit(mdl) {
-		case Result result:
+		case (Result) `<Result result>`:
 			return "<result>";		
 	}
 }

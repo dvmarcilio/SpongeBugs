@@ -114,7 +114,7 @@ private bool isGetterOrSetterForMutableVar(MethodDeclaration mdl, set[Variable] 
 private bool isGetterViolation(MethodDeclaration mdl) {
 	returnExp = retrieveReturnExpression(mdl);
 	top-down-break visit(returnExp) {
-		case (MethodInvocation) methodInvocation: {
+		case (MethodInvocation) `<MethodInvocation methodInvocation>`: {
 			return !contains("<methodInvocation>", "Collections.unmodifiable");
 		} 
 	}
@@ -161,17 +161,17 @@ private str getFieldType(str fieldName, set[Variable] instanceVars) {
 }
 
 private CompilationUnit refactorMethod(CompilationUnit unit, list[MethodDeclaration] methods, set[Variable] instanceVars, refactorFunction) {
-	// FIXME inneficient. O(methods * methodsToBeRefactored) really?
-	for(method <- methods) {
-		unit = visit(unit) {
-			case MethodDeclaration mdl: {
-				if (mdl == method) {
-					refactored = refactorFunction(method, instanceVars);
-					insert (MethodDeclaration) `<MethodDeclaration refactored>`;
-				}
+	// O(1) membership test
+	set[MethodDeclaration] methodsSet = toSet(methods);
+	unit = innermost visit(unit) {
+		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
+			if (mdl in methodsSet) {
+				refactored = refactorFunction(mdl, instanceVars);
+				methodsSet = methodsSet - {mdl};
+				insert (MethodDeclaration) `<MethodDeclaration refactored>`;
 			}
-		};
-	}
+		}
+	};
 	return unit;
 }
 
@@ -180,7 +180,7 @@ private MethodDeclaration refactorGetter(MethodDeclaration mdl, set[Variable] in
 		case (ReturnStatement) `return <Expression fieldName>;`: {
 			
 			Expression refactoredReturnExpression = visit(fieldName) {
-				case Expression exp: {
+				case (Expression) `<Expression exp>`: {
 					returnedFieldType = stripGenericTypeParameterFromType(getFieldType("<fieldName>", instanceVars));
 					rData = typeToRefactorData[returnedFieldType];
 					method = rData.method;
@@ -201,7 +201,7 @@ private MethodDeclaration refactorSetter(MethodDeclaration mdl, set[Variable] in
 	MethodDeclaration refactoredMdl = visit(mdl) {
 		case (Assignment) `this.<Identifier fieldName> = <Expression rhsAssignment>`: {
 			Expression rhsRefactored = visit(rhsAssignment) {
-				case Expression rhs: {
+				case (Expression) `<Expression rhs>`: {
 					setFieldType = stripGenericTypeParameterFromType(getFieldType("<fieldName>", instanceVars));
 					rData = typeToRefactorData[setFieldType];
 					newType = rData.newType;
