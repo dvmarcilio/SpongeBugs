@@ -81,11 +81,9 @@ public GettersAndSetters findGettersAndSettersMutableMembersViolations(Compilati
 
 public GettersAndSetters findGettersAndSettersForMutableInstanceVars(CompilationUnit unit, set[Variable] instanceVars) {
 	gas = retrieveGettersAndSettersFunctional(unit);
-	if (emptyGettersAndSetters(gas)) {
-		throw "No getters or setters. Analyze next file";	
+	if (!emptyGettersAndSetters(gas)) {
+		return filterGettersAndSettersForMutableInstanceVars(gas, instanceVars);	
 	}
-	
-	return filterGettersAndSettersForMutableInstanceVars(gas, instanceVars);
 }
 
 private bool emptyGettersAndSetters(GettersAndSetters gas) {
