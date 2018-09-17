@@ -83,6 +83,8 @@ public GettersAndSetters findGettersAndSettersForMutableInstanceVars(Compilation
 	gas = retrieveGettersAndSettersFunctional(unit);
 	if (!emptyGettersAndSetters(gas)) {
 		return filterGettersAndSettersForMutableInstanceVars(gas, instanceVars);	
+	} else {
+		return newGettersAndSetters([], []);
 	}
 }
 
