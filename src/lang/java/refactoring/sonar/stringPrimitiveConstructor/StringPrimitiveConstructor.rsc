@@ -4,7 +4,6 @@ import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import lang::java::util::CompilationUnitUtils;
-import lang::java::analysis::ParseTreeVisualization;
 import String;
 
 // TODO: BigInteger, BigDecimal, Byte, Character, Short
@@ -13,8 +12,6 @@ private set[str] classesToCheck = {"String", "Long", "Float", "Double", "Integer
 public void refactorStringPrimitiveConstructor(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
 	unit = parse(#CompilationUnit, javaFileContent);
-	
-	//visualize(unit);
 	
 	unit = top-down visit(unit) {
 		case (Expression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
