@@ -10,42 +10,27 @@ import String;
 // TODO: BigInteger, BigDecimal, Byte, Character, Short
 private set[str] classesToCheck = {"String", "Long", "Float", "Double", "Integer", "Boolean"};
 
-private data RefactorData = refactorData(str classType, StatementExpression exp, str arg); 
-
 public void refactorStringPrimitiveConstructor(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
 	unit = parse(#CompilationUnit, javaFileContent);
 	
 	//visualize(unit);
 	
-	list[RefactorData] violations = [];
-	
-	// FIXME: needs to find the entire assignment expression
-	// field? local variable?
-	// RefactorData.exp probably won't be an AssignmentExpression
-	// AssignmentExpression works fine for 'new String()';
-	visit(unit) {
-		case (ClassInstanceCreationExpression) `<UnqualifiedClassInstanceCreationExpression instantiationExp>`: {
-			visit(instantiationExp) {
-				case (UnqualifiedClassInstanceCreationExpression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
-					str classType = "<typeInstantiated>";
-					str args = "<arguments>";
-					if (isViolation(classType, args)) {
-						StatementExpression exp = parse(#StatementExpression, "<instantiationExp>");
-						violations += refactorData(classType, exp, args);
-					}
-				}
+	unit = top-down visit(unit) {
+		case (Expression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
+			classType = "<typeInstantiated>";
+			args = "<arguments>";
+			if (isViolation(classType, args)) {
+				refactored = refactorViolation(classType, args);
+				insert (Expression) `<Expression refactored>`;
 			}
 		}
 	}
 	
-	refactorViolations(unit, violations);
-	
-	
+	writeFile(fileLoc, unit);
 }
 
 private bool isViolation(str typeInstantiated, str args) {
-	println(args);
 	if (typeInstantiated in classesToCheck) {
 		if (typeInstantiated == "String") {
 			return isEmpty(args) || isOnlyOneArgument(args); 
@@ -58,6 +43,8 @@ private bool isViolation(str typeInstantiated, str args) {
 	return false;
 }
 
+
+// FIXME Fails HARD on strings, as string with "," would return false
 private bool isOnlyOneArgument(str args) {
 	if(!isEmpty(args)) {
 		return !contains(args, ",");
@@ -65,31 +52,20 @@ private bool isOnlyOneArgument(str args) {
 	return false;
 }
 
-private CompilationUnit refactorViolations(CompilationUnit unit, list[RefactorData] violations) {
-	violationsExps = { exp | StatementExpression exp <- [ r.exp | RefactorData r <- violations ]};
-	println(["<e>" | e <- violationsExps]);
-}
-
-private StatementExpression refactorViolation(RefactorData violation) {
-	if(violation.classType == "String") {
-		return refactorStringViolation(violation);
+private Expression refactorViolation(str classType, str arg) {
+	if(classType == "String") {
+		return refactorStringViolation(arg);
 	} else {
-		// TODO
-		return violation.exp;
+		return refactorNonStringViolation(classType, arg);
 	}
 }
 
-private StatementExpression refactorStringViolation(RefactorData violation) {
-	str arg = violation.arg;
-	if(isEmpty(arg)) {
+private Expression refactorStringViolation(str arg) {
+	if (isEmpty(arg))
 		arg = "\"\"";
-	}
-	leftSide = retrieveAssignmentLeftHandSide("<violation.exp>");
-	refactoredInstatiation = "<leftSide> <arg>";
-	return parse(#StatementExpression, refactoredInstatiaton);
+	return parse(#Expression, "<arg>");
 }
 
-private str retrieveAssignmentLeftHandSide(str exp) {
-	indexAfterAssignment = findFirst("=");
-	return  substring("<violation.exp>", 0, indexAfterAssignment + 1);
+private Expression refactorNonStringViolation(str classType, str arg) {
+	return parse(#Expression, "<classType>.valueOf(<arg>)");
 }
