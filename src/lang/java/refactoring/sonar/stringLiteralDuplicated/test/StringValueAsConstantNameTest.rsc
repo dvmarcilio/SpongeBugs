@@ -43,5 +43,5 @@ public test bool capitalizedStringShouldBeTheSame() {
 }
 
 public test bool shouldNotBreakNumberAndReplaceDotWithSpace() {
-	return stringValueAsConstantName("log4testng.rootLogger") == "LOG_4_TESTNG_ROOTLOGGER";
+	return stringValueAsConstantName("log4testng.rootLogger") == "LOG4_TESTNG_ROOTLOGGER";
 }
