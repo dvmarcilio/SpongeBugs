@@ -18,11 +18,15 @@ public test bool shouldTrimString2() {
 	return stringValueToConstantName("Method ") == "METHOD";
 }
 
+public test bool shouldTrimMultipleSpacesInBetween() {
+	return stringValueToConstantName("   Spaces      in     Between    ") == "SPACES_IN_BETWEEN";
+}
+
 public test bool shouldAddUnderScoreInInnerSpaces() {
 	return stringValueToConstantName("Cannot set property ") == "CANNOT_SET_PROPERTY";
 }
 
-public test bool shouldIgnoreSemiCollonsAtTheEnd() {
+public test bool shouldIgnoreColonAtTheEnd() {
 	return stringValueToConstantName("Arrays not equal: ") == "ARRAYS_NOT_EQUAL";
 }
 
@@ -42,6 +46,6 @@ public test bool capitalizedStringShouldBeTheSame() {
 	return stringValueToConstantName("DEBUG") == "DEBUG";
 }
 
-public test bool shouldNotBreakNumberAndReplaceDotWithSpace() {
-	return stringValueToConstantName("log4testng.rootLogger") == "LOG4_TESTNG_ROOTLOGGER";
+public test bool shouldNotBreakNumberAndIgnoreDot() {
+	return stringValueToConstantName("log4testng.rootLogger") == "LOG4TESTNGROOTLOGGER";
 }
