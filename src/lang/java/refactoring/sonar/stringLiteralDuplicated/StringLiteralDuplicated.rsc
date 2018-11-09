@@ -31,7 +31,7 @@ public void stringLiteral(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
 	unit = parse(#CompilationUnit, javaFileContent);
 	populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum(unit);
-	refactorDuplicatedOccurrencesToUseConstant();
+	refactorDuplicatedOccurrencesToUseConstant(unit);
 }
 
 private void populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum(unit) {
@@ -85,20 +85,47 @@ private void populateMapOfStmtsToBeRefactored() {
 		 set[StatementWithoutTrailingSubstatement] stmts <- range(stmtsByStringLiterals) };
 }
 
-private void refactorDuplicatedOccurrencesToUseConstant() {
+private void refactorDuplicatedOccurrencesToUseConstant(CompilationUnit unit) {
 	if (!isEmpty(countByStringLiterals)) {
 		set[str] strLiterals = domain(countByStringLiterals);
-		createConstantsForEachStrLiteral(strLiterals);
-		populateOriginalAndRefactoredStmts();
+		generateConstantNamesForEachStrLiteral(unit, strLiterals);
+		populateOriginalAndRefactoredStmts(strLiterals);
 		refactorOriginalToRefactoredStmts();
 	}
 }
 
-private void createConstantsForEachStrLiteral(set[str] strLiterals) {
-	// TODO create constants
+// FIXME Right now we can't verify a Constant name that is inherited
+// will fail on rare situations when the name of the constant is already defined (by inheritance) in this case
+private void generateConstantNamesForEachStrLiteral(CompilationUnit unit, set[str] strLiterals) {
+	set[str] alreadyDefinedConstantNames = retrieveThisClassConstantNames(unit);
+	for (strLiteral <- strLiterals) {
+		constantNameForThisStrLiteral = stringValueToConstantName(strLiteral);
+		count = 1;
+		while (constantNameForThisStrLiteral in alreadyDefinedConstantNames) {
+			count += 1;
+			constantNameForThisStrLiteral += "_<count>";
+		}
+		constantByStrLiteral[strLiteral] = constantNameForThisStrLiteral;
+	}
 }
 
-private void populateOriginalAndRefactoredStmts() {
+private set[str] retrieveThisClassConstantNames(CompilationUnit unit) {
+	set[str] constantNames = {};
+	visit(unit) {
+		case (FieldDeclaration) `<FieldModifier* varMod> <UnnanType _> <VariableDeclaratorList vdl>;`: {
+			if (contains("<varMod>", "static") && contains("<varMod>", "final")) {
+				visit(vdl) {
+					case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
+						constantNames += "<varId>";
+					}
+				}
+			}
+		}
+	}
+	return constantNames;
+}
+
+private void populateOriginalAndRefactoredStmts(strLiterals) {
 	// for each stmt(n), try to replace all string literals(m)
 	// O(n * m) - disregarding cost of replaceAll() and etc
 	for(stmtToBeRefactored <- stmtsToBeRefactored) {
