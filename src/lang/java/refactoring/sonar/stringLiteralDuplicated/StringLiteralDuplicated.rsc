@@ -9,9 +9,6 @@ import Set;
 
 import lang::java::refactoring::sonar::stringLiteralDuplicated::StringValueToConstantName;
 
-// XXX when defining the constant, need to check already defined constants.
-// can´t give the same name
-
 private int SONAR_MINIMUM_DUPLICATED_COUNT = 3;
 
 // Sonar considers minimum length of 5 + 2 (quotes)
@@ -26,6 +23,8 @@ private set[StatementWithoutTrailingSubstatement] stmtsToBeRefactored = {};
 private map[str, str] constantByStrLiteral = ();
 
 private map[StatementWithoutTrailingSubstatement, StatementWithoutTrailingSubstatement] refactoredByOriginalStmts = ();
+
+private list[FieldDeclaration] constants = [];
 
 public void stringLiteral(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
@@ -90,7 +89,7 @@ private void refactorDuplicatedOccurrencesToUseConstant(CompilationUnit unit) {
 		set[str] strLiterals = domain(countByStringLiterals);
 		generateConstantNamesForEachStrLiteral(unit, strLiterals);
 		populateOriginalAndRefactoredStmts(strLiterals);
-		refactorOriginalToRefactoredStmts();
+		refactorOriginalToRefactoredStmts(unit);
 	}
 }
 
@@ -111,12 +110,18 @@ private void generateConstantNamesForEachStrLiteral(CompilationUnit unit, set[st
 
 private set[str] retrieveThisClassConstantNames(CompilationUnit unit) {
 	set[str] constantNames = {};
-	visit(unit) {
-		case (FieldDeclaration) `<FieldModifier* varMod> <UnnanType _> <VariableDeclaratorList vdl>;`: {
-			if (contains("<varMod>", "static") && contains("<varMod>", "final")) {
-				visit(vdl) {
-					case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
-						constantNames += "<varId>";
+	top-down visit(unit) {
+		case (FieldDeclaration) `<FieldDeclaration flDecl>`: {
+			top-down-break visit (flDecl) {
+				case (FieldDeclaration) `<FieldModifier* varMod> <UnannType _> <VariableDeclaratorList vdl>;`: {
+					if (contains("<varMod>", "static") && contains("<varMod>", "final")) {
+						// saving FieldDeclarations for further adding new constants
+						constants += flDecl;
+						visit(vdl) {
+							case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
+								constantNames += "<varId>";
+							}
+						}
 					}
 				}
 			}
@@ -138,6 +143,10 @@ private void populateOriginalAndRefactoredStmts(strLiterals) {
 	}	
 }
 
-private void refactorOriginalToRefactoredStmts() {
+private void refactorOriginalToRefactoredStmts(CompilationUnit unit) {
+	addNeededConstants(unit);
+}
 
+private void addNeededConstants(CompilationUnit unit) {
+	
 }
