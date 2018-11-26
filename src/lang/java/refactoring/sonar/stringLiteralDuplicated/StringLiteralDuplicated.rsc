@@ -24,7 +24,7 @@ private map[str, str] constantByStrLiteral = ();
 
 private map[StatementWithoutTrailingSubstatement, StatementWithoutTrailingSubstatement] refactoredByOriginalStmts = ();
 
-private list[FieldDeclaration] constants = [];
+private list[FieldDeclaration] alreadyDefinedConstants = [];
 
 public void stringLiteral(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
@@ -116,7 +116,7 @@ private set[str] retrieveThisClassConstantNames(CompilationUnit unit) {
 				case (FieldDeclaration) `<FieldModifier* varMod> <UnannType _> <VariableDeclaratorList vdl>;`: {
 					if (contains("<varMod>", "static") && contains("<varMod>", "final")) {
 						// saving FieldDeclarations for further adding new constants
-						constants += flDecl;
+						alreadyDefinedConstants += flDecl;
 						visit(vdl) {
 							case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
 								constantNames += "<varId>";
@@ -136,8 +136,8 @@ private void populateOriginalAndRefactoredStmts(strLiterals) {
 	for(stmtToBeRefactored <- stmtsToBeRefactored) {
 		for(strLiteral <- strLiterals) {
 			str constantName = constantByStrLiteral["<strLiteral>"];
-			str stmtReplacedStringLiteralWithtConstant = replaceAll("<stmtToBeRefactored>", strLiteral, constantName);
-			stmtRefactored = parse(#StatementWithoutTrailingSubstatement, stmtReplacedStringLiteralWithtConstant);
+			str stmtReplacedStringLiteralWithConstant = replaceAll("<stmtToBeRefactored>", strLiteral, constantName);
+			stmtRefactored = parse(#StatementWithoutTrailingSubstatement, stmtReplacedStringLiteralWithConstant);
 			refactoredByOriginalStmts[stmtToBeRefactored] = stmtRefactored;
 		}
 	}	
@@ -147,6 +147,49 @@ private void refactorOriginalToRefactoredStmts(CompilationUnit unit) {
 	addNeededConstants(unit);
 }
 
+// what if CompilationUnit has multiple Class Bodies?
 private void addNeededConstants(CompilationUnit unit) {
-	
+	unit = top-down-break visit(unit) {
+		case (ClassBody) `<ClassBody classBody>`: {
+			str classBodyStr = "<classBody>";
+			ClassBody classBodyWithConstants = parse(#ClassBody, addConstantsToClassBody(classBodyStr));
+			insert (ClassBody) `<ClassBody classBodyWithConstants>`;
+		}
+	}
+	println(unit);
+}
+
+private str addConstantsToClassBody(str classBodyStr) {
+	if (isEmpty(alreadyDefinedConstants)) {
+		return addNeededConstantsAtTheBegginingOfClassBody(classBodyStr);
+	}
+	return addNeededConstantsAfterLastAlreadyDefinedConstant(classBodyStr);
+}
+
+private str addNeededConstantsAtTheBegginingOfClassBody(str classBodyStr) {
+	return replaceFirst(classBodyStr, "{", "{\n" + generateConstantsToBeAddedAsStr());
+}
+
+// unformatted (no indentation)
+private str generateConstantsToBeAddedAsStr() {
+	list[FieldDeclaration] constantsToBeAdded = createNeededConstants();
+	constantsToBeAddedStrs = [ unparse(constantToBeAdded) | FieldDeclaration constantToBeAdded <- constantsToBeAdded ];
+	return "\n" + intercalate("\n", constantsToBeAddedStrs);
+}
+
+private list[FieldDeclaration] createNeededConstants() {
+	set[str] constantValuesToBeCreated = domain(constantByStrLiteral);
+	list[FieldDeclaration] constantsToBeAdded = [];
+	for (constantValueToBeAdded <- constantValuesToBeCreated) {
+		// making sure we are creating syntatically correct constants
+		constantsToBeAdded += parse(#FieldDeclaration, 
+			"private static final String <constantByStrLiteral[constantValueToBeAdded]> = <constantValueToBeAdded>;");
+	}
+	return constantsToBeAdded;
+}
+
+private str addNeededConstantsAfterLastAlreadyDefinedConstant(str classBodyStr) {
+	FieldDeclaration lastConstantAlreadyDefined = last(alreadyDefinedConstants);
+	str lastConstantAlreadyDefinedStr = "<lastConstantAlreadyDefined>";
+	return replaceFirst(classBodyStr, lastConstantAlreadyDefinedStr, lastConstantAlreadyDefinedStr + "\n" + generateConstantsToBeAddedAsStr());
 }
