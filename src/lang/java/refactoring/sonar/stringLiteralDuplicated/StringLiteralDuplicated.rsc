@@ -135,10 +135,18 @@ private void populateOriginalAndRefactoredStmts(strLiterals) {
 	// O(n * m) - disregarding cost of replaceAll() and etc
 	for(stmtToBeRefactored <- stmtsToBeRefactored) {
 		for(strLiteral <- strLiterals) {
-			str constantName = constantByStrLiteral["<strLiteral>"];
-			str stmtReplacedStringLiteralWithConstant = replaceAll("<stmtToBeRefactored>", strLiteral, constantName);
-			stmtRefactored = parse(#StatementWithoutTrailingSubstatement, stmtReplacedStringLiteralWithConstant);
-			refactoredByOriginalStmts[stmtToBeRefactored] = stmtRefactored;
+			str stmtToBeRefactoredStr = "<stmtToBeRefactored>";
+			
+			if (stmtToBeRefactored in domain(refactoredByOriginalStmts)) {
+				stmtToBeRefactoredStr = unparse(refactoredByOriginalStmts[stmtToBeRefactored]);
+			}
+			
+			if (findFirst(stmtToBeRefactoredStr, strLiteral) != -1) {
+				str constantName = constantByStrLiteral["<strLiteral>"];
+				str stmtReplacedStringLiteralWithConstant = replaceAll(stmtToBeRefactoredStr, strLiteral, constantName);
+				stmtRefactored = parse(#StatementWithoutTrailingSubstatement, stmtReplacedStringLiteralWithConstant);
+				refactoredByOriginalStmts[stmtToBeRefactored] = stmtRefactored;		
+			}
 		}
 	}	
 }
