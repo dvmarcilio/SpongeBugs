@@ -30,7 +30,7 @@ public void stringLiteral(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
 	unit = parse(#CompilationUnit, javaFileContent);
 	populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum(unit);
-	refactorDuplicatedOccurrencesToUseConstant(unit);
+	refactorDuplicatedOccurrencesToUseConstant(fileLoc, unit);
 }
 
 private void populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum(unit) {
@@ -84,12 +84,12 @@ private void populateMapOfStmtsToBeRefactored() {
 		 set[StatementWithoutTrailingSubstatement] stmts <- range(stmtsByStringLiterals) };
 }
 
-private void refactorDuplicatedOccurrencesToUseConstant(CompilationUnit unit) {
+private void refactorDuplicatedOccurrencesToUseConstant(loc fileLoc, CompilationUnit unit) {
 	if (!isEmpty(countByStringLiterals)) {
 		set[str] strLiterals = domain(countByStringLiterals);
 		generateConstantNamesForEachStrLiteral(unit, strLiterals);
 		populateOriginalAndRefactoredStmts(strLiterals);
-		refactorOriginalToRefactoredStmts(unit);
+		refactorOriginalToRefactoredStmts(fileLoc, unit);
 	}
 }
 
@@ -143,12 +143,14 @@ private void populateOriginalAndRefactoredStmts(strLiterals) {
 	}	
 }
 
-private void refactorOriginalToRefactoredStmts(CompilationUnit unit) {
-	addNeededConstants(unit);
+private void refactorOriginalToRefactoredStmts(loc fileLoc, CompilationUnit unit) {
+	unit = addNeededConstants(unit);
+	unit = changeStatementsToUseConstants(unit);
+	writeFile(fileLoc, unit);
 }
 
 // what if CompilationUnit has multiple Class Bodies?
-private void addNeededConstants(CompilationUnit unit) {
+private CompilationUnit addNeededConstants(CompilationUnit unit) {
 	unit = top-down-break visit(unit) {
 		case (ClassBody) `<ClassBody classBody>`: {
 			str classBodyStr = "<classBody>";
@@ -156,7 +158,7 @@ private void addNeededConstants(CompilationUnit unit) {
 			insert (ClassBody) `<ClassBody classBodyWithConstants>`;
 		}
 	}
-	println(unit);
+	return unit;
 }
 
 private str addConstantsToClassBody(str classBodyStr) {
@@ -192,4 +194,16 @@ private str addNeededConstantsAfterLastAlreadyDefinedConstant(str classBodyStr) 
 	FieldDeclaration lastConstantAlreadyDefined = last(alreadyDefinedConstants);
 	str lastConstantAlreadyDefinedStr = "<lastConstantAlreadyDefined>";
 	return replaceFirst(classBodyStr, lastConstantAlreadyDefinedStr, lastConstantAlreadyDefinedStr + "\n" + generateConstantsToBeAddedAsStr());
+}
+
+private CompilationUnit changeStatementsToUseConstants(CompilationUnit unit) {
+	unit = top-down visit(unit) {
+		case (StatementWithoutTrailingSubstatement) `<StatementWithoutTrailingSubstatement stmt>`: {
+			if (stmt in refactoredByOriginalStmts) {
+				refactored = refactoredByOriginalStmts[stmt];
+				insert (StatementWithoutTrailingSubstatement) `<StatementWithoutTrailingSubstatement refactored>`;
+			}
+		}
+	}
+	return unit;
 }
