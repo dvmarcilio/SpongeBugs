@@ -26,21 +26,56 @@ private map[StatementWithoutTrailingSubstatement, StatementWithoutTrailingSubsta
 
 private list[FieldDeclaration] alreadyDefinedConstants = [];
 
-public void stringLiteral(loc fileLoc) {
-	javaFileContent = readFile(fileLoc);
-	unit = parse(#CompilationUnit, javaFileContent);
-	populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum(unit);
-	refactorDuplicatedOccurrencesToUseConstant(fileLoc, unit);
+public void transformStringLiteralDuplicated(loc fileLoc) {
+	unit = retrieveCompilationUnitFromLoc(fileLoc);
+	refactorForEachClassBody(fileLoc, unit);
 }
 
-private void populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum(unit) {
-	populateMapsWithStringsOfInterestCount(unit);
+private CompilationUnit retrieveCompilationUnitFromLoc(loc fileLoc) {
+	javaFileContent = readFile(fileLoc);
+	return parse(#CompilationUnit, javaFileContent);
+}
+
+private void refactorForEachClassBody(loc fileLoc, CompilationUnit unit) { 
+	for(classBody <- retrieveClassBodies(unit)) {
+		doRefactorForEachClassBody(fileLoc, unit, classBody);
+		unit = retrieveCompilationUnitFromLoc(fileLoc);
+	}	
+}
+
+private list[ClassBody] retrieveClassBodies(CompilationUnit unit) {
+	list[ClassBody] classBodies = [];
+	top-down-break visit(unit) {
+		case (ClassBody) `<ClassBody classBody>`: { 
+			classBodies += classBody;
+		}
+	}
+	return classBodies;
+}
+
+private void doRefactorForEachClassBody(loc fileLoc, CompilationUnit unit, ClassBody classBody) {
+	resetFieldsToInitialState();
+	populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum(classBody);
+	refactorDuplicatedOccurrencesToUseConstant(fileLoc, unit, classBody);
+}
+
+private void resetFieldsToInitialState() {
+	countByStringLiterals = ();
+	stmtsByStringLiterals = ();
+	stmtsToBeRefactored = {};
+	constantByStrLiteral = ();
+	refactoredByOriginalStmts = ();
+	alreadyDefinedConstants = [];
+}
+
+private void populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum(ClassBody classBody) {
+	populateMapsWithStringsOfInterestCount(classBody);
 	filterMapsWithOnlyOccurrencesEqualOrGreaterThanMinimum();
 	populateMapOfStmtsToBeRefactored();
 }
 
-private void populateMapsWithStringsOfInterestCount(CompilationUnit unit) {
-	top-down-break visit(unit) {
+private void populateMapsWithStringsOfInterestCount(ClassBody classBody) {
+	top-down-break visit(classBody) {
 		case (StatementWithoutTrailingSubstatement) `<StatementWithoutTrailingSubstatement stmt>`: {
 			top-down-break visit(stmt) {
 				case (StringLiteral) `<StringLiteral strLiteral>`: {
@@ -72,9 +107,10 @@ private void addStmtToStringLiteralsStmts(str strLiteral, StatementWithoutTraili
 }
 
 private void filterMapsWithOnlyOccurrencesEqualOrGreaterThanMinimum() {
-	countByStringLiterals = (stringLiteral : countByStringLiterals[stringLiteral]
-			| stringLiteral <- countByStringLiterals,
+	countByStringLiterals = (stringLiteral : countByStringLiterals[stringLiteral] | 
+			stringLiteral <- countByStringLiterals,
 			countByStringLiterals[stringLiteral] >= SONAR_MINIMUM_DUPLICATED_COUNT);
+			
 	stringLiteralsToRemove = stmtsByStringLiterals - countByStringLiterals;
 	stmtsByStringLiterals = stmtsByStringLiterals - stringLiteralsToRemove;
 }
@@ -84,19 +120,19 @@ private void populateMapOfStmtsToBeRefactored() {
 		 set[StatementWithoutTrailingSubstatement] stmts <- range(stmtsByStringLiterals) };
 }
 
-private void refactorDuplicatedOccurrencesToUseConstant(loc fileLoc, CompilationUnit unit) {
+private void refactorDuplicatedOccurrencesToUseConstant(loc fileLoc, CompilationUnit unit, ClassBody classBody) {
 	if (!isEmpty(countByStringLiterals)) {
 		set[str] strLiterals = domain(countByStringLiterals);
-		generateConstantNamesForEachStrLiteral(unit, strLiterals);
+		generateConstantNamesForEachStrLiteral(classBody, strLiterals);
 		populateOriginalAndRefactoredStmts(strLiterals);
-		refactorOriginalToRefactoredStmts(fileLoc, unit);
+		refactorOriginalToRefactoredStmts(fileLoc, unit, classBody);
 	}
 }
 
 // FIXME Right now we can't verify a Constant name that is inherited
 // will fail on rare situations when the name of the constant is already defined (by inheritance) in this case
-private void generateConstantNamesForEachStrLiteral(CompilationUnit unit, set[str] strLiterals) {
-	set[str] alreadyDefinedConstantNames = retrieveThisClassConstantNames(unit);
+private void generateConstantNamesForEachStrLiteral(ClassBody classBody, set[str] strLiterals) {
+	set[str] alreadyDefinedConstantNames = retrieveThisClassConstantNames(classBody);
 	for (strLiteral <- strLiterals) {
 		constantNameForThisStrLiteral = stringValueToConstantName(strLiteral);
 		count = 1;
@@ -108,9 +144,9 @@ private void generateConstantNamesForEachStrLiteral(CompilationUnit unit, set[st
 	}
 }
 
-private set[str] retrieveThisClassConstantNames(CompilationUnit unit) {
+private set[str] retrieveThisClassConstantNames(ClassBody classBody) {
 	set[str] constantNames = {};
-	top-down visit(unit) {
+	top-down visit(classBody) {
 		case (FieldDeclaration) `<FieldDeclaration flDecl>`: {
 			top-down-break visit (flDecl) {
 				case (FieldDeclaration) `<FieldModifier* varMod> <UnannType _> <VariableDeclaratorList vdl>;`: {
@@ -130,7 +166,7 @@ private set[str] retrieveThisClassConstantNames(CompilationUnit unit) {
 	return constantNames;
 }
 
-private void populateOriginalAndRefactoredStmts(strLiterals) {
+private void populateOriginalAndRefactoredStmts(set[str] strLiterals) {
 	// for each stmt(n), try to replace all string literals(m)
 	// O(n * m) - disregarding cost of replaceAll() and etc
 	for(stmtToBeRefactored <- stmtsToBeRefactored) {
@@ -151,31 +187,26 @@ private void populateOriginalAndRefactoredStmts(strLiterals) {
 	}	
 }
 
-private void refactorOriginalToRefactoredStmts(loc fileLoc, CompilationUnit unit) {
-	unit = addNeededConstants(unit);
-	unit = changeStatementsToUseConstants(unit);
+private void refactorOriginalToRefactoredStmts(loc fileLoc, CompilationUnit unit, ClassBody classBody) {
+	ClassBody classBodyRefactored = addNeededConstants(classBody);
+	classBodyRefactored = changeStatementsToUseConstants(classBodyRefactored);
+	
+	unit = visit(unit) {
+		case (ClassBody) `<ClassBody clb>`: {
+			if (clb == classBody) {
+				insert (ClassBody) `<ClassBody classBodyRefactored>`;
+			}
+		}
+	}
+	
 	writeFile(fileLoc, unit);
 }
 
-// what if CompilationUnit has multiple Class Bodies?
-private CompilationUnit addNeededConstants(CompilationUnit unit) {
-	unit = top-down-break visit(unit) {
-		case (ClassBody) `<ClassBody classBody>`: {
-			str classBodyStr = "<classBody>";
-			ClassBody classBodyWithConstants = parse(#ClassBody, addConstantsToClassBody(classBodyStr));
-			insert (ClassBody) `<ClassBody classBodyWithConstants>`;
-		}
-	}
-	return unit;
+private ClassBody addNeededConstants(ClassBody classBody) {
+	return parse(#ClassBody, addNeededConstantsAtTheBegginingOfClassBody("<classBody>"));
 }
 
-private str addConstantsToClassBody(str classBodyStr) {
-	if (isEmpty(alreadyDefinedConstants)) {
-		return addNeededConstantsAtTheBegginingOfClassBody(classBodyStr);
-	}
-	return addNeededConstantsAfterLastAlreadyDefinedConstant(classBodyStr);
-}
-
+// Always adding constants at the beggining of the class to make it easier
 private str addNeededConstantsAtTheBegginingOfClassBody(str classBodyStr) {
 	return replaceFirst(classBodyStr, "{", "{\n" + generateConstantsToBeAddedAsStr());
 }
@@ -198,14 +229,8 @@ private list[FieldDeclaration] createNeededConstants() {
 	return constantsToBeAdded;
 }
 
-private str addNeededConstantsAfterLastAlreadyDefinedConstant(str classBodyStr) {
-	FieldDeclaration lastConstantAlreadyDefined = last(alreadyDefinedConstants);
-	str lastConstantAlreadyDefinedStr = "<lastConstantAlreadyDefined>";
-	return replaceFirst(classBodyStr, lastConstantAlreadyDefinedStr, lastConstantAlreadyDefinedStr + "\n" + generateConstantsToBeAddedAsStr());
-}
-
-private CompilationUnit changeStatementsToUseConstants(CompilationUnit unit) {
-	unit = top-down visit(unit) {
+private ClassBody changeStatementsToUseConstants(ClassBody classBody) {
+	classBody = top-down visit(classBody) {
 		case (StatementWithoutTrailingSubstatement) `<StatementWithoutTrailingSubstatement stmt>`: {
 			if (stmt in refactoredByOriginalStmts) {
 				refactored = refactoredByOriginalStmts[stmt];
@@ -213,5 +238,5 @@ private CompilationUnit changeStatementsToUseConstants(CompilationUnit unit) {
 			}
 		}
 	}
-	return unit;
+	return classBody;
 }
