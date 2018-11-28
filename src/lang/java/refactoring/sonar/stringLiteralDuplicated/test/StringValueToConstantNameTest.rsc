@@ -1,6 +1,7 @@
 module lang::java::refactoring::sonar::stringLiteralDuplicated::\test::StringValueToConstantNameTest
 
 import lang::java::refactoring::sonar::stringLiteralDuplicated::StringValueToConstantName;
+import IO;
 
 public test bool shouldSnakeCaseCapitalizedSimpleString() {
 	return stringValueToConstantName("value") == "VALUE";
@@ -47,5 +48,17 @@ public test bool capitalizedStringShouldBeTheSame() {
 }
 
 public test bool shouldNotBreakNumberAndIgnoreDot() {
-	return stringValueToConstantName("log4testng.rootLogger") == "LOG4TESTNGROOTLOGGER";
+	return stringValueToConstantName("log4testng.rootLogger") == "LOG4TESTNG_ROOTLOGGER";
+}
+
+public test bool specialChars() {
+	return stringValueToConstantName("\</th\>\</tr\>") == "TH_TR";
+}
+
+public test bool specialChars2() {
+	return stringValueToConstantName("\</td\>\</tr\>") == "TD_TR";
+}
+
+public test bool specialChars3() {
+	return stringValueToConstantName("\</tr\>\</th") == "TR_TH";
 }

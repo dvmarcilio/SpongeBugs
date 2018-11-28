@@ -3,16 +3,16 @@ module lang::java::refactoring::sonar::stringLiteralDuplicated::StringValueToCon
 import String;
 
 public str stringValueToConstantName(str strValue) {
-	str converted = removeIgnoredChars(strValue);
+	str converted = convertIgnoredCharsToSpace(strValue);
 	converted = trimToAtMaxOneSpace(converted);
 	converted = replaceSpacesWithUnderline(converted);
 	return toUpperCase(converted);
 }
 
-private str removeIgnoredChars(str strValue) {
+private str convertIgnoredCharsToSpace(str strValue) {
 	str converted = strValue;
 	for(/<match:[^(\w|\s)]>/ := converted) {
-		converted = replaceAll(converted, match, "");
+		converted = replaceAll(converted, match, " ");
 	}
 	return converted;
 }
