@@ -132,15 +132,16 @@ private void refactorDuplicatedOccurrencesToUseConstant(loc fileLoc, Compilation
 // FIXME Right now we can't verify a Constant name that is inherited
 // will fail on rare situations when the name of the constant is already defined (by inheritance) in this case
 private void generateConstantNamesForEachStrLiteral(ClassBody classBody, set[str] strLiterals) {
-	set[str] alreadyDefinedConstantNames = retrieveThisClassConstantNames(classBody);
+	set[str] alreadyDefinedConstantsNamesAndGenerated = retrieveThisClassConstantNames(classBody);
 	for (strLiteral <- strLiterals) {
 		constantNameForThisStrLiteral = stringValueToConstantName(strLiteral);
 		count = 1;
-		while (constantNameForThisStrLiteral in alreadyDefinedConstantNames) {
+		while (constantNameForThisStrLiteral in alreadyDefinedConstantsNamesAndGenerated) {
 			count += 1;
 			constantNameForThisStrLiteral += "_<count>";
 		}
 		constantByStrLiteral[strLiteral] = constantNameForThisStrLiteral;
+		alreadyDefinedConstantsNamesAndGenerated += constantNameForThisStrLiteral;
 	}
 }
 
