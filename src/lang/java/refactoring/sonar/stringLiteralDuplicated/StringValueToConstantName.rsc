@@ -5,7 +5,8 @@ import String;
 public str stringValueToConstantName(str strValue) {
 	str converted = convertIgnoredCharsToSpace(strValue);
 	converted = trimToAtMaxOneSpace(converted);
-	converted = replaceSpacesWithUnderline(converted);
+	converted = replaceSpacesWithUnderscore(converted);
+	converted = addUnderscoreIfStartsWithNumber(converted);
 	return toUpperCase(converted);
 }
 
@@ -25,6 +26,14 @@ private str trimToAtMaxOneSpace(str strValue) {
 	return trimmed;
 }
 
-private str replaceSpacesWithUnderline(str strValue) {
+private str replaceSpacesWithUnderscore(str strValue) {
 	return replaceAll(strValue, " ", "_");
+}
+
+private str addUnderscoreIfStartsWithNumber(str strValue) {
+	str firstCharacter = stringChar(charAt(strValue, 0));
+	if (rexpMatch(firstCharacter, "\\d")) {
+		return "_" + strValue;
+	}
+	return strValue;
 }

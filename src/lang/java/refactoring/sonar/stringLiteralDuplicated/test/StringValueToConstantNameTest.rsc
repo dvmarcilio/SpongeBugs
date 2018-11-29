@@ -62,3 +62,31 @@ public test bool specialChars2() {
 public test bool specialChars3() {
 	return stringValueToConstantName("\</tr\>\</th") == "TR_TH";
 }
+
+public test bool shouldAddUnderscoreToNumbers() {
+	return stringValueToConstantName("12345") == "_12345";
+}
+
+public test bool shouldAddUnderscoreToStringStartingWithNumbers() {
+	return stringValueToConstantName("1 - First") == "_1_FIRST";
+}
+
+public test bool shouldNotStartWithSpecialCharacter1() {
+	return stringValueToConstantName("*ATTENTION*") == "ATTENTION";
+}
+
+public test bool shouldNotStartWithSpecialCharacter2() {
+	return stringValueToConstantName("-NOTE-") == "NOTE";
+}
+
+public test bool shouldNotStartWithSpecialCharacter3() {
+	return stringValueToConstantName("!OBS!") == "OBS";
+}
+
+public test bool removeInitialUnderscore() {
+	return stringValueToConstantName("_START") == "_START";
+}
+
+public test bool removeInitialCurrencyChar() {
+	return stringValueToConstantName("$VAR") == "VAR";
+}
