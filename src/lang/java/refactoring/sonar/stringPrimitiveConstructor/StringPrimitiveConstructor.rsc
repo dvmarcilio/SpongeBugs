@@ -7,7 +7,8 @@ import lang::java::util::CompilationUnitUtils;
 import String;
 
 // TODO: BigInteger, BigDecimal, Byte, Character, Short
-private set[str] classesToCheck = {"String", "Long", "Float", "Double", "Integer", "Boolean"};
+//private set[str] classesToCheck = {"String", "Long", "Float", "Double", "Integer", "Boolean", "BigDecimal"};
+private set[str] classesToCheck = {"BigDecimal"};
 
 public void refactorStringPrimitiveConstructor(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
@@ -34,12 +35,12 @@ private bool isViolation(str typeInstantiated, str args) {
 		} else {
 			// maybe redundant since wrapper classes only have constructors with one argument
 			// code wouldn´t compile at all
-			return isOnlyOneArgument(args);
+			// BigDecimal has more than one argument
+			return isOnlyOneArgument(args) && isNotCast(args);
 		}
 	}
 	return false;
 }
-
 
 // FIXME Fails HARD on strings, as string with "," would return false
 private bool isOnlyOneArgument(str args) {
@@ -47,6 +48,14 @@ private bool isOnlyOneArgument(str args) {
 		return !contains(args, ",");
 	}
 	return false;
+}
+
+private bool isNotCast(str args) {
+	try {
+		parse(#CastExpression, args);
+		return false;
+	} catch:
+		return true;
 }
 
 private Expression refactorViolation(str classType, str arg) {
