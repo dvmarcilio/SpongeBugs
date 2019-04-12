@@ -26,6 +26,17 @@ private map[StatementWithoutTrailingSubstatement, StatementWithoutTrailingSubsta
 
 private list[FieldDeclaration] alreadyDefinedConstants = [];
 
+public void stringLiteralDuplicated(list[loc] locs) {
+	for(fileLoc <- locs) {
+		try {
+			transformStringLiteralDuplicated(fileLoc);
+		} catch: {
+			println("Exception file: " + fileLoc.file);
+			continue;
+		}	
+	}
+}
+
 public void transformStringLiteralDuplicated(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	refactorForEachClassBody(fileLoc, unit);
@@ -181,11 +192,22 @@ private void populateOriginalAndRefactoredStmts(set[str] strLiterals) {
 			if (findFirst(stmtToBeRefactoredStr, strLiteral) != -1) {
 				str constantName = constantByStrLiteral["<strLiteral>"];
 				str stmtReplacedStringLiteralWithConstant = replaceAll(stmtToBeRefactoredStr, strLiteral, constantName);
+				//str stmtWithConstantAndOneLessNonNls = removeNonNlsCommentsForEclipse(stmtReplacedStringLiteralWithConstant);
 				stmtRefactored = parse(#StatementWithoutTrailingSubstatement, stmtReplacedStringLiteralWithConstant);
 				refactoredByOriginalStmts[stmtToBeRefactored] = stmtRefactored;		
 			}
 		}
 	}	
+}
+
+private str removeNonNlsCommentsForEclipse(str stmtReplaced) {
+	indexLastNonNls = findLast(stmtReplaced, "//$NON-NLS-");
+	if (indexLastNonNls != -1) {
+		println("found NON-NLS");
+		println(substring(stmtReplaced, 0, indexLastNonNls - 1));
+		return substring(stmtReplaced, 0, indexLastNonNls - 1);
+	}
+	return stmtReplaced;
 }
 
 private void refactorOriginalToRefactoredStmts(loc fileLoc, CompilationUnit unit, ClassBody classBody) {
@@ -216,6 +238,7 @@ private str addNeededConstantsAtTheBegginingOfClassBody(str classBodyStr) {
 private str generateConstantsToBeAddedAsStr() {
 	list[FieldDeclaration] constantsToBeAdded = createNeededConstants();
 	constantsToBeAddedStrs = [ unparse(constantToBeAdded) | FieldDeclaration constantToBeAdded <- constantsToBeAdded ];
+	constantsToBeAddedStrs = [ const + " //$NON-NLS-1$" | str const <- constantsToBeAddedStrs ];
 	return "\n" + intercalate("\n", constantsToBeAddedStrs);
 }
 
