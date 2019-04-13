@@ -39,9 +39,9 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 			possibleInstantiation = visit(possibleInstantiation) {
 				case (Primary) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
 					classType = "<typeInstantiated>";
-					args = "<arguments>";
-					if (isViolation(classType, args)) {
-						refactored = refactorViolationAsPrimary(classType, args);
+					instantiationArgs = "<arguments>";
+					if (isViolation(classType, instantiationArgs)) {
+						refactored = refactorViolationAsPrimary(classType, instantiationArgs);
 						modified = true;
 						insert (Primary) `<Primary refactored>`;
 					}
@@ -58,7 +58,9 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 private bool isViolation(str typeInstantiated, str args) {
 	if (typeInstantiated in classesToCheck) {
 		if (typeInstantiated == "String") {
-			return isEmpty(args) || isOnlyOneArgument(args); 
+			return isEmpty(args) || isOnlyOneArgument(args);
+		} else if(typeInstantiated == "BigDecimal") {
+			return isOnlyOneArgument(args) && isNotCast(args) && findFirst(args, "\"") == -1 && findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1;
 		} else {
 			// maybe redundant since wrapper classes only have constructors with one argument
 			// code wouldn´t compile at all
