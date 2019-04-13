@@ -23,6 +23,19 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 				insert (Expression) `<Expression refactored>`;
 			}
 		}
+		case (MethodInvocation) `<Primary possibleInstantiation> . <TypeArguments? ts> <Identifier id> (<ArgumentList? args>)`: {
+			possibleInstantiation = visit(possibleInstantiation) {
+				case (Primary) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
+					classType = "<typeInstantiated>";
+					args = "<arguments>";
+					if (isViolation(classType, args)) {
+						refactored = refactorViolationAsPrimary(classType, args);
+						insert (Primary) `<Primary refactored>`;
+					}
+				}
+			}
+			insert (MethodInvocation) `<Primary possibleInstantiation>.<TypeArguments? ts><Identifier id>(<ArgumentList? args>)`;
+		}
 	}
 	
 	writeFile(fileLoc, unit);
@@ -74,4 +87,9 @@ private Expression refactorStringViolation(str arg) {
 
 private Expression refactorNonStringViolation(str classType, str arg) {
 	return parse(#Expression, "<classType>.valueOf(<arg>)");
+}
+
+private Primary refactorViolationAsPrimary(str classType, str arg) {
+	refactoredExp = refactorViolation(classType, arg);
+	return parse(#Primary, "<refactoredExp>");
 }
