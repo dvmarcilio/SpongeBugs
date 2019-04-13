@@ -10,6 +10,17 @@ import String;
 //private set[str] classesToCheck = {"String", "Long", "Float", "Double", "Integer", "Boolean", "BigDecimal"};
 private set[str] classesToCheck = {"BigDecimal"};
 
+public void stringPrimitiveConstructor(list[loc] locs) {
+	for(fileLoc <- locs) {
+		try {
+			refactorStringPrimitiveConstructor(fileLoc);
+		} catch: {
+			println("Exception file: " + fileLoc.file);
+			continue;
+		}	
+	}
+}
+
 public void refactorStringPrimitiveConstructor(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
 	unit = parse(#CompilationUnit, javaFileContent);
@@ -24,17 +35,20 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 			}
 		}
 		case (MethodInvocation) `<Primary possibleInstantiation> . <TypeArguments? ts> <Identifier id> (<ArgumentList? args>)`: {
+			modified = false;
 			possibleInstantiation = visit(possibleInstantiation) {
 				case (Primary) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
 					classType = "<typeInstantiated>";
 					args = "<arguments>";
 					if (isViolation(classType, args)) {
 						refactored = refactorViolationAsPrimary(classType, args);
+						modified = true;
 						insert (Primary) `<Primary refactored>`;
 					}
 				}
 			}
-			insert (MethodInvocation) `<Primary possibleInstantiation>.<TypeArguments? ts><Identifier id>(<ArgumentList? args>)`;
+			if (modified)
+				insert (MethodInvocation) `<Primary possibleInstantiation>.<TypeArguments? ts><Identifier id>(<ArgumentList? args>)`;
 		}
 	}
 	
