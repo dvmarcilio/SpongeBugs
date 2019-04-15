@@ -20,13 +20,13 @@ Onward! 2009.)
 ### Goal 
 
 Implement a set of refactorings (using [Rascal-MPL](http://rascal-mpl.org)) 
-to evolve a legacy Java systems towards the usage of more recent 
+to evolve a legacy Java system towards the usage of more recent 
 constructs of the language. 
 
 ### Current transformations 
 
    * Convert Anonymous Inner Classes into Lambda Expressions
-   * Convert explicit typing of generic r-alues into Diamond Operator 
+   * Convert explicit typing of generic r-values into Diamond Operator 
    * Conver if-then-else-if on the value of strings to Switch String
    * Convert similar catch blocks into MultiCatch 
 
@@ -44,6 +44,5 @@ The input file is in the CSV format, with at least the following columns:
    * project name
    * project revision (to help on reproducibility) 
    * type of tranformation (DI for diamond operator, AC for anonymous to lambda, MC for multi-catch)
-   * percentage (just a number, with the percentage of transformations with respect to the oportunities)   * absolute path to the project 
-
-
+   * percentage (just a number, with the percentage of transformations with respect to the opportunities)   
+   * absolute path to the project
