@@ -7,8 +7,8 @@ import lang::java::util::CompilationUnitUtils;
 import String;
 
 // TODO: BigInteger, BigDecimal, Byte, Character, Short
-//private set[str] classesToCheck = {"String", "Long", "Float", "Double", "Integer", "Boolean", "BigDecimal"};
-private set[str] classesToCheck = {"BigDecimal"};
+private set[str] classesToCheck = {"String", "Long", "Float", "Double", "Integer", "Boolean"};
+//private set[str] classesToCheck = {"BigDecimal"};
 
 public void stringPrimitiveConstructor(list[loc] locs) {
 	for(fileLoc <- locs) {
@@ -58,7 +58,7 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 private bool isViolation(str typeInstantiated, str args) {
 	if (typeInstantiated in classesToCheck) {
 		if (typeInstantiated == "String") {
-			return isEmpty(args) || isOnlyOneArgument(args);
+			return (isEmpty(args) || isOnlyOneArgument(args)) && findFirst(args, "\"") != -1;
 		} else if(typeInstantiated == "BigDecimal") {
 			return isOnlyOneArgument(args) && isNotCast(args) && findFirst(args, "\"") == -1 && findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1;
 		} else {
