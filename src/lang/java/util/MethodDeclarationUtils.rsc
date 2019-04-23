@@ -62,5 +62,14 @@ public list[Variable] retrieveMethodParameters(MethodDeclaration mdl) {
 			parameters += variable("<varType>", "<varId>");
 	}
 	return parameters;
-		
+}
+
+public str retrieveMethodReturnTypeAsStr(MethodDeclaration mdl) {
+	return unparse(retrieveResultFromMethod(mdl));
+}
+
+public Result retrieveResultFromMethod(MethodDeclaration mdl) {
+	visit(mdl) {
+		case (Result) `<Result result>`: return result;
+	}
 }
