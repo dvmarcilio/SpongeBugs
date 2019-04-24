@@ -53,12 +53,10 @@ syntax IntegralType = "byte"
 syntax FloatingPointType = "float" | "double" ;
 
 syntax ReferenceType = ClassOrInterfaceType 
-          //           | TypeVariable 
                      | arrayType: ArrayType
                      ;
                      
 syntax ClassOrInterfaceType = ClassType 
-                //     | InterfaceType
                      ;
                                           
 syntax ClassType = Annotation* Identifier TypeArguments? 
@@ -70,7 +68,6 @@ syntax TypeVariable = Annotation* Identifier;
 
 syntax ArrayType = PrimitiveType Dims 
                  | ClassOrInterfaceType Dims 
-                 //| TypeVariable Dims
                  ;
                  
 syntax Dims = Annotation* "[" "]" (Annotation* "[" "]")*; 
@@ -80,7 +77,6 @@ syntax TypeParameter = typeParameter: TypeParameterModifier* Identifier TypeBoun
 syntax TypeParameterModifier = Annotation; 
 
 syntax TypeBound = "extends" { ClassOrInterfaceType "&" }+
-               //  | "extends" ClassOrInterfaceType AdditionalBound*
                  ;
                  
 syntax AdditionalBound = "&" InterfaceType ;
@@ -138,13 +134,13 @@ syntax ImportDeclaration = importDeclaration: SingleTypeImportDeclaration       
                          | StaticImportOnDemandDeclaration   // import static br.unb.rascal.Foo.*;
                          ;
  
-syntax SingleTypeImportDeclaration = "import" TypeName ";" ;
+syntax SingleTypeImportDeclaration = "import" TypeName ";"+ ;
 
-syntax TypeImportOnDemandDeclaration = "import" PackageOrTypeName "." "*" ";" ;
+syntax TypeImportOnDemandDeclaration = "import" PackageOrTypeName "." "*" ";"+ ;
 
-syntax SingleStaticImportDeclaration = "import" "static" TypeName "." Identifier ";";
+syntax SingleStaticImportDeclaration = "import" "static" TypeName "." Identifier ";"+;
 
-syntax StaticImportOnDemandDeclaration = "import" "static" TypeName "." "*" ";" ;                         
+syntax StaticImportOnDemandDeclaration = "import" "static" TypeName "." "*" ";"+ ;                         
 
 
 syntax TypeDeclaration = ClassDeclaration ";"*
@@ -173,7 +169,7 @@ syntax Superclass = "extends" ClassType ;
 
 syntax Superinterfaces = "implements" {InterfaceType ","}+ ;
 
-syntax ClassBody = classBody : "{" ClassBodyDeclaration* decls "}" ;
+syntax ClassBody = classBody : "{" ClassBodyDeclaration* decls "}" ";"? ;
 
 syntax ClassBodyDeclaration = ClassMemberDeclaration 
                             | InstanceInitializer 
@@ -219,12 +215,10 @@ syntax UnannPrimitiveType = NumericType
                           ;
 
 syntax UnannReferenceType = UnannClassOrInterfaceType 
-                         // | UnannTypeVariable 
                           | UnannArrayType
                           ;
                           
 syntax UnannClassOrInterfaceType = UnannClassType 
-                     //            | UnannInterfaceType
                                  ; 
                           
 syntax UnannClassType = Identifier TypeArguments? 
@@ -236,10 +230,9 @@ syntax UnannTypeVariable = Identifier ;
 
 syntax UnannArrayType = UnannPrimitiveType Dims 
                | UnannClassOrInterfaceType Dims 
-             //  |UnannTypeVariable Dims
                ;
 
-syntax MethodDeclaration = methodDeclaration: MethodModifier* MethodHeader MethodBody ";"?;
+syntax MethodDeclaration = methodDeclaration: MethodModifier* MethodHeader MethodBody ;
 
 syntax MethodModifier = Annotation 
                       | "public" 
@@ -262,8 +255,6 @@ syntax Result = UnannType
               ;
 
 
-// syntax MethodDeclarator = methodDeclarator: Identifier "(" FormalParameterList? pmts ")" Dims? ;
-
 syntax MethodDeclarator = Identifier "(" ")" Dims?
                         | Identifier "(" LastFormalParameter ")" Dims?
                         | Identifier "(" {FormalParameter ","}+ ("," LastFormalParameter)?")" Dims?
@@ -272,7 +263,6 @@ syntax MethodDeclarator = Identifier "(" ")" Dims?
 syntax FormalParameterList = FormalParameters ;
                             
 syntax FormalParameters = formalParameter : FormalParameter ("," FormalParameters)?
-                      //  | receiveParameter: ReceiverParameter (", FormalParameter)*
                         | lastFormalParameter: LastFormalParameter
                         ;                                   
 
@@ -288,45 +278,21 @@ syntax VariableModifier = Annotation
                         | "final" 
                         ;
               
-//syntax MethodDeclarator = Identifier "(" FormalParameterList? ")" Dims? ;
-//
-////syntax FormalParameterList = ReceiverParameter 
-////                           | FormalParameters "," LastFormalParameter 
-////                           | LastFormalParameter
-////                           ;
-//syntax FormalParameterList = {FormalParameter ","}+;
-//                           
-//                            
-//syntax FormalParameters = {FormalParameter ","}+  
-//                         | ReceiverParameter ("," FormalParameter)*
-//                         ;                                   
-//
-//syntax FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
-//
-//syntax VariableModifier = Annotation 
-//                        | "final" 
-//                        ;
-//                        
-//syntax LastFormalParameter = VariableModifier* UnannType Annotation* "..." VariableDeclaratorId 
-//                           | FormalParameter
-//                           ;
-//
-//syntax ReceiverParameter = Annotation* UnannType (Identifier ".")? "this" ;
+
 
 syntax Throws = "throws" { ExceptionType "," }+;  
 
 syntax ExceptionType = ClassType 
-                 //    | TypeVariable
                      ; 
 
 
-syntax MethodBody = Block 
+syntax MethodBody = Block ";"*
                   | ";"
                   ;
                    
 syntax InstanceInitializer = Block ;
 
-syntax StaticInitializer = "static" Block ;
+syntax StaticInitializer = "static" Block ";"* ;
 
 syntax ConstructorDeclaration = ConstructorModifier* ConstructorDeclarator Throws? ConstructorBody ;
 
@@ -334,13 +300,14 @@ syntax ConstructorModifier = Annotation
                            | "public" 
                            | "protected" 
                            | "private" 
+                           | "strictfp"
                            ;
                            
 syntax ConstructorDeclarator = TypeParameters? SimpleTypeName "(" FormalParameterList? ")" ;
 
 syntax SimpleTypeName = Identifier ;
 
-syntax ConstructorBody = "{" ExplicitConstructorInvocation? BlockStatements? "}" ;
+syntax ConstructorBody = "{" ExplicitConstructorInvocation? BlockStatements? "}" ";"* ;
 
 syntax ExplicitConstructorInvocation = TypeArguments? "this" "(" ArgumentList? ")" ";"  
                                      | TypeArguments? "super" "(" ArgumentList? ")" ";" 
@@ -377,13 +344,12 @@ syntax InterfaceModifier = Annotation
                          
 syntax ExtendsInterfaces = "extends" {InterfaceType ","}+ ; 
 
-syntax InterfaceBody = "{" InterfaceMemberDeclaration* "}" ;
+syntax InterfaceBody = "{" InterfaceMemberDeclaration* "}" ";"* ;
 
 syntax InterfaceMemberDeclaration = ConstantDeclaration 
                                   | InterfaceMethodDeclaration 
                                   | ClassDeclaration 
                                   | InterfaceDeclaration 
-                                //  | ";" 
                                   ;
 
 syntax ConstantDeclaration = ConstantModifier* UnannType VariableDeclaratorList ";" ;
@@ -412,6 +378,7 @@ syntax AnnotationTypeMemberDeclaration = AnnotationTypeElementDeclaration
                                        | ConstantDeclaration 
                                        | ClassDeclaration 
                                        | InterfaceDeclaration 
+                                       | InterfaceMethodDeclaration
                                     //   | ";"
                                        ;
 
@@ -422,7 +389,7 @@ syntax AnnotationTypeElementModifier = Annotation
                                      | "abstract"
                                      ;
                                      
-syntax DefaultValue = "default" ElementValue ;
+syntax DefaultValue = "default" ElementValue ";"*;
 
 syntax Annotation = NormalAnnotation 
                   | MarkerAnnotation 
@@ -437,7 +404,7 @@ syntax ElementValuePair = Identifier "=" ElementValue ;
 
 syntax ElementValue = ConditionalExpression 
                     | ElementValueArrayInitializer 
-                    | Annotation 
+                    | Annotation
                     ;
                     
 syntax ElementValueArrayInitializer = "{" ElementValueList? ","? "}" ;
@@ -460,7 +427,7 @@ syntax VariableInitializerList = { VariableInitializer "," }+ ;
  * Productions from §14 (Blocks and Statements)
  */
  
-syntax Block = "{" BlockStatements? "}"  ;
+syntax Block = "{" BlockStatements? "}" ;
              
 
 syntax BlockStatements = BlockStatement BlockStatement* ;
@@ -541,7 +508,6 @@ syntax SwitchBlockStatementGroup = SwitchLabels BlockStatements ;
 syntax SwitchLabels = SwitchLabel+ ; 
 
 syntax SwitchLabel = "case" ConstantExpression ":" 
-                //   | "case" EnumConstantName ":" 
                    | "default" ":" 
                    ;
                    
@@ -651,7 +617,6 @@ syntax ClassOrInterfaceTypeToInstantiate = {AnnotatedType "."}* TypeArgumentsOrD
 syntax AnnotatedType = Annotation* Identifier ;
 
 syntax TypeArgumentsOrDiamond = TypeArguments  
-                            //  | "\<" "\>" 
                               ;
                                        
 syntax FieldAccess = Primary "." Identifier 
@@ -664,7 +629,6 @@ syntax ArrayAccess = ExpressionName "[" Expression "]"
                    ;
                   
 syntax MethodInvocation = MethodName "(" ArgumentList? ")"  
-                        //| TypeName "." TypeArguments? Identifier "(" ArgumentList? ")"  
                         | ExpressionName "." TypeArguments? Identifier "(" ArgumentList? ")" 
                         | Primary "." TypeArguments? Identifier "(" ArgumentList? ")"  
                         | "super" "." TypeArguments? Identifier "(" ArgumentList? ")"  
@@ -674,7 +638,6 @@ syntax MethodInvocation = MethodName "(" ArgumentList? ")"
 syntax ArgumentList = { Expression "," }+ ; 
 
 syntax MethodReference = ExpressionName "::" TypeArguments? Identifier 
-                       // ReferenceType "::" TypeArguments? Identifier 
                        | Primary "::" TypeArguments? Identifier 
                        | "super" "::" TypeArguments? Identifier 
                        | TypeName "." "super" "::" TypeArguments? Identifier 
@@ -692,9 +655,6 @@ syntax DimExprs = DimExpr+ ;
 
 syntax DimExpr = Annotation* "[" Expression "]" ;
 
-//syntax Expression = LambdaExpression 
-//                  | AssignmentExpression
-//                  ;
                   
 syntax Expression = LambdaExpression 
                   | AssignmentExpression
