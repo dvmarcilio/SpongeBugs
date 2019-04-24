@@ -98,6 +98,6 @@ public set[MethodVar] retainLocalVariablesIfDuplicates(set[MethodVar] classField
 	return (classFields - duplicatedClassFields) + localVars;
 }
 
-private set[str] retrieveAllNames(set[MethodVar] vars) {
+public set[str] retrieveAllNames(set[MethodVar] vars) {
 	return { var.name | MethodVar var <- vars };
 }
