@@ -6,6 +6,7 @@ import ParseTree;
 import String;
 import Set;
 import lang::java::util::MethodDeclarationUtils;
+import lang::java::util::CompilationUnitUtils;
 
 private set[str] constantsToCheck = {"EMPTY_SET", "EMPTY_LIST", "EMPTY_MAP"};
 
@@ -36,8 +37,7 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	return findFirst(javaFileContent, "Collections.EMPTY") != -1;
 }
 
-// FieldAccess = Primary "." Identifier 
-public void replaceEmptyConstantWithGenericMethod(loc fileLoc) { 
+public void replaceEmptyConstantWithGenericMethod(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	modified = false;
 	
@@ -74,10 +74,6 @@ public void replaceEmptyConstantWithGenericMethod(loc fileLoc) {
 	}	
 }
 
-private CompilationUnit retrieveCompilationUnitFromLoc(loc fileLoc) {
-	javaFileContent = readFile(fileLoc);
-	return parse(#CompilationUnit, javaFileContent);
-}
 
 private bool isConstantOfInterest(str constName) {
 	return constName in constantsToCheck;

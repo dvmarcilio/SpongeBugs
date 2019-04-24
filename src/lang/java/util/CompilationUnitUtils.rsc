@@ -5,6 +5,11 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import String;
 
+public CompilationUnit retrieveCompilationUnitFromLoc(loc fileLoc) {
+	javaFileContent = readFile(fileLoc);
+	return parse(#CompilationUnit, javaFileContent);
+}
+
 public list[ImportDeclaration] retrieveImportDeclarations(CompilationUnit unit) {
 	importDecls = [];
 	top-down visit(unit) {
