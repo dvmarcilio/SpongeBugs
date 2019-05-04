@@ -38,30 +38,64 @@ public void refactorFileToEqualsIgnoreCase(loc fileLoc) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
 			mdl = visit(mdl) {
-				case (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>toUpperCase().equals(<ArgumentList? args>)`: {
+				// toCase on variable, Literal at the end
+				case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>toUpperCase().equals(<ArgumentList? args>)`: {
 					if (isStringLiteral("<args>") && isEntireUpperCase("<args>")) {
 						modified = true;
-						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`;
+						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert mi;
 					}
 				}
-				case (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>toLowerCase().equals(<ArgumentList? args>)`: {
+				case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>toLowerCase().equals(<ArgumentList? args>)`: {
 					if (isStringLiteral("<args>") && isEntireLowerCase("<args>")) {
 						modified = true;
-						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`;
+						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert mi;
 					}
 				}
-				case (MethodInvocation) `<Primary varName>.<TypeArguments? ts>toUpperCase().equals(<ArgumentList? args>)`: {
+				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>toUpperCase().equals(<ArgumentList? args>)`: {
 					if (isStringLiteral("<args>") && isEntireUpperCase("<args>")) {
 						modified = true;
-						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`;
+						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert mi;
 					}
 				}
-				case (MethodInvocation) `<Primary varName>.<TypeArguments? ts>toLowerCase().equals(<ArgumentList? args>)`: {
+				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>toLowerCase().equals(<ArgumentList? args>)`: {
 					if (isStringLiteral("<args>") && isEntireLowerCase("<args>")) {
 						modified = true;
-						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`;
+						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert mi;
 					}
 				}
+				
+				// literal first, toCase after
+				case (MethodInvocation) `<StringLiteral strLiteral>.equals(<ArgumentList? args>)`: {
+					matchLiteralFirstToCaseAfter = false;
+					str beforeFunction = "<args>";
+					visit(args) {
+						case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>toLowerCase()`: {
+							if (isEntireLowerCase("<args>")) {
+								modified = true;
+								matchLiteralFirstToCaseAfter = true;
+								beforeFunction = "<beforeFunc>";
+							}
+						}
+						case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>toUpperCase()`: {
+							if (isEntireUpperCase("<strLiteral>")) {
+								modified = true;
+								matchLiteralFirstToCaseAfter = true;
+								beforeFunction = "<beforeFunc>";
+							}
+						}
+					}
+					if (matchLiteralFirstToCaseAfter) {
+						mi = parse(#MethodInvocation, "<strLiteral>.equalsIgnoreCase(<beforeFunction>)");
+						insert mi;
+					}
+				}
+				
+				// two sides equals
+				// str.name().toLowerCase().equals(str2.toLowerCase());
 			}
 			if (modified) {
 				shouldRewrite = true;
