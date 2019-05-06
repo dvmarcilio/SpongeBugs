@@ -4,7 +4,11 @@ import Set;
 import String;
 
 // TODO Review if using a Set is the best choice. Probably not.
-public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, bool isDeclaredWithinLoop, bool isEffectiveFinal);
+public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, 
+	bool isDeclaredWithinLoop, bool isEffectiveFinal);
+
+private set[str] collections = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "LinkedHashSet",
+	 "TreeSet", "Map", "HashMap", "LinkedHashMap"};
 
 public bool isArray(MethodVar methodVar) {
 	return methodVar.varType == "array";
@@ -26,6 +30,18 @@ public bool isIterable(MethodVar methodVar) {
 
 public bool isParameter(MethodVar methodVar) {
 	return !methodVar.isParameter;
+}
+
+// We might miss some
+public bool isCollection(MethodVar methodVar) {
+	if (methodVar.varType in collections)
+		return true;
+	
+	for (collectionType <- collections) {
+		if (startsWith(methodVar.varType, collectionType))
+			return true;
+	}
+	return false;
 } 
 
 public set[MethodVar] retrieveFinals(set[MethodVar] methodVars) {
