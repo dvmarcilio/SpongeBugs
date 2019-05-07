@@ -28,6 +28,7 @@ public bool isIterable(MethodVar methodVar) {
 	return startsWith(varType, "Iterable");
 }
 
+// FIXME? really?
 public bool isParameter(MethodVar methodVar) {
 	return !methodVar.isParameter;
 }
