@@ -48,9 +48,9 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 				case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: 
 					visit(vdl) {
 						case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: {
-								varsWithinLoopNames += unparse(varId);
-								methodVars += createLocalMethodVarWithinLoop(figureIfIsFinal(varMod), varId, varType, dims);
-							}
+							varsWithinLoopNames += unparse(varId);
+							methodVars += createLocalMethodVarWithinLoop(figureIfIsFinal(varMod), varId, varType, dims);
+						}
 					}		
 			}
 		}
