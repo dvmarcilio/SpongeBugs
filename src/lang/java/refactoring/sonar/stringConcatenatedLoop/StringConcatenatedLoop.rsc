@@ -40,13 +40,19 @@ public void refactorStringConcatenatedLoop(loc fileLoc) {
 	
 	unit = visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
+			// Just so we don't get a unitialized exception
+			ExpressionName expLHSToConsider = parse(#ExpressionName, "a");
 			modified = false;
+			
 			mdl = visit(mdl) {
 				case (BasicForStatement) `<BasicForStatement forStmt>`: { 
-					BasicForStatement = top-down-break visit(forStmt) {
-						case (Assignment) `<ExpressionName expLHS> += <Expression exp>`: {
+					forStmt = top-down-break visit(forStmt) {
+						case (StatementExpression) `<ExpressionName expLHS> += <Expression exp>`: {
 							if(isStringAndDeclaredWithinMethod(mdl, expLHS) && methodReturnsStringFromExpLHS(mdl, expLHS)) {
-								println("case 1");
+								modified = true;
+								expLHSToConsider = expLHS;
+								refactoredToAppend = parse(#StatementExpression, "<expLHS>.append(<exp>)");
+								insert refactoredToAppend;
 							}
 						}
 						case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <ExpressionName expRHS2>`: {
@@ -64,11 +70,22 @@ public void refactorStringConcatenatedLoop(loc fileLoc) {
 							}
 						}
 					}
+					if (modified) {
+						insert (BasicForStatement) `<BasicForStatement forStmt>`;
+					}
 				}
 			}
-		}
+			if (modified) {
+				shouldRewrite = true;
+				mdlRefactored = ref(mdl, expLHSToConsider);
+				insert (MethodDeclaration) `<MethodDeclaration mdlRefactored>`;
+			}
+		}	
 	}
 	
+	if (shouldRewrite) {
+		writeFile(fileLoc, unit);
+	}
 }
 
 private bool isStringAndDeclaredWithinMethod(MethodDeclaration mdl, ExpressionName exp) {
@@ -106,4 +123,47 @@ private bool methodReturnsStringFromExpLHS(MethodDeclaration mdl, ExpressionName
 		}
 	}
 	return methodReturnsString && returnsExpString;
+}
+
+private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {	
+	mdl = visit(mdl) {
+		case (LocalVariableDeclaration) `<UnannType varType> <Identifier varId> <Dims? _> = <Expression expRHS>`: {
+			if (trim("<varType>") == "String" && trim("<varId>") == "<expName>") {
+				lvDecl = parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(<expRHS>)");
+				insert lvDecl;
+			}
+		}
+		
+		case (StatementExpression) `<ExpressionName expLHS> <AssignmentOperator op> <Expression expRHS>`: {
+			if (expLHS == expName && trim("<op>") == "=") {
+				assignmentExp = parse(#StatementExpression, "<expLHS> = new StringBuilder(<expRHS>)");
+				insert assignmentExp;
+			}
+			
+			if (expLHS == expName && trim("<op>") == "+=") {
+				assignmentExp = parse(#StatementExpression, "<expLHS>.append(<expRHS>)");
+				insert assignmentExp;
+			}
+		}
+		
+		case (ReturnStatement) `<ReturnStatement returnStmt>`: {
+			// Unfortunately there is a bug when parsing a ReturnStatement, we have to go deeper and substitute just the expression
+			returnStmt = visit(returnStmt) {		
+				case (ReturnStatement) `return <Expression returnExp>;`: {
+					returnExp = visit(returnExp) {
+						case (Expression) `<Expression _>`: {
+							if (trim("<returnExp>") == "<expName>") {
+								returnExpRefactored = parse(#Expression, "<expName>.toString()");
+								insert returnExpRefactored;
+							}
+						}
+					}
+					insert (ReturnStatement) `return <Expression returnExp>;`;
+				}
+			}
+			insert returnStmt;
+		}
+	}
+	
+	return mdl;
 }
