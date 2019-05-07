@@ -31,15 +31,17 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 }
 
 private bool hasSizeComparison(str javaFileContent) {
-	return findFirst(javaFileContent, ".size() \> 0") != -1 ||
-		   findFirst(javaFileContent, ".size() != 0") != -1 ||
-		   findFirst(javaFileContent, ".size() == 0") != -1;
+	return findFirst(javaFileContent, ".size() \> 0")  != -1  ||
+	 	   findFirst(javaFileContent, ".size() \>= 1") != -1  ||
+		   findFirst(javaFileContent, ".size() != 0")  != -1  ||
+		   findFirst(javaFileContent, ".size() == 0")  != -1;
 }
 
 public void refactorCollectionIsEmpty(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	
 	unit = top-down visit(unit) {
+		// we are missing lambda bodies here
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
 			mdl = bottom-up-break visit(mdl) {
@@ -59,6 +61,12 @@ public void refactorCollectionIsEmpty(loc fileLoc) {
 							}
 						}
 						case (RelationalExpression) `<ExpressionName beforeFunc>.size() \> 0`: {
+							if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+								modified = true;
+								refactoredExp = parse(#Expression, "!<beforeFunc>.isEmpty()");
+							}
+						}
+						case (RelationalExpression) `<ExpressionName beforeFunc>.size() \>= 1`: {
 							if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
 								modified = true;
 								refactoredExp = parse(#Expression, "!<beforeFunc>.isEmpty()");
