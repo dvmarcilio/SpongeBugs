@@ -8,7 +8,7 @@ public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isPa
 	bool isDeclaredWithinLoop, bool isEffectiveFinal);
 
 private set[str] collections = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "LinkedHashSet",
-	 "TreeSet", "Map", "HashMap", "LinkedHashMap"};
+	 "TreeSet", "Map", "HashMap", "LinkedHashMap", "Queue"};
 
 public bool isArray(MethodVar methodVar) {
 	return methodVar.varType == "array";
