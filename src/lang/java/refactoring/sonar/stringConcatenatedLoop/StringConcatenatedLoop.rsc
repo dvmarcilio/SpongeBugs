@@ -12,6 +12,9 @@ import lang::java::refactoring::forloop::MethodVar;
 
 private bool shouldRewrite = false;
 
+// Just so we don't get a unitialized exception
+ExpressionName expLHSToConsider = parse(#ExpressionName, "a");
+
 public void refactorAllStringConcatenatedLoop(list[loc] locs) {
 	for(fileLoc <- locs) {
 		//try {
@@ -40,69 +43,24 @@ public void refactorStringConcatenatedLoop(loc fileLoc) {
 	
 	unit = visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
-			// Just so we don't get a unitialized exception
-			ExpressionName expLHSToConsider = parse(#ExpressionName, "a");
 			modified = false;
 			
 			mdl = visit(mdl) {
 				case (BasicForStatement) `<BasicForStatement forStmt>`: {
-					forStmt = top-down-break visit(forStmt) {
-						case (StatementExpression) `<ExpressionName expLHS> += <Expression exp>`: {
-							if(isStringAndDeclaredWithinMethod(mdl, expLHS) && methodReturnsStringFromExpLHS(mdl, expLHS)) {
-								modified = true;
-								expLHSToConsider = expLHS;
-								refactoredToAppend = parse(#StatementExpression, "<expLHS>.append(<exp>)");
-								insert refactoredToAppend;
-							}
-						}
-						case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <ExpressionName expRHS2>`: {
-							if (<"expLHS"> == <"expRHS">) {
-								if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
-									println("case 2");
-								}
-							}
-						}
-						case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <StringLiteral strLiteral>`: {
-							if (<"expLHS"> == <"expRHS">) {
-								if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
-									println("case 3");
-								}
-							}
-						}
-					}
-					if (modified) {
-						insert (BasicForStatement) `<BasicForStatement forStmt>`;
+					refactored = refactorLoop(forStmt, mdl);
+					if ("<refactored>" != "<forStmt>") {
+						modified = true;
+						BasicForStatement refactored = parse(#BasicForStatement, "<refactored>");
+						insert refactored;
 					}
 				}
 				
-				// Duplicated enhanced for loop
 				case (EnhancedForStatement) `<EnhancedForStatement forStmt>`: {
-					forStmt = top-down-break visit(forStmt) {
-						case (StatementExpression) `<ExpressionName expLHS> += <Expression exp>`: {
-							if(isStringAndDeclaredWithinMethod(mdl, expLHS) && methodReturnsStringFromExpLHS(mdl, expLHS)) {
-								modified = true;
-								expLHSToConsider = expLHS;
-								refactoredToAppend = parse(#StatementExpression, "<expLHS>.append(<exp>)");
-								insert refactoredToAppend;
-							}
-						}
-						case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <ExpressionName expRHS2>`: {
-							if (<"expLHS"> == <"expRHS">) {
-								if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
-									println("case 2");
-								}
-							}
-						}
-						case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <StringLiteral strLiteral>`: {
-							if (<"expLHS"> == <"expRHS">) {
-								if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
-									println("case 3");
-								}
-							}
-						}
-					}
-					if (modified) {
-						insert (EnhancedForStatement) `<EnhancedForStatement forStmt>`;
+					refactored = refactorLoop(forStmt, mdl);
+					if ("<refactored>" != "<forStmt>") {
+						modified = true;
+						EnhancedForStatement refactored = parse(#EnhancedForStatement, "<refactored>");
+						insert refactored;
 					}
 				}
 				
@@ -118,6 +76,33 @@ public void refactorStringConcatenatedLoop(loc fileLoc) {
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
 	}
+}
+
+private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
+	loopStmt = top-down-break visit(loopStmt) {
+		case (StatementExpression) `<ExpressionName expLHS> += <Expression exp>`: {
+			if(isStringAndDeclaredWithinMethod(mdl, expLHS) && methodReturnsStringFromExpLHS(mdl, expLHS)) {
+				expLHSToConsider = expLHS;
+				refactoredToAppend = parse(#StatementExpression, "<expLHS>.append(<exp>)");
+				insert refactoredToAppend;
+			}
+		}
+		case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <ExpressionName expRHS2>`: {
+			if (<"expLHS"> == <"expRHS">) {
+				if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
+					println("case 2");
+				}
+			}
+		}
+		case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <StringLiteral strLiteral>`: {
+			if (<"expLHS"> == <"expRHS">) {
+				if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
+					println("case 3");
+				}
+			}
+		}
+	}
+	return loopStmt;
 }
 
 private bool isStringAndDeclaredWithinMethod(MethodDeclaration mdl, ExpressionName exp) {
