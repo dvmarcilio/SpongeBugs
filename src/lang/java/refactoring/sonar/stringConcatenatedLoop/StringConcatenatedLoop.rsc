@@ -64,6 +64,15 @@ public void refactorStringConcatenatedLoop(loc fileLoc) {
 					}
 				}
 				
+				case (WhileStatement) `<WhileStatement whileStmt>`: {
+					refactored = refactorLoop(whileStmt, mdl);
+					if ("<refactored>" != "<whileStmt>") {
+						modified = true;
+						WhileStatement refactored = parse(#WhileStatement, "<refactored>");
+						insert refactored;
+					}
+				}
+				
 			}
 			if (modified) {
 				shouldRewrite = true;
