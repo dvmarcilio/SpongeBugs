@@ -73,6 +73,16 @@ public void refactorStringConcatenatedLoop(loc fileLoc) {
 					}
 				}
 				
+				case (DoStatement) `<DoStatement doStmt>`: {
+					println("do statement");
+					refactored = refactorLoop(doStmt, mdl);
+					if ("<refactored>" != "<doStmt>") {
+						modified = true;
+						DoStatement refactored = parse(#DoStatement, "<refactored>");
+						insert refactored;
+					}
+				}
+				
 			}
 			if (modified) {
 				shouldRewrite = true;
