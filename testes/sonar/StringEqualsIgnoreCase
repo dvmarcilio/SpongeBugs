@@ -1,0 +1,12 @@
+public class A {
+	
+	private static boolean interactive;
+	
+	public void a(String testName) {
+		String filterString = context.getProperty(INTERACTIVE);
+		if (filterString != null && "true".equalsIgnoreCase(filterString)) {
+			interactive = true;
+		}
+	}
+	
+}

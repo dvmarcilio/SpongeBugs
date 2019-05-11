@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: antlr
-Bundle-SymbolicName: rascal-Java8
+Bundle-SymbolicName: fix-my-issues
 Bundle-Version: 1.0.0
 Require-Bundle: rascal_eclipse
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

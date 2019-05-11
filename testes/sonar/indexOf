@@ -1,0 +1,5 @@
+protected boolean hasExportableExtension(String resourceName) {
+        int separatorIndex = resourceName.lastIndexOf("."); //$NON-NLS-1$
+
+        return false;
+    }
