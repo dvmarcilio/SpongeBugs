@@ -17,15 +17,15 @@ ExpressionName expLHSToConsider = parse(#ExpressionName, "a");
 
 public void refactorAllStringConcatenatedLoop(list[loc] locs) {
 	for(fileLoc <- locs) {
-		//try {
+		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				shouldRewrite = false;
 				refactorStringConcatenatedLoop(fileLoc);
 			}
-		//} catch: {
-		//	println("Exception file: " + fileLoc.file);
-		//	continue;
-		//}	
+		} catch: {
+			println("Exception file: " + fileLoc.file);
+			continue;
+		}	
 	}
 }
 
