@@ -5,6 +5,7 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import String;
 import Set;
+import List;
 import lang::java::util::MethodDeclarationUtils;
 import lang::java::util::CompilationUnitUtils;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
@@ -23,7 +24,7 @@ private set[str] resources = inputStreams + outputStreams + readers + writers + 
 
 private bool shouldRewrite = false;
 
-private data VarsInstantiatedWithinBlock = varsInstantiatedWithinBlock(str name, str varType, bool isResourceOfInterest, LocalVariableDeclaration initStatement);
+private data VarInstantiatedWithinBlock = varInstantiatedWithinBlock(str name, str varType, bool isResourceOfInterest, LocalVariableDeclaration initStatement);
 
 // Checking only if resources are being closed within finally blocks
 public void resourcesShouldAllBeClosed(list[loc] locs) {
@@ -51,68 +52,82 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 	unit = visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
-			candidateResourcesWithinBlock = {};
+			varsToMoveOutOfTryBlock = {};
+			tryResourceSpecification = "";
 			
 			mdl = top-down-break visit(mdl) {
 				case (TryWithResourcesStatement) `<TryWithResourcesStatement _>`: {
 					continue;
 				}
-				case (TryStatement) `try <Block tryBlock> <Catches catches>`: {
-					tryBlock = visit(tryBlock) {
-						case (Block) `<Block block>`: {
-							varsWithinBlock = findVarsInstantiatedWithinBlock(block);
-							if (!isEmpty(varsWithinBlock)) {
-								closesToRemove = collectClosesToRemoveForResources(block, varsWithinBlock);
-								Block tryBlockRefactored = tryBlock;
-								
-								resourcesWithinBlock = { var | VarsInstantiatedWithinBlock var <- varsWithinBlock, var.isResourceOfInterest };
-								for (resourceWithinBlock <- resourcesWithinBlock) {
-									tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<resourceWithinBlock.initStatement>;", ""));
-								}
-								
-								for (closeToRemove <- closesToRemove) {
-									tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", closeToRemove, ""));
-								}
-								println("<tryBlockRefactored>");
+				case (TryStatement) `<TryStatement tryStmt>`: {
+					tryStmt = visit(tryStmt) {
+						case (TryStatement) `try <Block tryBlock> <Catches catches>`: {
+							resourceSpecification = "";
+							
+							tryBlock = visit(tryBlock) {
+								case (Block) `<Block block>`: {
+									
+									varsWithinBlock = findVarsInstantiatedWithinBlock(block);
+									
+									if (!isEmpty(varsWithinBlock)) {
+										closesToRemove = collectClosesToRemoveForResources(block, varsWithinBlock);
+										Block tryBlockRefactored = tryBlock;
+										
+										resourcesWithinBlock = { var | VarInstantiatedWithinBlock var <- varsWithinBlock, var.isResourceOfInterest };
+										for (resourceWithinBlock <- resourcesWithinBlock) {
+											tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<resourceWithinBlock.initStatement>;", ""));
+										}
+										
+										varsToMoveOutOfTryBlock = varsThatNeedToBeOutOfTryBlock(tryBlock, varsWithinBlock);
+										for (varToMove <- varsToMoveOutOfTryBlock) {
+											tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<varToMove.initStatement>;", ""));
+										}
+										
+										for (closeToRemove <- closesToRemove) {
+											tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", closeToRemove, ""));
+										}
+										
+										modified = true;										
+										resourceSpecification = generateResourceSpecificationForTryWithResources(resourcesWithinBlock);
+										
+										insert tryBlockRefactored;
+									}
+								}				
 							}
 							
+							if (modified) {
+								tryStmt = parse(#TryStatement, "try <tryBlock> <catches>");								
+							
+								tryResourceSpecification = "try<resourceSpecification>";
+								tryStmtWithResources = parse(#TryStatement, replaceFirst("<tryStmt>", "try", tryResourceSpecification));
+								insert tryStmtWithResources;
+							}
 						}
+					}
 					
-						//case (CatchClause) `catch (<CatchFormalParameter _>) <Block catchBlock>`: {
-						//	println("*** CATCH ***\n");
-						//	println("<catchBlock>");
-						//	println();
-						//}
-						
-						//case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? _>close()`: {
-						//	localVars = findVars(mdl);
-						//	varName = "<beforeFunc>";
-						//	println(fileLoc.file);
-						//	println(varName);
-						//	if ("<beforeFunc>" in retrieveNonParametersNames(localVars)) {
-						//		MethodVar var = findByName(localVars, varName);
-						//		if (varIsCandidate(mdl, varName, var)) {
-						//			println("candidate for refactoring");
-						//		}
-						//	}				
-						//	println();
-						//	
-						//}
-						//case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? _>close()`: {
-						//	println("primary");
-						//}
-					
+					if(modified) {
+						insert tryStmt;
 					}
 				}
 			}
 			
+			if (modified) {
+				shouldRewrite = true;
+				stmtsJustBeforeTry = generateStatementsMovedOutOfBlock(varsToMoveOutOfTryBlock);
+				mdlRefactored = insertStmtsJustBeforeTryInMethodDeclaration(stmtsJustBeforeTry, mdl, tryResourceSpecification);
+				insert parse(#MethodDeclaration, mdlRefactored);
+			}
 		}
+	}
+	
+	if (shouldRewrite) {
+		writeFile(fileLoc, unit);
 	}
 		
 }
 
-private set[VarsInstantiatedWithinBlock] findVarsInstantiatedWithinBlock(Block block) {
-	set[VarsInstantiatedWithinBlock] varsWithinBlock = {};
+private set[VarInstantiatedWithinBlock] findVarsInstantiatedWithinBlock(Block block) {
+	set[VarInstantiatedWithinBlock] varsWithinBlock = {};
 	visit (block) {
 		case (LocalVariableDeclaration) `<LocalVariableDeclaration lVDecl>`: {
 			visit(lVDecl) {	
@@ -120,9 +135,9 @@ private set[VarsInstantiatedWithinBlock] findVarsInstantiatedWithinBlock(Block b
 					visit(vdl) {
 						case (VariableDeclarator) `<VariableDeclaratorId varId> = new <TypeArguments? _> <ClassOrInterfaceTypeToInstantiate typeInstantiated> (<ArgumentList? _>)`: {
 							if (trim("<varType>") in resources && trim("<typeInstantiated>") notin typesWhichCloseHasNoEffect) {
-								varsWithinBlock += varsInstantiatedWithinBlock(trim("<varId>"), trim("<varType>"), true, lVDecl);
+								varsWithinBlock += varInstantiatedWithinBlock(trim("<varId>"), trim("<varType>"), true, lVDecl);
 							} else {
-								varsWithinBlock += varsInstantiatedWithinBlock(trim("<varId>"), trim("<varType>"), false, lVDecl);
+								varsWithinBlock += varInstantiatedWithinBlock(trim("<varId>"), trim("<varType>"), false, lVDecl);
 							}
 						}
 					}
@@ -156,8 +171,8 @@ private bool isVarInstantiatedAsTypeToIgnore(MethodDeclaration mdl, str varName)
 	return false;
 }
 
-private list[str] collectClosesToRemoveForResources(Block block, set[VarsInstantiatedWithinBlock] vars) {
-	resourcesNamesWithinBlock = { var.name | VarsInstantiatedWithinBlock var <- vars, var.isResourceOfInterest };
+private list[str] collectClosesToRemoveForResources(Block block, set[VarInstantiatedWithinBlock] vars) {
+	resourcesNamesWithinBlock = { var.name | VarInstantiatedWithinBlock var <- vars, var.isResourceOfInterest };
 	return collectClosesToRemove(block, resourcesNamesWithinBlock);
 
 }
@@ -175,4 +190,51 @@ private list[str] collectClosesToRemove(Block block, set[str] varNames) {
 		}
 	}
 	return closesToRemove;
+}
+
+private set[VarInstantiatedWithinBlock] varsThatNeedToBeOutOfTryBlock(Block tryBlock, set[VarInstantiatedWithinBlock] varsInstantiatedWithinBlock) {
+	set[str] varsNamesToMove = varsNamesThatNeedToBeOutOfTryBlock(tryBlock, varsInstantiatedWithinBlock);
+	return { var | VarInstantiatedWithinBlock var <- varsInstantiatedWithinBlock, var.name in varsNamesToMove };
+}
+
+// recursively, guess we need to start from bottom up
+// the resources need another variable, that may need another variable and so on
+// TODO this can be improved continuosly
+private set[str] varsNamesThatNeedToBeOutOfTryBlock(Block tryBlock, set[VarInstantiatedWithinBlock] varsInstantiatedWithinBlock) {
+	set[str] varsNamesToMove = {};
+	
+	varsNamesWithinBlock = { var.name | VarInstantiatedWithinBlock var <- varsInstantiatedWithinBlock, !var.isResourceOfInterest };
+	resourcesWithinBlock = { var | VarInstantiatedWithinBlock var <- varsInstantiatedWithinBlock, var.isResourceOfInterest };
+	
+	for (resourceWithinBlock <- resourcesWithinBlock) {
+		visit (resourceWithinBlock.initStatement) {
+			case (ArgumentList) `<ArgumentList args>`: {
+				for (arg <- split(",", "<args>")) {
+					if (trim(arg) in varsNamesWithinBlock) {
+						varsNamesToMove += trim(arg);
+					}
+				}
+			}
+		}
+	}
+	return varsNamesToMove;
+}
+
+private str generateResourceSpecificationForTryWithResources(set[VarInstantiatedWithinBlock] resourcesWithinBlock) {
+	initStatements =  [ "<var.initStatement>" | VarInstantiatedWithinBlock var <- resourcesWithinBlock ];
+	intercalated = intercalate("; ", initStatements);
+	return "(<intercalated>)";
+}
+
+private str generateStatementsMovedOutOfBlock(set[VarInstantiatedWithinBlock] varsToMoveOutOfTryBlock) {
+	list[str] stmts = [ "<var.initStatement>;\n" | VarInstantiatedWithinBlock var <- varsToMoveOutOfTryBlock ];
+	return intercalate("", stmts);	
+}
+
+private str insertStmtsJustBeforeTryInMethodDeclaration(str stmts, MethodDeclaration mdl, str tryResourceSpecification) {
+	mdlStr = "<mdl>";
+	indexOfTry = findFirst(mdlStr, tryResourceSpecification);
+	mdlBeforeTryWithResources = substring(mdlStr, 0, indexOfTry);
+	mdlFromTryToTheEnd = substring(mdlStr, indexOfTry);
+	return mdlBeforeTryWithResources + stmts + mdlFromTryToTheEnd;
 }
