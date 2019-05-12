@@ -31,7 +31,7 @@ public void resourcesShouldAllBeClosed(list[loc] locs) {
 	for(fileLoc <- locs) {
 		//try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				shouldRewrite = false;
+				shouldRewrite = false; 
 				resourcesShouldBeClosed(fileLoc);
 			}
 		//} catch: {
@@ -74,23 +74,26 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 										Block tryBlockRefactored = tryBlock;
 										
 										resourcesWithinBlock = { var | VarInstantiatedWithinBlock var <- varsWithinBlock, var.isResourceOfInterest };
-										for (resourceWithinBlock <- resourcesWithinBlock) {
-											tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<resourceWithinBlock.initStatement>;", ""));
+										if(!isEmpty(resourcesWithinBlock)) {
+											for (resourceWithinBlock <- resourcesWithinBlock) {
+												tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<resourceWithinBlock.initStatement>;", ""));
+											}
+											
+											varsToMoveOutOfTryBlock = varsThatNeedToBeOutOfTryBlock(tryBlock, varsWithinBlock);
+											for (varToMove <- varsToMoveOutOfTryBlock) {
+												tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<varToMove.initStatement>;", ""));
+											}
+											
+											for (closeToRemove <- closesToRemove) {
+												tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", closeToRemove, ""));
+											}
+											
+											modified = true;
+											
+											resourceSpecification = generateResourceSpecificationForTryWithResources(resourcesWithinBlock);
+											
+											insert tryBlockRefactored;
 										}
-										
-										varsToMoveOutOfTryBlock = varsThatNeedToBeOutOfTryBlock(tryBlock, varsWithinBlock);
-										for (varToMove <- varsToMoveOutOfTryBlock) {
-											tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<varToMove.initStatement>;", ""));
-										}
-										
-										for (closeToRemove <- closesToRemove) {
-											tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", closeToRemove, ""));
-										}
-										
-										modified = true;										
-										resourceSpecification = generateResourceSpecificationForTryWithResources(resourcesWithinBlock);
-										
-										insert tryBlockRefactored;
 									}
 								}				
 							}
