@@ -43,17 +43,17 @@ public void resourcesShouldAllBeClosed(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, "throws IOException") != -1 && findFirst(javaFileContent, "import java.io.") != -1;
+	return findFirst(javaFileContent, "import java.io.") != -1;
 }
 
 public void resourcesShouldBeClosed(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
+			println(fileLoc.file);
 	
 	unit = visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
-			varsToMoveOutOfTryBlock = {};
-			tryResourceSpecification = "";
+			varsToMoveOutOfTryBlock = [];
 			
 			mdl = top-down-break visit(mdl) {
 				case (TryWithResourcesStatement) `<TryWithResourcesStatement _>`: {
@@ -73,7 +73,7 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 										closesToRemove = collectClosesToRemoveForResources(block, varsWithinBlock);
 										Block tryBlockRefactored = tryBlock;
 										
-										resourcesWithinBlock = { var | VarInstantiatedWithinBlock var <- varsWithinBlock, var.isResourceOfInterest };
+										resourcesWithinBlock = [ var | VarInstantiatedWithinBlock var <- varsWithinBlock, var.isResourceOfInterest ];
 										if(!isEmpty(resourcesWithinBlock)) {
 											for (resourceWithinBlock <- resourcesWithinBlock) {
 												tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<resourceWithinBlock.initStatement>;", ""));
@@ -129,8 +129,8 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 		
 }
 
-private set[VarInstantiatedWithinBlock] findVarsInstantiatedWithinBlock(Block block) {
-	set[VarInstantiatedWithinBlock] varsWithinBlock = {};
+private list[VarInstantiatedWithinBlock] findVarsInstantiatedWithinBlock(Block block) {
+	list[VarInstantiatedWithinBlock] varsWithinBlock = [];
 	visit (block) {
 		case (LocalVariableDeclaration) `<LocalVariableDeclaration lVDecl>`: {
 			visit(lVDecl) {	
@@ -152,7 +152,7 @@ private set[VarInstantiatedWithinBlock] findVarsInstantiatedWithinBlock(Block bl
 	return varsWithinBlock;
 }
 
-private set[MethodVar] findVars(MethodDeclaration mdl) {
+private list[MethodVar] findVars(MethodDeclaration mdl) {
 	visit (mdl) {
 		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
 			return findLocalVariables(methodHeader, mBody);
@@ -174,7 +174,7 @@ private bool isVarInstantiatedAsTypeToIgnore(MethodDeclaration mdl, str varName)
 	return false;
 }
 
-private list[str] collectClosesToRemoveForResources(Block block, set[VarInstantiatedWithinBlock] vars) {
+private list[str] collectClosesToRemoveForResources(Block block, list[VarInstantiatedWithinBlock] vars) {
 	resourcesNamesWithinBlock = { var.name | VarInstantiatedWithinBlock var <- vars, var.isResourceOfInterest };
 	return collectClosesToRemove(block, resourcesNamesWithinBlock);
 
@@ -195,16 +195,16 @@ private list[str] collectClosesToRemove(Block block, set[str] varNames) {
 	return closesToRemove;
 }
 
-private set[VarInstantiatedWithinBlock] varsThatNeedToBeOutOfTryBlock(Block tryBlock, set[VarInstantiatedWithinBlock] varsInstantiatedWithinBlock) {
-	set[str] varsNamesToMove = varsNamesThatNeedToBeOutOfTryBlock(tryBlock, varsInstantiatedWithinBlock);
-	return { var | VarInstantiatedWithinBlock var <- varsInstantiatedWithinBlock, var.name in varsNamesToMove };
+private list[VarInstantiatedWithinBlock] varsThatNeedToBeOutOfTryBlock(Block tryBlock, list[VarInstantiatedWithinBlock] varsInstantiatedWithinBlock) {
+	list[str] varsNamesToMove = varsNamesThatNeedToBeOutOfTryBlock(tryBlock, varsInstantiatedWithinBlock);
+	return [ var | VarInstantiatedWithinBlock var <- varsInstantiatedWithinBlock, var.name in varsNamesToMove ];
 }
 
 // recursively, guess we need to start from bottom up
 // the resources need another variable, that may need another variable and so on
 // TODO this can be improved continuosly
-private set[str] varsNamesThatNeedToBeOutOfTryBlock(Block tryBlock, set[VarInstantiatedWithinBlock] varsInstantiatedWithinBlock) {
-	set[str] varsNamesToMove = {};
+private list[str] varsNamesThatNeedToBeOutOfTryBlock(Block tryBlock, list[VarInstantiatedWithinBlock] varsInstantiatedWithinBlock) {
+	list[str] varsNamesToMove = [];
 	
 	varsNamesWithinBlock = { var.name | VarInstantiatedWithinBlock var <- varsInstantiatedWithinBlock, !var.isResourceOfInterest };
 	resourcesWithinBlock = { var | VarInstantiatedWithinBlock var <- varsInstantiatedWithinBlock, var.isResourceOfInterest };
@@ -223,13 +223,13 @@ private set[str] varsNamesThatNeedToBeOutOfTryBlock(Block tryBlock, set[VarInsta
 	return varsNamesToMove;
 }
 
-private str generateResourceSpecificationForTryWithResources(set[VarInstantiatedWithinBlock] resourcesWithinBlock) {
+private str generateResourceSpecificationForTryWithResources(list[VarInstantiatedWithinBlock] resourcesWithinBlock) {
 	initStatements =  [ "<var.initStatement>" | VarInstantiatedWithinBlock var <- resourcesWithinBlock ];
 	intercalated = intercalate("; ", initStatements);
 	return "(<intercalated>)";
 }
 
-private str generateStatementsMovedOutOfBlock(set[VarInstantiatedWithinBlock] varsToMoveOutOfTryBlock) {
+private str generateStatementsMovedOutOfBlock(list[VarInstantiatedWithinBlock] varsToMoveOutOfTryBlock) {
 	list[str] stmts = [ "<var.initStatement>;\n" | VarInstantiatedWithinBlock var <- varsToMoveOutOfTryBlock ];
 	return intercalate("", stmts);	
 }
