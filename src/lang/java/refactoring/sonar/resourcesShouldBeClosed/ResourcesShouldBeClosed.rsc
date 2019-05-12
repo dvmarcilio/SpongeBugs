@@ -115,7 +115,7 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 							if (modified) {
 								tryStmt = parse(#TryStatement, "try <tryBlock> <catches>");								
 							
-								tryResourceSpecification = "try<resourceSpecification>";
+								tryResourceSpecification = "try <resourceSpecification>";
 								tryStmtWithResources = parse(#TryStatement, replaceFirst("<tryStmt>", "try", tryResourceSpecification));
 								insert tryStmtWithResources;
 							}
