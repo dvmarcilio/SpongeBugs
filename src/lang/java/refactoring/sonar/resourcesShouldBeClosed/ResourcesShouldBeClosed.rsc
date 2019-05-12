@@ -27,18 +27,17 @@ private bool shouldRewrite = false;
 
 private data VarInstantiatedWithinBlock = varInstantiatedWithinBlock(str name, str varType, bool isResourceOfInterest, LocalVariableDeclaration initStatement);
 
-// Checking only if resources are being closed within finally blocks
 public void resourcesShouldAllBeClosed(list[loc] locs) {
 	for(fileLoc <- locs) {
-		//try {
+		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				shouldRewrite = false; 
 				resourcesShouldBeClosed(fileLoc);
 			}
-		//} catch: {
-		//	println("Exception file: " + fileLoc.file);
-		//	continue;
-		//}	
+		} catch: {
+			println("Exception file: " + fileLoc.file);
+			continue;
+		}	
 	}
 }
 
@@ -49,7 +48,6 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 
 public void resourcesShouldBeClosed(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
-			println(fileLoc.file);
 	
 	unit = visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
