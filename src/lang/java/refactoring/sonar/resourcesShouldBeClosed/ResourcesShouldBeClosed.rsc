@@ -13,8 +13,9 @@ import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::MethodVar;
 
 private set[str] inputStreams = {"InputStream", "InputStreamReader", "ObjectInputStream", "FileInputStream",
-	"StringBufferInputStream", "BufferedInputStream"};
-private set[str] outputStreams = {"OutputStream", "OutputStreamWriter", "ObjectOutputStream", "FileOutputStream", "BufferedOutputStream"};
+	"StringBufferInputStream", "BufferedInputStream", "DataInputStream"};
+private set[str] outputStreams = {"OutputStream", "OutputStreamWriter", "ObjectOutputStream", "FileOutputStream",
+ 	"BufferedOutputStream", "DataOutputStream"};
 private set[str] readers = {"Reader", "FileReader", "BufferedReader"};
 private set[str] writers = {"Writer", "FileWriter", "BufferedWriter"};
 private set[str] others = {"Scanner"};
