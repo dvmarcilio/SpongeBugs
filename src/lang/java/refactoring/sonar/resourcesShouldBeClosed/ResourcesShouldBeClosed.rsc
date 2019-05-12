@@ -6,6 +6,7 @@ import ParseTree;
 import String;
 import Set;
 import List;
+import Map;
 import lang::java::util::MethodDeclarationUtils;
 import lang::java::util::CompilationUnitUtils;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
@@ -20,7 +21,7 @@ private set[str] others = {"Scanner"};
 
 private set[str] typesWhichCloseHasNoEffect = {"ByteArrayOutputStream", "ByteArrayInputStream", "CharArrayReader", "CharArrayWriter", "StringReader", "StringWriter"};
 
-private set[str] resources = inputStreams + outputStreams + readers + writers + others;
+private set[str] resourcesToConsider = inputStreams + outputStreams + readers + writers + others;
 
 private bool shouldRewrite = false;
 
@@ -43,7 +44,7 @@ public void resourcesShouldAllBeClosed(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, "import java.io.") != -1;
+	return findFirst(javaFileContent, "import java.io.") != -1 || findFirst(javaFileContent, "import java.util.Scanner;") != -1;
 }
 
 public void resourcesShouldBeClosed(loc fileLoc) {
@@ -54,6 +55,7 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
 			varsToMoveOutOfTryBlock = [];
+			map[str, list[Statement]] stmtsReferingModifyingVarsToMoveOut = ();
 			tryResourceSpecification = "";
 			
 			mdl = top-down-break visit(mdl) {
@@ -81,8 +83,19 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 											}
 											
 											varsToMoveOutOfTryBlock = varsThatNeedToBeOutOfTryBlock(tryBlock, varsWithinBlock);
+											stmtsReferingCurrentBlockBetweenVarAndResource = stmtsReferingVarBetweenVarAndResource(
+												varsToMoveOutOfTryBlock, resourcesWithinBlock, tryBlock
+											);
+											stmtsReferingModifyingVarsToMoveOut += stmtsReferingCurrentBlockBetweenVarAndResource;
+											
 											for (varToMove <- varsToMoveOutOfTryBlock) {
 												tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<varToMove.initStatement>;", ""));
+											}
+											
+											for (varNameToMove <- domain(stmtsReferingModifyingVarsToMoveOut)) {
+												for (stmt <- stmtsReferingModifyingVarsToMoveOut[varNameToMove]) {
+													tryBlockRefactored = parse(#Block, replaceFirst("<tryBlockRefactored>", "<stmt>", ""));
+												}
 											}
 											
 											for (closeToRemove <- closesToRemove) {
@@ -117,7 +130,7 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 			
 			if (modified) {
 				shouldRewrite = true;
-				stmtsJustBeforeTry = generateStatementsMovedOutOfBlock(varsToMoveOutOfTryBlock);
+				stmtsJustBeforeTry = generateStatementsMovedOutOfBlock(varsToMoveOutOfTryBlock, stmtsReferingModifyingVarsToMoveOut);
 				mdlRefactored = insertStmtsJustBeforeTryInMethodDeclaration(stmtsJustBeforeTry, mdl, tryResourceSpecification);
 				insert parse(#MethodDeclaration, mdlRefactored);
 			}
@@ -138,7 +151,7 @@ private list[VarInstantiatedWithinBlock] findVarsInstantiatedWithinBlock(Block b
 				case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: {
 					visit(vdl) {
 						case (VariableDeclarator) `<VariableDeclaratorId varId> = new <TypeArguments? _> <ClassOrInterfaceTypeToInstantiate typeInstantiated> (<ArgumentList? _>)`: {
-							if (trim("<varType>") in resources && trim("<typeInstantiated>") notin typesWhichCloseHasNoEffect) {
+							if (trim("<varType>") in resourcesToConsider && trim("<typeInstantiated>") notin typesWhichCloseHasNoEffect) {
 								varsWithinBlock += varInstantiatedWithinBlock(trim("<varId>"), trim("<varType>"), true, lVDecl);
 							} else {
 								varsWithinBlock += varInstantiatedWithinBlock(trim("<varId>"), trim("<varType>"), false, lVDecl);
@@ -230,12 +243,114 @@ private str generateResourceSpecificationForTryWithResources(list[VarInstantiate
 	return "(<intercalated>)";
 }
 
-private str generateStatementsMovedOutOfBlock(list[VarInstantiatedWithinBlock] varsToMoveOutOfTryBlock) {
-	list[str] stmts = [ "<var.initStatement>;\n" | VarInstantiatedWithinBlock var <- varsToMoveOutOfTryBlock ];
+// O(m*n) is it the best way?
+private map[str, list[Statement]] stmtsReferingVarBetweenVarAndResource(list[VarInstantiatedWithinBlock] vars,
+	list[VarInstantiatedWithinBlock] resourcesWithinBlock, Block tryBlock) {
+	
+	map[str, list[Statement]] stmts = ();
+	for (var <- vars) {
+		for (resource <- resourcesWithinBlock) {
+			stmts += doStmtsReferingVarBetweenVarAndResource(var, resource, tryBlock);
+		}
+	}
+	return stmts;
+}
+
+private map[str, list[Statement]] doStmtsReferingVarBetweenVarAndResource(VarInstantiatedWithinBlock var, VarInstantiatedWithinBlock resource, Block tryBlock) {
+	assert(!var.isResourceOfInterest);
+	assert(resource.isResourceOfInterest);
+	
+	blockStr = "<tryBlock>";
+	endIndexOfVar = findFirst(blockStr, "<var.initStatement>") + size("<var.initStatement>") + 1;
+	indexOfResource = findFirst(blockStr, "<resource.initStatement>") - 1;
+	
+	if (indexOfResource < endIndexOfVar)
+		return ();
+		
+	blockInBetween = substring(blockStr, endIndexOfVar, indexOfResource);
+	stmtsInBetween = split(";", blockInBetween);
+	
+	if (!isEmpty(stmtsInBetween)) {
+		map[str, list[Statement]] stmts = ();
+		for (stmt <- stmtsInBetween) {
+			stmt = trim(stmt);
+			if (isStatementRelatedToVar(stmt, var.name)) {
+				if (var.name in stmts) {
+					stmts[var.name] += [parse(#Statement, "<stmt>;")];
+				} else {
+					stmts[var.name] = [parse(#Statement, "<stmt>;")];
+				}
+			} 
+		}
+		return stmts;
+	}
+	return ();
+}
+
+private bool isStatementRelatedToVar(str stmt, str varName) {
+	try {
+		assignment = parse(#Assignment, stmt);
+		visit(assignment) {
+			case (Assignment) `<LeftHandSide lhs> = <Expression exp>`: {
+				if (findFirst("<lhs>", varName) != 1)
+					return true;
+			}
+		}
+	} catch: "";
+	
+	try {
+		mi = parse(#MethodInvocation, stmt);
+		visit(mi) {
+			case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts> <Identifier id> (<ArgumentList? args>)`: {
+				possibleChainBefore = split(".", "<beforeFunc>");
+				for (idInChain <- possibleChainBefore) {
+					if (idInChain == varName)
+						return true;
+				}
+				
+				possibleChainArgs = split(".", "<args>");
+				for (idInChain <- possibleChainArgs) {
+					if (idInChain == varName)
+						return true;
+				}
+			}
+			case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts> <Identifier id> (<ArgumentList? args>)`: {
+				possibleChainBefore = split(".", "<beforeFunc>");
+				for (idInChain <- possibleChainBefore) {
+					if (idInChain == varName)
+						return true;
+				}
+				
+				possibleChainArgs = split(".", "<args>");
+				for (idInChain <- possibleChainArgs) {
+					if (idInChain == varName)
+						return true;
+				}
+			}
+		}
+	} catch: "";
+	
+	
+	return false;
+}
+
+private str generateStatementsMovedOutOfBlock(list[VarInstantiatedWithinBlock] varsToMoveOutOfTryBlock,
+	map[str, list[Statement]] stmtsReferingModifyingVarsToMoveOut) {
+	
+	list[str] stmts = [];
+	
+	for (var <- varsToMoveOutOfTryBlock) {
+		stmts += "<var.initStatement>;\n";
+		if (var.name in stmtsReferingModifyingVarsToMoveOut) {
+			stmts += [ "<stmt>\n" | Statement stmt <- stmtsReferingModifyingVarsToMoveOut[var.name] ];
+		}
+	}
+	
 	return intercalate("", stmts);	
 }
 
 private str insertStmtsJustBeforeTryInMethodDeclaration(str stmts, MethodDeclaration mdl, str tryResourceSpecification) {
+	
 	mdlStr = "<mdl>";
 	indexOfTry = findFirst(mdlStr, tryResourceSpecification);
 	mdlBeforeTryWithResources = substring(mdlStr, 0, indexOfTry);
