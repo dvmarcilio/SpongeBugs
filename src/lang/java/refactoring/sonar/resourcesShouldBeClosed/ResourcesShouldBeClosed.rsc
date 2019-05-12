@@ -54,6 +54,7 @@ public void resourcesShouldBeClosed(loc fileLoc) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
 			varsToMoveOutOfTryBlock = [];
+			tryResourceSpecification = "";
 			
 			mdl = top-down-break visit(mdl) {
 				case (TryWithResourcesStatement) `<TryWithResourcesStatement _>`: {
