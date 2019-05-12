@@ -9,8 +9,6 @@ import List;
 import Map;
 import lang::java::util::MethodDeclarationUtils;
 import lang::java::util::CompilationUnitUtils;
-import lang::java::refactoring::forloop::LocalVariablesFinder;
-import lang::java::refactoring::forloop::MethodVar;
 
 private set[str] inputStreams = {"InputStream", "InputStreamReader", "ObjectInputStream", "FileInputStream",
 	"StringBufferInputStream", "BufferedInputStream", "DataInputStream"};
@@ -163,19 +161,6 @@ private list[VarInstantiatedWithinBlock] findVarsInstantiatedWithinBlock(Block b
 	}
 	
 	return varsWithinBlock;
-}
-
-private list[MethodVar] findVars(MethodDeclaration mdl) {
-	visit (mdl) {
-		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
-			return findLocalVariables(methodHeader, mBody);
-		}
-	}
-	return {};
-}
-
-private bool isVarCandidate(MethodDeclaration mdl, MethodVar var) {
-	return var.varType in resources && !isVarInstantiatedAsTypeToIgnore(mdl, var.name);
 }
 
 private bool isVarInstantiatedAsTypeToIgnore(MethodDeclaration mdl, str varName) {
