@@ -7,10 +7,14 @@ import String;
 import Set;
 import lang::java::\syntax::Java18;
 import lang::java::util::CompilationUnitUtils;
+import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::forloop::LocalVariablesFinder;
+import lang::java::refactoring::forloop::ClassFieldsFinder;
+
 
 private data Var = newVar(str name, str varType);
 
-private map[str, Var] constantsByName = ();
+private map[str, Var] fieldsByName = ();
 
 private bool shouldRewrite = false;
 
@@ -32,31 +36,57 @@ public void refactorAllReferenceComparison(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, "==") != -1 ;
+	return findFirst(javaFileContent, "==") != -1 || findFirst(javaFileContent, "!=") != -1 ;
 }
 
 public void refactorFileReferenceComparison(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
-	findConstants(unit);
+	findFields(unit);
 	
 	unit = top-down-break visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
-			mdl = visit(mdl) {
-				case (EqualityExpression) `<EqualityExpression lhs> == <RelationalExpression rhs>`: {
-					map[str, Var] localVarsByName = findVarsInstantiatedWithinMethod(mdl);
-					if (isComparisonOfInterest("<lhs>", "<rhs>", localVarsByName)) {
-						println(fileLoc.file);
-						println("<lhs> == <rhs>\n");
-					}					
-				} 
+			continueWithAnalysis = true;
+			modified = false;
+			visit(mdl) {
+				case (MethodDeclarator) `<MethodDeclarator mDecl>`:
+					continueWithAnalysis = findFirst("<mDecl>", "equals(") != 1;
+			}
+			if (continueWithAnalysis) {
+				mdl = visit(mdl) {
+					case (Expression) `<EqualityExpression lhs> == <RelationalExpression rhs>`: {
+						map[str, Var] localVarsByName = findVarsInstantiatedInMethod(mdl);
+						if (isComparisonOfInterest("<lhs>", "<rhs>", localVarsByName)) {
+							modified = true;
+							insert(parse(#Expression, "<lhs>.equals(<rhs>)"));
+						}					
+					}
+					case (Expression) `<EqualityExpression lhs> != <RelationalExpression rhs>`: {
+						map[str, Var] localVarsByName = findVarsInstantiatedInMethod(mdl);
+						if (isComparisonOfInterest("<lhs>", "<rhs>", localVarsByName)) {
+							modified = true;
+							insert(parse(#Expression, "!<lhs>.equals(<rhs>)"));
+						}					
+					}
+				}
+				if (modified) {
+					shouldRewrite = true;
+					insert mdl;
+				}
 			}
 		}
-		case (EqualityExpression) `<EqualityExpression lhs> == <RelationalExpression rhs>`: {
+		case (Expression) `<EqualityExpression lhs> == <RelationalExpression rhs>`: {
 			if (isComparisonOfInterest("<lhs>", "<rhs>")) {
-				println(fileLoc.file);
-				println("<lhs> == <rhs>\n");
+				shouldRewrite = true;
+				insert(parse(#Expression, "<lhs>.equals(<rhs>)"));
 			}
 		}
+		case (Expression) `<EqualityExpression lhs> != <RelationalExpression rhs>`: {
+			if (isComparisonOfInterest("<lhs>", "<rhs>")) {
+				shouldRewrite = true;
+				insert(parse(#Expression, "!<lhs>.equals(<rhs>)"));
+			}
+		}
+		
 	}
 
 	if (shouldRewrite) {
@@ -64,54 +94,30 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 	} 
 }
 
-private void findConstants(CompilationUnit unit) {
-	visit(unit) {
-		case (FieldDeclaration) `<FieldModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>;`: {
-			visit(vdl) {
-				case (VariableDeclaratorId) `<Identifier varId> <Dims? dims>`: { 
-					if (isStaticFinal(varMod)) {
-						varIdStr = trim("<varId>");
-						constantsByName[varIdStr] = newVar(varIdStr, trim("<varType>"));
-					}
-				}
-			}
-		}
+private void findFields(CompilationUnit unit) {
+	set[MethodVar] fields = findClassFields(unit);
+	for (field <- fields) {
+		fieldsByName[field.name] = newVar(field.name, field.varType);
 	}
 }
 
-private bool isStaticFinal(FieldModifier* varMod) {
-	varModStr = "<varMod>";
-	return contains(varModStr, "final") && contains(varModStr, "static");	
-}
-
-private map[str, Var] findVarsInstantiatedWithinMethod(MethodDeclaration mdl) {
-	map[str, Var] varsWithinMethod = ();
-	visit (mdl) {
-		case (LocalVariableDeclaration) `<LocalVariableDeclaration lVDecl>`: {
-			visit(lVDecl) {	
-				case (LocalVariableDeclaration) `<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorList vdl>`: {
-					visit(vdl) {
-						case (VariableDeclarator) `<VariableDeclaratorId varId> = new <TypeArguments? _> <ClassOrInterfaceTypeToInstantiate typeInstantiated> (<ArgumentList? _>)`: {
-							varIdStr = trim("<varId>");
-							varsWithinMethod[varIdStr] = newVar(varIdStr, trim("<varType>"));
-						}
-					}
-				}
-			}
-		}
+private map[str, Var] findVarsInstantiatedInMethod(MethodDeclaration mdl) {
+	map[str, Var] varsInMethod = ();
+	set[MethodVar] vars = findlocalVars(mdl);
+	for (var <- vars) {
+		varsInMethod[var.name] = newVar(var.name, var.varType);
 	}
-	
-	return varsWithinMethod;
+	return varsInMethod;
 }
 
 private bool isComparisonOfInterest(str exp1, str exp2) {
-	return isExpOfInterest(exp1, constantsByName) && isExpOfInterest(exp2, constantsByName);
+	return isExpOfInterest(exp1, fieldsByName) && isExpOfInterest(exp2, fieldsByName);
 }
 
 private bool isComparisonOfInterest(str exp, str exp2, map[str, Var] localVarsByName) {
 	if (trim(exp2) == "null") return false;
 	exp = trim(exp);
-	return isExpOfInterest(exp, localVarsByName, constantsByName) && isExpOfInterest(exp2, localVarsByName, constantsByName);
+	return isExpOfInterest(exp, localVarsByName, fieldsByName) && isExpOfInterest(exp2, localVarsByName, fieldsByName);
 }
 
 private bool isExpOfInterest(str exp, map[str, Var] map1, map[str, Var] map2) {
