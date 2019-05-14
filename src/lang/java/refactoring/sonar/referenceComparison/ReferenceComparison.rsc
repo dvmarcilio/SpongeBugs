@@ -18,7 +18,13 @@ private map[str, Var] fieldsByName = ();
 
 private bool shouldRewrite = false;
 
-private set[str] primitiveTypes = {"int", "double", "float", "char", "byte", "Object"};
+private set[str] primitiveTypes = {"int", "double", "float", "char", "byte", "short", "long"};
+
+// List and Collections actually does not override equals
+private set[str] typesWithoutEquals = {"List", "Set", "Map", "ArrayList", "LinkedList", "HashSet", "LinkedHashSet", "HashMap"};
+
+// there is a rule that enums should be compared using "=="
+private set[str] ignoreTypes = { "enum", "Object" } + primitiveTypes + typesWithoutEquals;
 
 public void refactorAllReferenceComparison(list[loc] locs) {
 	for(fileLoc <- locs) {
@@ -120,7 +126,7 @@ private bool isComparisonOfInterest(str exp, str exp2, map[str, Var] localVarsBy
 	exp2 = trim(exp2);
 	exp1OfInterest = isExpOfInterest(exp, localVarsByName, fieldsByName);
 	exp2OfInterest = isExpOfInterest(exp2, localVarsByName, fieldsByName);
-	return exp1OfInterest && exp2OfInterest;
+	return exp1OfInterest || exp2OfInterest;
 }
 
 private bool isExpOfInterest(str exp, map[str, Var] map1, map[str, Var] map2) {
@@ -128,15 +134,12 @@ private bool isExpOfInterest(str exp, map[str, Var] map1, map[str, Var] map2) {
 }
 
 private bool isExpOfInterest(str exp, map[str, Var] varByName) {
-	if (isStringLiteral(exp))
-		return true;
-	
 	if(exp in varByName) {
 		var = varByName[exp];
-		return var.varType notin primitiveTypes;
-	}
+		return var.varType notin ignoreTypes;
+	}	
 	
-	return false;
+	return isStringLiteral(exp);
 }
 
 private bool isStringLiteral(str exp) {
