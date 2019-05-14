@@ -115,8 +115,9 @@ private bool isComparisonOfInterest(str exp1, str exp2) {
 }
 
 private bool isComparisonOfInterest(str exp, str exp2, map[str, Var] localVarsByName) {
-	if (trim(exp2) == "null") return false;
+	if (trim(exp) == "null" || trim(exp2) == "null") return false;
 	exp = trim(exp);
+	exp2 = trim(exp2);
 	exp1OfInterest = isExpOfInterest(exp, localVarsByName, fieldsByName);
 	exp2OfInterest = isExpOfInterest(exp2, localVarsByName, fieldsByName);
 	return exp1OfInterest && exp2OfInterest;
@@ -127,22 +128,23 @@ private bool isExpOfInterest(str exp, map[str, Var] map1, map[str, Var] map2) {
 }
 
 private bool isExpOfInterest(str exp, map[str, Var] varByName) {
-	if (isLiteralOtherThanString(exp))
-		return false;
+	if (isStringLiteral(exp))
+		return true;
 	
 	if(exp in varByName) {
 		var = varByName[exp];
 		return var.varType notin primitiveTypes;
 	}
+	
 	return false;
 }
 
-private bool isLiteralOtherThanString(str exp) {
+private bool isStringLiteral(str exp) {
 	try {
 		parse(#StringLiteral, exp);
-		return false;
+		return true;
 	} catch: {
-		return isLiteral(exp);
+		return false;
 	}
 }
 
