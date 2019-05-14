@@ -7,6 +7,15 @@ import Set;
 import String;
 import lang::java::refactoring::forloop::MethodVar;
 
+public set[MethodVar] findlocalVars(MethodDeclaration mdl) {
+	visit (mdl) {
+		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
+			return findLocalVariables(methodHeader, mBody);
+		}
+	}
+	return {};
+}
+
 public set[MethodVar] findLocalVariables(MethodHeader methodHeader, MethodBody methodBody) {
 	return findVariablesAsParameters(methodHeader) + findVariablesInsideBody(methodBody);
 }

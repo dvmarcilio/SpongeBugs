@@ -125,22 +125,13 @@ private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
 }
 
 private bool isStringAndDeclaredWithinMethod(MethodDeclaration mdl, ExpressionName exp) {
-	set[MethodVar] vars = findVars(mdl);
+	set[MethodVar] vars = findlocalVars(mdl);
 	if ("<exp>" notin retrieveNonParametersNames(vars)) {
 		return false;
 	}
 	
 	MethodVar var = findByName(vars, "<exp>");
 	return isString(var) && !var.isParameter;
-}
-
-private set[MethodVar] findVars(MethodDeclaration mdl) {
-	visit (mdl) {
-		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
-			return findLocalVariables(methodHeader, mBody);
-		}
-	}
-	return {};
 }
 
 private bool methodReturnsStringFromExpLHS(MethodDeclaration mdl, ExpressionName exp) {
