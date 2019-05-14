@@ -18,7 +18,7 @@ private map[str, Var] fieldsByName = ();
 
 private bool shouldRewrite = false;
 
-private set[str] primitiveTypes = {"String", "int", "double", "float", "char", "byte", "Object"};
+private set[str] primitiveTypes = {"int", "double", "float", "char", "byte", "Object"};
 
 public void refactorAllReferenceComparison(list[loc] locs) {
 	for(fileLoc <- locs) {
@@ -117,7 +117,9 @@ private bool isComparisonOfInterest(str exp1, str exp2) {
 private bool isComparisonOfInterest(str exp, str exp2, map[str, Var] localVarsByName) {
 	if (trim(exp2) == "null") return false;
 	exp = trim(exp);
-	return isExpOfInterest(exp, localVarsByName, fieldsByName) && isExpOfInterest(exp2, localVarsByName, fieldsByName);
+	exp1OfInterest = isExpOfInterest(exp, localVarsByName, fieldsByName);
+	exp2OfInterest = isExpOfInterest(exp2, localVarsByName, fieldsByName);
+	return exp1OfInterest && exp2OfInterest;
 }
 
 private bool isExpOfInterest(str exp, map[str, Var] map1, map[str, Var] map2) {
