@@ -5,7 +5,6 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import String;
 import Set;
-import lang::java::\syntax::Java18;
 import lang::java::util::CompilationUnitUtils;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
