@@ -41,3 +41,12 @@ public bool isImportPresent(list[ImportDeclaration] importDecls, str importStrs.
 	}
 	return false;
 }
+
+public CompilationUnit addImport(CompilationUnit unit, list[ImportDeclaration] importDecls, str importPackageOrType) {
+	importDecls += parse(#ImportDeclaration, "import <importPackageOrType>;");
+	importDeclsStrs = [ unparse(importDecl) | ImportDeclaration importDecl <- importDecls ];
+	unit = top-down-break visit(unit) {
+		case Imports _ => parse(#Imports, intercalate("\n", importDeclsStrs))
+	}
+	return unit;
+}

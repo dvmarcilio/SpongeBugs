@@ -232,15 +232,6 @@ private CompilationUnit addNeededImportsForGetters(CompilationUnit unit, list[Im
 	return unit;
 }
 
-private CompilationUnit addImport(CompilationUnit unit, list[ImportDeclaration] importDecls, str importPackageOrType) {
-	importDecls += parse(#ImportDeclaration, "import <importPackageOrType>;");
-	importDeclsStrs = [ unparse(importDecl) | ImportDeclaration importDecl <- importDecls ];
-	unit = top-down-break visit(unit) {
-		case Imports _ => parse(#Imports, intercalate("\n", importDeclsStrs))
-	}
-	return unit;
-}
-
 private CompilationUnit addNeededImportsForSetters(CompilationUnit unit, list[ImportDeclaration] importDecls) {
 	if (!isImportPresent(importDecls, "java.util.*")) {
 		for (usedTypeForSetter <- usedTypesForSetters) {
