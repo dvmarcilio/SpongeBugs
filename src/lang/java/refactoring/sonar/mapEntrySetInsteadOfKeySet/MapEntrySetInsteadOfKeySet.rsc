@@ -61,8 +61,14 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 									set[MethodInvocation] mapGetCalls = callsToMapGet(loopBody, possibleMapExp, iteratedVarName);
 								if (size(mapGetCalls) > 0) {
 									modified = true;
-									loopBody = refactorLoopBody(loopBody, possibleMapExp, expVar(possibleMapExp.exp, localVarsByName), mapGetCalls, iteratedVarName);
-									insert (EnhancedForStatement) `for (<VariableModifier* vm><UnannType ut><VariableDeclaratorId iteratedVarName>: <Expression exp>) <Statement loopBody>`;						
+									mapVar = expVar(possibleMapExp.exp, localVarsByName);
+									
+									ut = parse(#UnannType, "Entry<mapVar.generics>");
+									iteratedVarName = parse(#VariableDeclaratorId, ENTRY_NAME);
+									exp = parse(#Expression, "<possibleMapExp.exp>.entrySet()");
+									
+									loopBody = refactorLoopBody(loopBody, possibleMapExp, mapVar , mapGetCalls, iteratedVarName);
+									insert (EnhancedForStatement) `for (<VariableModifier* vm><UnannType ut> <VariableDeclaratorId iteratedVarName> : <Expression exp>) <Statement loopBody>`;						
 								}
 							}
 						}
