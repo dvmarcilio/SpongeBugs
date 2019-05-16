@@ -227,16 +227,16 @@ private CompilationUnit addNeededImports(CompilationUnit unit, GettersAndSetters
 }
 
 private CompilationUnit addNeededImportsForGetters(CompilationUnit unit, list[ImportDeclaration] importDecls) {
-	if (!isImportPresent(importDecls, "java.util.*", importForGetters))
+	if (!isAnyImportPresent(importDecls, "java.util.*", importForGetters))
 		unit = addImport(unit, importDecls, importForGetters);
 	return unit;
 }
 
 private CompilationUnit addNeededImportsForSetters(CompilationUnit unit, list[ImportDeclaration] importDecls) {
-	if (!isImportPresent(importDecls, "java.util.*")) {
+	if (!isAnyImportPresent(importDecls, "java.util.*")) {
 		for (usedTypeForSetter <- usedTypesForSetters) {
 			importForSetter = importForSetterType[usedTypeForSetter];
-			if(!isImportPresent(importDecls, importForSetter)) {
+			if(!isAnyImportPresent(importDecls, importForSetter)) {
 				unit = addImport(unit, importDecls, importForSetter);
 				importDecls = retrieveImportDeclarations(unit);
 			}

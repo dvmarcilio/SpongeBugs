@@ -19,7 +19,7 @@ public list[ImportDeclaration] retrieveImportDeclarations(CompilationUnit unit) 
 	return importDecls;
 }
 
-public bool isImportPresent(CompilationUnit unit, str importStrs...) {
+public bool isAnyImportPresent(CompilationUnit unit, str importStrs...) {
 	top-down visit(unit) {
 		case ImportDeclaration importDecl: {
 			for (importStr <- importStrs) {
@@ -32,7 +32,7 @@ public bool isImportPresent(CompilationUnit unit, str importStrs...) {
 	return false;
 }
 
-public bool isImportPresent(list[ImportDeclaration] importDecls, str importStrs...) {
+public bool isAnyImportPresent(list[ImportDeclaration] importDecls, str importStrs...) {
 	for(importDecl <- importDecls) {
 		for(importStr <- importStrs) {
 			if(contains("<importDecl>", importStr))
