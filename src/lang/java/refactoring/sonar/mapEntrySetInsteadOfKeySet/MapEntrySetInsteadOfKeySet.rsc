@@ -10,7 +10,7 @@ import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
 
-private data Var = newVar(str name, str varType);
+private data Var = newVar(str name, str varType, str generics);
 
 private map[str, Var] fieldsByName = ();
 
@@ -39,6 +39,7 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	return findFirst(javaFileContent, ".keySet()") != 1 && findFirst(javaFileContent, ".get(") != 1;
 }
 
+// we need to import: import java.util.Map.Entry;
 public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	findFields(unit);
@@ -80,7 +81,7 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 private void findFields(CompilationUnit unit) {
 	set[MethodVar] fields = findClassFields(unit);
 	for (field <- fields) {
-		fieldsByName[field.name] = newVar(field.name, varTypeWithoutGenerics(field.varType));
+		fieldsByName[field.name] = newVar(field.name, varTypeWithoutGenerics(field.varType), extractGenericsFromVarType(field.varType));
 	}
 }
 
@@ -92,11 +93,19 @@ private str varTypeWithoutGenerics(str varType) {
 	return varType;
 }
 
+private str extractGenericsFromVarType(str varType) {
+	indexOfOpeningGenerics = findFirst(varType, "\<");
+	if (indexOfOpeningGenerics != -1) {
+		return substring(varType, indexOfOpeningGenerics);
+	}
+	return "";
+}
+
 private map[str, Var] findVarsInstantiatedInMethod(MethodDeclaration mdl) {
 	map[str, Var] varsInMethod = ();
 	set[MethodVar] vars = findlocalVars(mdl);
 	for (var <- vars) {
-		varsInMethod[var.name] = newVar(var.name, varTypeWithoutGenerics(var.varType));
+		varsInMethod[var.name] = newVar(var.name, varTypeWithoutGenerics(var.varType), extractGenericsFromVarType(field.varType));
 	}
 	return varsInMethod;
 }
