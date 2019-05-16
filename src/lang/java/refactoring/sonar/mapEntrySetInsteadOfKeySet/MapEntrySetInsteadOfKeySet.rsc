@@ -189,13 +189,13 @@ private Statement refactorLoopBody(Statement loopBody, MapExp mapExp, Var var,
 		set[MethodInvocation] mapGetCalls, VariableDeclaratorId iteratedVarName) {
 	loopBody = replaceGetCalls(loopBody, mapGetCalls);
 	loopBody = visit(loopBody) {
-		case (Expression) `<Primary primary>`: {
-			if(trim("<primary>") == trim("<iteratedVarName>"))
-				insert parse(#Expression, "<ENTRY_NAME>.getKey()");
-		}
 		case (Expression) `<ExpressionName expName>`: {
 			if(trim("<expName>") == trim("<iteratedVarName>"))
 				insert parse(#Expression, "<ENTRY_NAME>.getKey()");
+		}
+		case (UnaryExpression) `<UnaryExpression expName>`: {
+			if(trim("<expName>") == trim("<iteratedVarName>"))
+				insert parse(#UnaryExpression, "<ENTRY_NAME>.getKey()");
 		}
 	}
 	return loopBody;
