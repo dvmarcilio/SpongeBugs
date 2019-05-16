@@ -9,6 +9,7 @@ import lang::java::util::CompilationUnitUtils;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
+import lang::java::util::CompilationUnitUtils;
 
 private data Var = newVar(str name, str varType, str generics);
 
@@ -43,7 +44,6 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 		findFirst(javaFileContent, ".get(") != 1;
 }
 
-// we need to import: import java.util.Map.Entry;
 public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	findFields(unit);
@@ -93,6 +93,7 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 	}
 	
 	if (shouldRewrite) {
+		unit = addNeededImports(unit);
 		writeFile(fileLoc, unit);
 	} 
 }
@@ -210,4 +211,12 @@ private Statement replaceGetCalls(Statement loopBody, set[MethodInvocation] mapG
 		}
 	}
 	return loopBody;
+}
+
+private CompilationUnit addNeededImports(CompilationUnit unit) {
+	importDecls = retrieveImportDeclarations(unit);
+	if (!isAnyImportPresent(importDecls, "java.util.Map.*", "java.util.Map.Entry")) {
+		unit = addImport(unit, importDecls, "java.util.Map.Entry");
+	}
+	return unit;
 }
