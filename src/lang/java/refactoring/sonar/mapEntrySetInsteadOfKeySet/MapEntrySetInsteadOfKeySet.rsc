@@ -18,6 +18,8 @@ private bool shouldRewrite = false;
 
 private set[str] mapTypes = {"Map", "HashMap", "LinkedHashMap", "TreeMap"};
 
+private data MapExp = mapExp(bool isMapReference, str name, Expression exp); 
+
 public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
@@ -34,7 +36,7 @@ public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, ".keySet()") != 1;
+	return findFirst(javaFileContent, ".keySet()") != 1 && findFirst(javaFileContent, ".get(") != 1;
 }
 
 public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
@@ -49,9 +51,14 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 					enhancedForStmt = visit(enhancedForStmt) {
 						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression exp> ) <Statement loopBody>`: {
 							map[str, Var] localVarsByName = findVarsInstantiatedInMethod(mdl);
-							if (isExpressionCallingKeySetOnAMapInstance(exp, localVarsByName)) {
-								println("enhancedFor interating on keySet()");
-								println(fileLoc.file);
+							possibleMapExp = isExpressionCallingKeySetOnAMapInstance(exp, localVarsByName);
+							if (possibleMapExp.isMapReference) {
+									println("enhancedFor interating on keySet()");
+									println(fileLoc.file);
+									set[MethodInvocation] mapGetCalls = callsToMapGet(loopBody, possibleMapExp, iteratedVarName);
+								if (size(mapGetCalls) > 0) {
+									println("calls to map.get() inside loop body");
+								}
 								println();
 							}
 						}
@@ -95,16 +102,24 @@ private map[str, Var] findVarsInstantiatedInMethod(MethodDeclaration mdl) {
 }
 
 // What to do with: for (MMenuElement menuElement : new HashSet<>(modelToContribution.keySet())) 
-private bool isExpressionCallingKeySetOnAMapInstance(Expression exp, map[str, Var] localVarsByName) {
+private MapExp isExpressionCallingKeySetOnAMapInstance(Expression exp, map[str, Var] localVarsByName) {
 	visit(exp) {
 		case (MethodInvocation) `<ExpressionName beforeFunc>.keySet()`: {
-			return isBeforeFuncAMapInstance("<beforeFunc>", localVarsByName);
+			return generateMapExp(beforeFunc, localVarsByName);
 		}
 		case (MethodInvocation) `<Primary beforeFunc>.keySet()`: {
-			return isBeforeFuncAMapInstance("<beforeFunc>", localVarsByName);
+			return generateMapExp(beforeFunc, localVarsByName);
 		}	
 	}
-	return false;
+	return mapExp(false, "", exp);
+}
+
+private MapExp generateMapExp(Tree beforeFunc, map[str, Var] localVarsByName) {
+	if (isBeforeFuncAMapInstance("<beforeFunc>", localVarsByName)) {
+		return mapExp(true, "<beforeFunc>", parse(#Expression, "<beforeFunc>"));
+	} else {
+		return mapExp(false, "", parse(#Expression, "<beforeFunc>"));
+	}
 }
 
 private bool isBeforeFuncAMapInstance(str beforeFunc, map[str, Var] localVarsByName) {
@@ -115,4 +130,20 @@ private bool isBeforeFuncAMapInstance(str beforeFunc, map[str, Var] localVarsByN
 		return fieldsByName[beforeFunc].varType in mapTypes;
 	}
 	return false;
+}
+
+private set[MethodInvocation] callsToMapGet(Statement loopBody, MapExp mapExp, VariableDeclaratorId iteratedVarName) {
+	set[MethodInvocation] mapGetCalls = {};
+	visit(loopBody) {
+		case (MethodInvocation) `<MethodInvocation mi>`: {
+			visit(mi) {
+				case (MethodInvocation) `<ExpressionName beforeFunc>.get(<ArgumentList? args>)`: {
+					if ("<beforeFunc>" == "<mapExp.exp>" && trim("<args>") == trim("<iteratedVarName>")) {
+						mapGetCalls += mi;
+					}
+				}
+			}
+		}
+	}
+	return mapGetCalls;
 }
