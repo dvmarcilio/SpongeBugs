@@ -63,11 +63,11 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 									modified = true;
 									mapVar = expVar(possibleMapExp.exp, localVarsByName);
 									
+									loopBody = refactorLoopBody(loopBody, possibleMapExp, mapVar , mapGetCalls, iteratedVarName);
+									
 									ut = parse(#UnannType, "Entry<mapVar.generics>");
 									iteratedVarName = parse(#VariableDeclaratorId, ENTRY_NAME);
 									exp = parse(#Expression, "<possibleMapExp.exp>.entrySet()");
-									
-									loopBody = refactorLoopBody(loopBody, possibleMapExp, mapVar , mapGetCalls, iteratedVarName);
 									
 									// Ugly, but works to add a space after VariableModifier, if it's the case
 									if (isEmpty("<vm>")) {
