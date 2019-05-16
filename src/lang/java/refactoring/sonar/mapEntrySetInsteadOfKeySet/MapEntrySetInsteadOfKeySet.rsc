@@ -18,7 +18,9 @@ private bool shouldRewrite = false;
 
 private set[str] mapTypes = {"Map", "HashMap", "LinkedHashMap", "TreeMap"};
 
-private data MapExp = mapExp(bool isMapReference, str name, Expression exp); 
+private data MapExp = mapExp(bool isMapReference, str name, Expression exp);
+
+private str ENTRY_NAME = "entry";
 
 public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 	for(fileLoc <- locs) {
@@ -36,7 +38,9 @@ public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, ".keySet()") != 1 && findFirst(javaFileContent, ".get(") != 1;
+	return findFirst(javaFileContent, "java.util.") != -1 &&
+		findFirst(javaFileContent, ".keySet()") != 1 &&
+		findFirst(javaFileContent, ".get(") != 1;
 }
 
 // we need to import: import java.util.Map.Entry;
@@ -50,19 +54,21 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 			mdl = visit(mdl) {
 				case (EnhancedForStatement) `<EnhancedForStatement enhancedForStmt>`: {
 					enhancedForStmt = visit(enhancedForStmt) {
-						case (EnhancedForStatement) `for ( <VariableModifier* _> <UnannType _> <VariableDeclaratorId iteratedVarName>: <Expression exp> ) <Statement loopBody>`: {
+						case (EnhancedForStatement) `for ( <VariableModifier* vm> <UnannType ut> <VariableDeclaratorId iteratedVarName>: <Expression exp> ) <Statement loopBody>`: {
 							map[str, Var] localVarsByName = findVarsInstantiatedInMethod(mdl);
 							possibleMapExp = isExpressionCallingKeySetOnAMapInstance(exp, localVarsByName);
 							if (possibleMapExp.isMapReference) {
-									println("enhancedFor interating on keySet()");
-									println(fileLoc.file);
 									set[MethodInvocation] mapGetCalls = callsToMapGet(loopBody, possibleMapExp, iteratedVarName);
 								if (size(mapGetCalls) > 0) {
-									println("calls to map.get() inside loop body");
+									modified = true;
+									loopBody = refactorLoopBody(loopBody, possibleMapExp, expVar(possibleMapExp.exp, localVarsByName), mapGetCalls, iteratedVarName);
+									insert (EnhancedForStatement) `for (<VariableModifier* vm><UnannType ut><VariableDeclaratorId iteratedVarName>: <Expression exp>) <Statement loopBody>`;						
 								}
-								println();
 							}
 						}
+					}
+					if (modified) {
+						insert enhancedForStmt;
 					}
 				}
 			}
@@ -105,7 +111,7 @@ private map[str, Var] findVarsInstantiatedInMethod(MethodDeclaration mdl) {
 	map[str, Var] varsInMethod = ();
 	set[MethodVar] vars = findlocalVars(mdl);
 	for (var <- vars) {
-		varsInMethod[var.name] = newVar(var.name, varTypeWithoutGenerics(var.varType), extractGenericsFromVarType(field.varType));
+		varsInMethod[var.name] = newVar(var.name, varTypeWithoutGenerics(var.varType), extractGenericsFromVarType(var.varType));
 	}
 	return varsInMethod;
 }
@@ -155,4 +161,40 @@ private set[MethodInvocation] callsToMapGet(Statement loopBody, MapExp mapExp, V
 		}
 	}
 	return mapGetCalls;
+}
+
+private Var expVar(Expression exp, map[str, Var] localVarsByName) {
+	expStr = "<exp>";
+	if (expStr in localVarsByName)
+		return localVarsByName[expStr];
+	if (expStr in fieldsByName)
+		return fieldsByName[expStr];
+	throw "Exp should be either a field or a local var";
+}
+
+private Statement refactorLoopBody(Statement loopBody, MapExp mapExp, Var var,
+		set[MethodInvocation] mapGetCalls, VariableDeclaratorId iteratedVarName) {
+	loopBody = replaceGetCalls(loopBody, mapGetCalls);
+	loopBody = visit(loopBody) {
+		case (Expression) `<Primary primary>`: {
+			if(trim("<primary>") == trim("<iteratedVarName>"))
+				insert parse(#Expression, "<ENTRY_NAME>.getKey()");
+		}
+		case (Expression) `<ExpressionName expName>`: {
+			if(trim("<expName>") == trim("<iteratedVarName>"))
+				insert parse(#Expression, "<ENTRY_NAME>.getKey()");
+		}
+	}
+	return loopBody;
+}
+
+private Statement replaceGetCalls(Statement loopBody, set[MethodInvocation] mapGetCalls) {
+	loopBody = visit(loopBody) {
+		case (MethodInvocation) `<MethodInvocation mi>`: {
+			if (mi in mapGetCalls) {
+				insert parse(#MethodInvocation, "<ENTRY_NAME>.getValue()");
+			}
+		}
+	}
+	return loopBody;
 }
