@@ -5,6 +5,7 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import String;
 import Set;
+import Map;
 import lang::java::util::CompilationUnitUtils;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
@@ -30,6 +31,7 @@ public void refactorAllReferenceComparison(list[loc] locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				shouldRewrite = false;
+				fieldsByName = ();
 				refactorFileReferenceComparison(fileLoc);
 			}
 		} catch: {
@@ -46,27 +48,32 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 
 public void refactorFileReferenceComparison(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
-	findFields(unit);
 	
 	unit = top-down-break visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			continueWithAnalysis = true;
+			map[str, Var] localVarsByName = ();
 			modified = false;
 			visit(mdl) {
 				case (MethodDeclarator) `<MethodDeclarator mDecl>`:
+					// Not analyzing equals()
 					continueWithAnalysis = findFirst("<mDecl>", "equals(") != 1;
 			}
 			if (continueWithAnalysis) {
 				mdl = visit(mdl) {
 					case (Expression) `<EqualityExpression lhs> == <RelationalExpression rhs>`: {
-						map[str, Var] localVarsByName = findVarsInstantiatedInMethod(mdl);
+						findFields(unit);
+						if(isEmpty(localVarsByName)) 
+							localVarsByName = findVarsInstantiatedInMethod(mdl);
 						if (isComparisonOfInterest("<lhs>", "<rhs>", localVarsByName)) {
 							modified = true;
 							insert(parse(#Expression, "<lhs>.equals(<rhs>)"));
 						}					
 					}
 					case (Expression) `<EqualityExpression lhs> != <RelationalExpression rhs>`: {
-						map[str, Var] localVarsByName = findVarsInstantiatedInMethod(mdl);
+						findFields(unit);
+						if(isEmpty(localVarsByName)) 
+							localVarsByName = findVarsInstantiatedInMethod(mdl);
 						if (isComparisonOfInterest("<lhs>", "<rhs>", localVarsByName)) {
 							modified = true;
 							insert(parse(#Expression, "!<lhs>.equals(<rhs>)"));
@@ -80,12 +87,14 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 			}
 		}
 		case (Expression) `<EqualityExpression lhs> == <RelationalExpression rhs>`: {
+			findFields(unit);
 			if (isComparisonOfInterest("<lhs>", "<rhs>")) {
 				shouldRewrite = true;
 				insert(parse(#Expression, "<lhs>.equals(<rhs>)"));
 			}
 		}
 		case (Expression) `<EqualityExpression lhs> != <RelationalExpression rhs>`: {
+			findFields(unit);
 			if (isComparisonOfInterest("<lhs>", "<rhs>")) {
 				shouldRewrite = true;
 				insert(parse(#Expression, "!<lhs>.equals(<rhs>)"));
@@ -100,9 +109,11 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 }
 
 private void findFields(CompilationUnit unit) {
-	set[MethodVar] fields = findClassFields(unit);
-	for (field <- fields) {
-		fieldsByName[field.name] = newVar(field.name, field.varType);
+	if(isEmpty(fieldsByName)) {
+		set[MethodVar] fields = findClassFields(unit);
+		for (field <- fields) {
+			fieldsByName[field.name] = newVar(field.name, field.varType);
+		}
 	}
 }
 
