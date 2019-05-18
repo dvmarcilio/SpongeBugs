@@ -18,7 +18,7 @@ private map[str, Var] fieldsByName = ();
 
 private bool shouldRewrite = false;
 
-private set[str] primitiveTypes = {"int", "double", "float", "char", "byte", "short", "long"};
+private set[str] primitiveTypes = {"int", "double", "float", "char", "byte", "short", "long", "boolean"};
 
 // List and Collections actually does not override equals
 private set[str] typesWithoutEquals = {"List", "Set", "Map", "ArrayList", "LinkedList", "HashSet", "LinkedHashSet", "HashMap"};
@@ -55,9 +55,10 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 			map[str, Var] localVarsByName = ();
 			modified = false;
 			visit(mdl) {
-				case (MethodDeclarator) `<MethodDeclarator mDecl>`:
+				case (MethodDeclarator) `<MethodDeclarator mDecl>`: {
 					// Not analyzing equals()
 					continueWithAnalysis = findFirst("<mDecl>", "equals(") != 1;
+				}
 			}
 			if (continueWithAnalysis) {
 				mdl = visit(mdl) {
