@@ -120,12 +120,16 @@ private bool isComparisonOfInterest(str exp1, str exp2) {
 }
 
 private bool isComparisonOfInterest(str exp, str exp2, map[str, Var] localVarsByName) {
-	if (trim(exp) == "null" || trim(exp2) == "null") return false;
+	if (equalsNulls(exp) || equalsNulls(exp2)) return false;
 	exp = trim(exp);
 	exp2 = trim(exp2);
 	exp1OfInterest = isExpOfInterest(exp, localVarsByName, fieldsByName);
 	exp2OfInterest = isExpOfInterest(exp2, localVarsByName, fieldsByName);
 	return exp1OfInterest || exp2OfInterest;
+}
+
+private bool equalsNulls(str exp) {
+	return trim(exp) == "null";
 }
 
 private bool isExpOfInterest(str exp, map[str, Var] map1, map[str, Var] map2) {
