@@ -5,10 +5,9 @@ import lang::java::\syntax::Java18;
 import ParseTree;
 import lang::java::util::CompilationUnitUtils;
 import String;
+import lang::java::util::GeneralUtils;
 
-// TODO: BigInteger, BigDecimal, Byte, Character, Short
-private set[str] classesToCheck = {"String", "Long", "Float", "Double", "Integer", "Boolean"};
-//private set[str] classesToCheck = {"BigDecimal"};
+private set[str] classesToCheck = getPrimitiveWrappers() + "String";
 
 public void stringPrimitiveConstructor(list[loc] locs) {
 	for(fileLoc <- locs) {
