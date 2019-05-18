@@ -10,7 +10,9 @@ import lang::java::util::CompilationUnitUtils;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
-
+import lang::java::util::GeneralUtils;
+import util::Benchmark;
+import util::Math;
 
 private data Var = newVar(str name, str varType);
 
@@ -25,6 +27,10 @@ private set[str] typesWithoutEquals = {"List", "Set", "Map", "ArrayList", "Linke
 
 // there is a rule that enums should be compared using "=="
 private set[str] ignoreTypes = { "enum", "Object" } + primitiveTypes + typesWithoutEquals;
+
+// Moving towards String and Boxed types. Less intrusive transformations
+// We could change if we know that a class overrides equals() 
+private set[str] classesToConsider = getPrimitiveWrappers() + "String";
 
 public void refactorAllReferenceComparison(list[loc] locs) {
 	for(fileLoc <- locs) {
@@ -43,7 +49,19 @@ public void refactorAllReferenceComparison(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, "==") != -1 || findFirst(javaFileContent, "!=") != -1 ;
+	return hasWrapper(javaFileContent) && hasEqualityOperator(javaFileContent); 
+}
+
+private bool hasWrapper(str javaFileContent) {
+	for (wrapper <- classesToConsider) {
+		if (findFirst(javaFileContent, wrapper) != -1)
+			return true;
+	}
+	return false;
+}
+
+private bool hasEqualityOperator(str javaFileContent) {
+	return findFirst(javaFileContent, "==") != -1 || findFirst(javaFileContent, "!=") != -1;
 }
 
 public void refactorFileReferenceComparison(loc fileLoc) {
@@ -137,7 +155,7 @@ private bool isComparisonOfInterest(str exp, str exp2, map[str, Var] localVarsBy
 	exp2 = trim(exp2);
 	exp1OfInterest = isExpOfInterest(exp, localVarsByName, fieldsByName);
 	exp2OfInterest = isExpOfInterest(exp2, localVarsByName, fieldsByName);
-	return exp1OfInterest || exp2OfInterest;
+	return exp1OfInterest && exp2OfInterest;
 }
 
 private bool equalsNulls(str exp) {
@@ -149,6 +167,16 @@ private bool isExpOfInterest(str exp, map[str, Var] map1, map[str, Var] map2) {
 }
 
 private bool isExpOfInterest(str exp, map[str, Var] varByName) {
+	if (exp in varByName) {
+		var = varByName[exp];
+		return var.varType in classesToConsider;
+	}
+	
+	return isStringLiteral(exp);
+}
+
+// Can be used if we want to transform for all classes
+private bool isExpOfInterestGeneralReference(str exp, map[str, Var] varByName) {
 	if(exp in varByName) {
 		var = varByName[exp];
 		return var.varType notin ignoreTypes;
