@@ -7,6 +7,8 @@ import String;
 import Set;
 import Map;
 import lang::java::util::CompilationUnitUtils;
+import lang::java::util::MethodDeclarationUtils;
+import lang::java::util::GeneralUtils;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
@@ -39,6 +41,8 @@ private map[str, Var] fieldsByName = ();
 private map[str, Var] localVarsByName = ();
 
 private bool shouldRewrite = false;
+
+private data RefactoredMethodInvocation = refactoredMI(bool wasRefactored, MethodInvocation mi);
 
 public void refactorAllParseToConvertStringToPrimitive(list[loc] locs) {
 	for (fileLoc <- locs) {
@@ -78,44 +82,20 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 			localVarsByName = ();
 			mdl = top-down-break visit(mdl) {
 				case (LocalVariableDeclaration) `<UnannPrimitiveType varType> <Identifier varName> = <Expression rhs>`: {
-					rhs = top-down-break visit(rhs) {
-						case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).<Identifier methodName>()`: {
-							if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
-								findFields(unit);
-								findLocalVars(mdl);
-								if (isArgumentAString(args)) {
-									modified = true;
-									parseMethod = parseMethodByType["<expName>"];
-									insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
-								}					
-							}
-						}
-						// Eclipse special cases
-						case (MethodInvocation) `(<ExpressionName expName>.valueOf(<ArgumentList? args>)).<Identifier methodName>()`: {
-							if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
-								findFields(unit);
-								findLocalVars(mdl);
-								if (isArgumentAString(args)) {
-									modified = true;
-									parseMethod = parseMethodByType["<expName>"];
-									insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
-								}					
-							}
-						}
-						case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>)`: {
-							if("<expName>" in wrappers) {
-								findFields(unit);
-								findLocalVars(mdl);
-								if (isArgumentAString(args)) {
-									modified = true;
-									parseMethod = parseMethodByType["<expName>"];
-									insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
-								}					
-							}
-						}
+					miRefactored = refactorExpression(unit, mdl, rhs);
+					if (miRefactored.wasRefactored) {
+						modified = true;
+						insert parse(#LocalVariableDeclaration, "<varType> <varName> = <miRefactored.mi>");
 					}
-					if (modified) {
-						insert parse(#LocalVariableDeclaration, "<varType> <varName> = <rhs>");
+				}
+				case (ReturnStatement) `return <Expression exp>;`: {
+					methodReturnType = retrieveMethodReturnTypeAsStr(mdl);
+					if (methodReturnType in getPrimitives()) {
+						miRefactored = refactorExpression(unit, mdl, exp);
+						if (miRefactored.wasRefactored) {
+							modified = true;
+							insert parse(#ReturnStatement, "return <miRefactored.mi>;");
+						}
 					}
 				}
 			}
@@ -131,23 +111,6 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 	} 
 }
 
-private void findFields(CompilationUnit unit) {
-	if(isEmpty(fieldsByName)) {
-		set[MethodVar] fields = findClassFields(unit);
-		for (field <- fields) {
-			fieldsByName[field.name] = newVar(field.name, field.varType);
-		}
-	}
-}
-
-private void findLocalVars(MethodDeclaration mdl) {
-	if(isEmpty(localVarsByName)) {
-		set[MethodVar] vars = findlocalVars(mdl);
-		for (var <- vars) {
-			localVarsByName[var.name] = newVar(var.name, var.varType);
-		}
-	}
-}
 
 private bool isArgumentAString(ArgumentList? args) {
 	return isArgumentAFieldOrLocalVarString("<args>") || isStringLiteral("<args>");
@@ -172,5 +135,57 @@ private bool isStringLiteral(str exp) {
 		return true;
 	} catch: {
 		return false;
+	}
+}
+
+private RefactoredMethodInvocation refactorExpression(CompilationUnit unit, MethodDeclaration mdl, Expression exp) {
+	top-down-break visit(exp) {
+		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).<Identifier methodName>()`: {
+			if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
+				return refactorMethodInvocation(unit, mdl, expName, args);			
+			}
+		}
+		// Eclipse special cases
+		case (MethodInvocation) `(<ExpressionName expName>.valueOf(<ArgumentList? args>)).<Identifier methodName>()`: {
+			if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
+				return refactorMethodInvocation(unit, mdl, expName, args);					
+			}
+		}
+		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>)`: {
+			if("<expName>" in wrappers) {
+				return refactorMethodInvocation(unit, mdl, expName, args);				
+			}
+		}
+	}
+	
+	return refactoredMI(false, parse(#MethodInvocation, "a.a()"));
+}
+
+private RefactoredMethodInvocation refactorMethodInvocation(CompilationUnit unit, MethodDeclaration mdl,
+		ExpressionName expName, ArgumentList? args) {
+	findFields(unit);
+	findLocalVars(mdl);
+	if (isArgumentAString(args)) {
+		parseMethod = parseMethodByType["<expName>"];
+		return refactoredMI(true, parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)"));
+	}
+	return refactoredMI(false, parse(#MethodInvocation, "a.a()"));
+}
+
+private void findFields(CompilationUnit unit) {
+	if(isEmpty(fieldsByName)) {
+		set[MethodVar] fields = findClassFields(unit);
+		for (field <- fields) {
+			fieldsByName[field.name] = newVar(field.name, field.varType);
+		}
+	}
+}
+
+private void findLocalVars(MethodDeclaration mdl) {
+	if(isEmpty(localVarsByName)) {
+		set[MethodVar] vars = findlocalVars(mdl);
+		for (var <- vars) {
+			localVarsByName[var.name] = newVar(var.name, var.varType);
+		}
 	}
 }
