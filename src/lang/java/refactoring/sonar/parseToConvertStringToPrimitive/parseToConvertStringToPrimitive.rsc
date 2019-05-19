@@ -90,7 +90,7 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 				}
 				case (ReturnStatement) `return <Expression exp>;`: {
 					methodReturnType = retrieveMethodReturnTypeAsStr(mdl);
-					if (methodReturnType in getPrimitives()) {
+					if (methodReturnType in getPrimitives() && isMethodInvocation("<exp>")) {
 						miRefactored = refactorExpression(unit, mdl, exp);
 						if (miRefactored.wasRefactored) {
 							modified = true;
@@ -211,4 +211,13 @@ private bool isExpOfAPrimitiveType(str exp, map[str, Var] varByName) {
 	}
 	
 	return false;
+}
+
+private bool isMethodInvocation(str exp) {
+	try {
+		parse(#MethodInvocation, exp);
+		return true;
+	} catch: {
+		return false;
+	}
 }
