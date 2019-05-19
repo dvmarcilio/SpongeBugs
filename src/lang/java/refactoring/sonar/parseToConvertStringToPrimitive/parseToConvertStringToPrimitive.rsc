@@ -77,44 +77,45 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 			modified = false;
 			localVarsByName = ();
 			mdl = top-down-break visit(mdl) {
-				case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).<Identifier methodName>()`: {
-					if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
-						findFields(unit);
-						findLocalVars(mdl);
-						if (isArgumentAString(args)) {
-							modified = true;
-						}					
+				case (LocalVariableDeclaration) `<UnannPrimitiveType varType> <Identifier varName> = <Expression rhs>`: {
+					rhs = top-down-break visit(rhs) {
+						case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).<Identifier methodName>()`: {
+							if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
+								findFields(unit);
+								findLocalVars(mdl);
+								if (isArgumentAString(args)) {
+									modified = true;
+									parseMethod = parseMethodByType["<expName>"];
+									insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
+								}					
+							}
+						}
+						// Eclipse special cases
+						case (MethodInvocation) `(<ExpressionName expName>.valueOf(<ArgumentList? args>)).<Identifier methodName>()`: {
+							if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
+								findFields(unit);
+								findLocalVars(mdl);
+								if (isArgumentAString(args)) {
+									modified = true;
+									parseMethod = parseMethodByType["<expName>"];
+									insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
+								}					
+							}
+						}
+						case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>)`: {
+							if("<expName>" in wrappers) {
+								findFields(unit);
+								findLocalVars(mdl);
+								if (isArgumentAString(args)) {
+									modified = true;
+									parseMethod = parseMethodByType["<expName>"];
+									insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
+								}					
+							}
+						}
 					}
 					if (modified) {
-						parseMethod = parseMethodByType["<expName>"];
-						insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
-					}
-				}
-				// Eclipse special cases
-				case (MethodInvocation) `(<ExpressionName expName>.valueOf(<ArgumentList? args>)).<Identifier methodName>()`: {
-					if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
-						findFields(unit);
-						findLocalVars(mdl);
-						if (isArgumentAString(args)) {
-							modified = true;
-						}					
-					}
-					if (modified) {
-						parseMethod = parseMethodByType["<expName>"];
-						insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
-					}
-				}
-				case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>)`: {
-					if("<expName>" in wrappers) {
-						findFields(unit);
-						findLocalVars(mdl);
-						if (isArgumentAString(args)) {
-							modified = true;
-						}					
-					}
-					if (modified) {
-						parseMethod = parseMethodByType["<expName>"];
-						insert parse(#MethodInvocation, "<expName>.<parseMethod>(<args>)");
+						insert parse(#LocalVariableDeclaration, "<varType> <varName> = <rhs>");
 					}
 				}
 			}
