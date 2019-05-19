@@ -101,7 +101,7 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 				case (Assignment) `<ExpressionName lhs> = <Expression rhs>`: {
 					findFields(unit);
 					findLocalVars(mdl);
-					if (isLhsOfAPrimitiveType("<lhs>")) {
+					if (isLhsOfAPrimitiveType("<lhs>") && isMethodInvocation("<rhs>")) {
 						miRefactored = refactorExpression(unit, mdl, rhs);
 						if (miRefactored.wasRefactored) {
 							modified = true;
