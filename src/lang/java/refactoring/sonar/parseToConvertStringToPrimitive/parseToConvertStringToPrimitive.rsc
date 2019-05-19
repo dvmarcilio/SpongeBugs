@@ -98,6 +98,17 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 						}
 					}
 				}
+				case (Assignment) `<ExpressionName lhs> = <Expression rhs>`: {
+					findFields(unit);
+					findLocalVars(mdl);
+					if (isLhsOfAPrimitiveType("<lhs>")) {
+						miRefactored = refactorExpression(unit, mdl, rhs);
+						if (miRefactored.wasRefactored) {
+							modified = true;
+							insert parse(#Assignment, "<lhs> = <miRefactored.mi>");
+						}						
+					}
+				}
 			}
 			if (modified) {
 				shouldRewrite = true;
@@ -109,33 +120,6 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
 	} 
-}
-
-
-private bool isArgumentAString(ArgumentList? args) {
-	return isArgumentAFieldOrLocalVarString("<args>") || isStringLiteral("<args>");
-}
-
-private bool isArgumentAFieldOrLocalVarString(str arg) {
-	return isExpReferencingAString(arg, fieldsByName) || isExpReferencingAString(arg, localVarsByName);
-}
-
-private bool isExpReferencingAString(str exp, map[str, Var] varByName) {
-	if (exp in varByName) {
-		var = varByName[exp];
-		return var.varType == "String";
-	}
-	
-	return false;
-}
-
-private bool isStringLiteral(str exp) {
-	try {
-		parse(#StringLiteral, exp);
-		return true;
-	} catch: {
-		return false;
-	}
 }
 
 private RefactoredMethodInvocation refactorExpression(CompilationUnit unit, MethodDeclaration mdl, Expression exp) {
@@ -188,4 +172,43 @@ private void findLocalVars(MethodDeclaration mdl) {
 			localVarsByName[var.name] = newVar(var.name, var.varType);
 		}
 	}
+}
+
+private bool isArgumentAString(ArgumentList? args) {
+	return isArgumentAFieldOrLocalVarString("<args>") || isStringLiteral("<args>");
+}
+
+private bool isArgumentAFieldOrLocalVarString(str arg) {
+	return isExpReferencingAString(arg, fieldsByName) || isExpReferencingAString(arg, localVarsByName);
+}
+
+private bool isExpReferencingAString(str exp, map[str, Var] varByName) {
+	if (exp in varByName) {
+		var = varByName[exp];
+		return var.varType == "String";
+	}
+	
+	return false;
+}
+
+private bool isStringLiteral(str exp) {
+	try {
+		parse(#StringLiteral, exp);
+		return true;
+	} catch: {
+		return false;
+	}
+}
+
+private bool isLhsOfAPrimitiveType(str exp) {
+	return isExpOfAPrimitiveType(exp, fieldsByName) || isExpOfAPrimitiveType(exp, localVarsByName);
+}
+
+private bool isExpOfAPrimitiveType(str exp, map[str, Var] varByName) {
+	if (exp in varByName) {
+		var = varByName[exp];
+		return var.varType in getPrimitives();
+	}
+	
+	return false;
 }
