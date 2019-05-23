@@ -14,7 +14,7 @@ str tc01 = " import javax.crypto.Cipher;
            '}";
            
 
-str tc02 = " import java.security.MessageDigest; 
+str tc02 = " import javax.crypto.Cipher; 
            ' class TestCase { 
            '   public void method() {
            '      Cipher c = Cipher.getInstance(\"DESede/ECB/PKCS5Padding\");      	
@@ -67,7 +67,7 @@ str res2 = " import javax.crypto.Cipher;
            
 test bool runTC01() {
 	code = parse(#CompilationUnit, tc01);
-	expected = parse(#CompilationUnit, res1); 
+	expected = parse(#CompilationUnit, res1);
 	return expected == refactorInsecureCipher(code); 	
 }           
            
@@ -76,10 +76,6 @@ test bool runTC01() {
 test bool runTC02() {
 	code = parse(#CompilationUnit, tc02);
 	expected = parse(#CompilationUnit, res1); 
-	
-	println(code);
-	println(expected);
-	println(refactorInsecureCipher(code)); 
 	return expected == refactorInsecureCipher(code); 	
 }                     
 
