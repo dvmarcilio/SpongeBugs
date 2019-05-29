@@ -50,6 +50,21 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 						insert expRefactored;						
 					}
 				}
+				
+				case (Expression) `<EqualityExpression exp1> != null && !<ExpressionName beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
+					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
+						modified = true;
+						expRefactored = parse(#Expression, "!<args>.equals(<beforeFunc>)");
+						insert expRefactored;						
+					}
+				}
+				case (Expression) `<EqualityExpression exp1> != null && !<Primary beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
+					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
+						modified = true;
+						expRefactored = parse(#Expression, "!<args>.equals(<beforeFunc>)");
+						insert expRefactored;						
+					}
+				}
 			}
 			
 			if (modified) {
