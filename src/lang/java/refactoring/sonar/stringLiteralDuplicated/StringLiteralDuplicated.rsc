@@ -238,7 +238,8 @@ private str addNeededConstantsAtTheBegginingOfClassBody(str classBodyStr) {
 private str generateConstantsToBeAddedAsStr() {
 	list[FieldDeclaration] constantsToBeAdded = createNeededConstants();
 	constantsToBeAddedStrs = [ unparse(constantToBeAdded) | FieldDeclaration constantToBeAdded <- constantsToBeAdded ];
-	constantsToBeAddedStrs = [ const + " //$NON-NLS-1$" | str const <- constantsToBeAddedStrs ];
+	// only for eclipse
+	//constantsToBeAddedStrs = [ const + " //$NON-NLS-1$" | str const <- constantsToBeAddedStrs ];
 	return "\n" + intercalate("\n", constantsToBeAddedStrs);
 }
 
