@@ -9,6 +9,8 @@ import Set;
 
 import lang::java::refactoring::sonar::stringLiteralDuplicated::StringValueToConstantName;
 
+private str DEFAULT_IDENTATION = "  ";
+
 private int SONAR_MINIMUM_DUPLICATED_COUNT = 3;
 
 // Sonar considers minimum length of 5 + 2 (quotes)
@@ -240,6 +242,7 @@ private str generateConstantsToBeAddedAsStr() {
 	constantsToBeAddedStrs = [ unparse(constantToBeAdded) | FieldDeclaration constantToBeAdded <- constantsToBeAdded ];
 	// only for eclipse
 	//constantsToBeAddedStrs = [ const + " //$NON-NLS-1$" | str const <- constantsToBeAddedStrs ];
+	constantsToBeAddedStrs = [ DEFAULT_IDENTATION + const | str const <- constantsToBeAddedStrs ];
 	return "\n" + intercalate("\n", constantsToBeAddedStrs);
 }
 
