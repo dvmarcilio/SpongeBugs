@@ -74,7 +74,6 @@ public void refactorStringConcatenatedLoop(loc fileLoc) {
 				}
 				
 				case (DoStatement) `<DoStatement doStmt>`: {
-					println("do statement");
 					refactored = refactorLoop(doStmt, mdl);
 					if ("<refactored>" != "<doStmt>") {
 						modified = true;
