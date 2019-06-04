@@ -36,6 +36,16 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 		case (Expression) `<Expression exp>`: {
 			modified = false;
 			exp = visit(exp) {
+				case (Expression) `<EqualityExpression exp1> == null || <ExpressionName beforeFunc>.equals(<ArgumentList? args>)`: {
+					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
+						continue;
+					}
+				}
+				case (Expression) `<EqualityExpression exp1> == null || <Primary beforeFunc>.equals(<ArgumentList? args>)`: {
+					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
+						continue;
+					}
+				}
 				case (Expression) `<EqualityExpression exp1> != null && <ExpressionName beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
