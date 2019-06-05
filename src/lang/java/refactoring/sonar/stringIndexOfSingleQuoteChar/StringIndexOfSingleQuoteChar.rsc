@@ -99,8 +99,11 @@ private bool isVarOfInterest(MethodDeclaration mdl, str varNameOrChainOfInvocati
 
 private bool isVarInTheChainAString(set[MethodVar] localVars, str varNameOrChainOfInvocation) {
 	if (findFirst(varNameOrChainOfInvocation, ".") == -1) {
-		MethodVar var = findByName(localVars, varNameOrChainOfInvocation);
-		return isString(var);
+		try {
+			MethodVar var = findByName(localVars, varNameOrChainOfInvocation);
+			return isString(var);
+		} catch :
+			return false;
 	}
 	
 	return false;
