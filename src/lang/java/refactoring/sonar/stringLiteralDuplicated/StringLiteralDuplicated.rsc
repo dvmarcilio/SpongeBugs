@@ -9,7 +9,7 @@ import Set;
 
 import lang::java::refactoring::sonar::stringLiteralDuplicated::StringValueToConstantName;
 
-private str DEFAULT_IDENTATION = "  ";
+private str DEFAULT_IDENTATION = "    ";
 
 private int SONAR_MINIMUM_DUPLICATED_COUNT = 3;
 

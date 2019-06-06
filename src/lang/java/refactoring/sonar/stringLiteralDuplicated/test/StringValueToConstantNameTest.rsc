@@ -90,3 +90,15 @@ public test bool removeInitialUnderscore() {
 public test bool removeInitialCurrencyChar() {
 	return stringValueToConstantName("$VAR") == "VAR";
 }
+
+public test bool camelCase1() {
+	return stringValueToConstantName("camelValue") == "CAMEL_VALUE";
+}
+
+public test bool camelCase2() {
+	return stringValueToConstantName("TitleValue") == "TITLE_VALUE";
+}
+
+public test bool camelCase3() {
+	return stringValueToConstantName("eclipseRCPExt") == "ECLIPSE_RCP_EXT";
+}
