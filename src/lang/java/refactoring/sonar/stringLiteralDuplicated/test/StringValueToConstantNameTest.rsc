@@ -107,3 +107,11 @@ public test bool camelCase4() {
 	return stringValueToConstantName("caseSensitiveTableNames") == "CASE_SENSITIVE_TABLE_NAMES";
 }
 
+public test bool camelCaseWithQuotesShouldStripQuotes() {
+	return stringValueToConstantName("\"caseSensitiveTableNames\"") == "CASE_SENSITIVE_TABLE_NAMES";
+}
+
+public test bool phraseWithQuotes() {
+	return stringValueToConstantName("\"Phrase with lots of words\"") == "PHRASE_WITH_LOTS_OF_WORDS";
+}
+

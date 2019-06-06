@@ -16,7 +16,8 @@ public str stringValueToConstantName(str strValue) {
 }
 
 private bool isPossibleCamelCase(str strValue) {
-	return !startsWithUnderScore(strValue) && isOnlyLetters(strValue) && findFirst(strValue, " ") == -1;
+	strValueWithoutSpaces = replaceAll(strValue, "\"", "");
+	return !startsWithUnderScore(strValueWithoutSpaces) && isOnlyLetters(strValueWithoutSpaces) && findFirst(strValueWithoutSpaces, " ") == -1;
 }
 
 private bool isOnlyLetters(str strValue) {
@@ -28,8 +29,9 @@ private bool startsWithUnderScore(str strValue) {
 }
 
 private str separateWithUnderscorePossibleCamelCase(str strValue) {
+	strValueWithoutSpaces = replaceAll(strValue, "\"", "");
 	list[str] matches = [];
-	for (/<match:(^[a-z]+|[A-Z][a-z]+|[A-Z]+(?=[A-Z][a-z]|$))>/ := strValue) {
+	for (/<match:(^[a-z]+|[A-Z][a-z]+|[A-Z]+(?=[A-Z][a-z]|$))>/ := strValueWithoutSpaces) {
 		matches += match;
 	}
 	return intercalate("_", matches);
