@@ -21,7 +21,7 @@ private bool isPossibleCamelCase(str strValue) {
 }
 
 private bool isOnlyLetters(str strValue) {
-	return rexpMatch(strValue, "[a-zA-z]+");
+	return rexpMatch(strValue, "^[A-Za-z]+$");
 }
 
 private bool startsWithUnderScore(str strValue) {

@@ -111,7 +111,18 @@ public test bool camelCaseWithQuotesShouldStripQuotes() {
 	return stringValueToConstantName("\"caseSensitiveTableNames\"") == "CASE_SENSITIVE_TABLE_NAMES";
 }
 
+public test bool twoWordsWithQuotesAndUnderScoreShouldReturnUppercasedVersion() {
+	return stringValueToConstantName("\"table_name\"") == "TABLE_NAME";
+}
+
+public test bool twoWordsUppercasedWithQuotesAndUnderScoreShouldReturnUppercasedVersion() {
+	return stringValueToConstantName("\"TABLE_NAME\"") == "TABLE_NAME";
+}
+
+public test bool threeWordsSeparatedByUnderscoreShouldReturnUpperCasedVersion() {
+	return stringValueToConstantName("one_two_three") == "ONE_TWO_THREE";
+}
+
 public test bool phraseWithQuotes() {
 	return stringValueToConstantName("\"Phrase with lots of words\"") == "PHRASE_WITH_LOTS_OF_WORDS";
 }
-
