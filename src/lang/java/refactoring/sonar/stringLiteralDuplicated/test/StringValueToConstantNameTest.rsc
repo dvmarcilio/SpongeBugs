@@ -47,8 +47,8 @@ public test bool capitalizedStringShouldBeTheSame() {
 	return stringValueToConstantName("DEBUG") == "DEBUG";
 }
 
-public test bool shouldNotBreakNumberAndIgnoreDot() {
-	return stringValueToConstantName("log4testng.rootLogger") == "LOG4TESTNG_ROOTLOGGER";
+public test bool shouldNotBreakNumberAndIgnoreDotCamelCase() {
+	return stringValueToConstantName("log4testng.rootLogger") == "LOG4TESTNG_ROOT_LOGGER";
 }
 
 public test bool specialChars() {
@@ -125,4 +125,12 @@ public test bool threeWordsSeparatedByUnderscoreShouldReturnUpperCasedVersion() 
 
 public test bool phraseWithQuotes() {
 	return stringValueToConstantName("\"Phrase with lots of words\"") == "PHRASE_WITH_LOTS_OF_WORDS";
+}
+
+public test bool mixedCamelCaseAndNonCamelCase() {
+	return stringValueToConstantName("\"Cancelling resourceRetrievalMonitor\"") == "CANCELLING_RESOURCE_RETRIEVAL_MONITOR";
+}
+
+public test bool mixedCamelCaseAndNonCamelCase() {
+	return stringValueToConstantName("\"EXITING: getEnterpriseResourceOptions\"") == "EXITING_GET_ENTERPRISE_RESOURCE_OPTIONS";
 }

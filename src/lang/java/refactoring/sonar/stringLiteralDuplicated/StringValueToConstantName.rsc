@@ -12,6 +12,8 @@ public str stringValueToConstantName(str strValue) {
 	converted = trimToAtMaxOneSpace(converted);
 	converted = replaceSpacesWithUnderscore(converted);
 	converted = addUnderscoreIfStartsWithNumber(converted);
+	converted = furtherSplitInsideCamelCases(converted);
+	
 	return toUpperCase(converted);
 }
 
@@ -63,4 +65,18 @@ private str addUnderscoreIfStartsWithNumber(str strValue) {
 		return "_" + strValue;
 	}
 	return strValue;
+}
+
+private str furtherSplitInsideCamelCases(str strValue) {
+	words = [];
+	for (word <- split("_", strValue)) {
+		if (isPossibleCamelCase(word)) {
+			for (/<match:(^[a-z]+|[A-Z][a-z]+|[A-Z]+(?=[A-Z][a-z]|$))>/ := word) {
+				words += match;
+			}
+		} else {
+			words += word;
+		}
+	}
+	return intercalate("_", words);
 }
