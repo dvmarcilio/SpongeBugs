@@ -102,3 +102,8 @@ public test bool camelCase2() {
 public test bool camelCase3() {
 	return stringValueToConstantName("eclipseRCPExt") == "ECLIPSE_RCP_EXT";
 }
+
+public test bool camelCase4() {
+	return stringValueToConstantName("caseSensitiveTableNames") == "CASE_SENSITIVE_TABLE_NAMES";
+}
+
