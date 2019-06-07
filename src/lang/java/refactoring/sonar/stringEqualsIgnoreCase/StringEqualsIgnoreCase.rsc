@@ -61,7 +61,6 @@ public void refactorFileToEqualsIgnoreCase(loc fileLoc) {
 					}
 				}
 				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>toLowerCase().equals(<ArgumentList? args>)`: {
-					println("aqui");
 					if (isStringLiteral("<args>") && isEntireLowerCase("<args>")) {
 						modified = true;
 						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
@@ -131,7 +130,6 @@ public void refactorFileToEqualsIgnoreCase(loc fileLoc) {
 					}
 				}
 				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>toLowerCase().equals(<ArgumentList? args>)`: {
-					println("aqui");
 					if (isStringLiteral("<args>") && isEntireLowerCase("<args>")) {
 						modified = true;
 						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
