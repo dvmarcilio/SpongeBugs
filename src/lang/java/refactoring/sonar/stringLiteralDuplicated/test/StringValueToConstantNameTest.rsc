@@ -134,3 +134,7 @@ public test bool mixedCamelCaseAndNonCamelCase() {
 public test bool mixedCamelCaseAndNonCamelCase() {
 	return stringValueToConstantName("\"EXITING: getEnterpriseResourceOptions\"") == "EXITING_GET_ENTERPRISE_RESOURCE_OPTIONS";
 }
+
+public test bool a() {
+	return stringValueToConstantName("\"bundle-audit ({}): {}\"") == "BUNDLE_AUDIT";
+}

@@ -41,7 +41,7 @@ private str separateWithUnderscorePossibleCamelCase(str strValue) {
 
 private str convertIgnoredCharsToSpace(str strValue) {
 	str converted = strValue;
-	for(/<match:[^(\w|\s)]>/ := converted) {
+	for(/<match:[^(\w|\s)]|(\(|\))>/ := converted) {
 		converted = replaceAll(converted, match, " ");
 	}
 	return converted;
