@@ -60,7 +60,11 @@ private str replaceSpacesWithUnderscore(str strValue) {
 }
 
 private str addUnderscoreIfStartsWithNumber(str strValue) {
-	str firstCharacter = stringChar(charAt(strValue, 0));
+	str firstCharacter = "";
+	try {
+		firstCharacter = stringChar(charAt(strValue, 0));
+	} catch IndexOutOfBounds: return "NEEDS_NAME";
+	
 	if (rexpMatch(firstCharacter, "\\d")) {
 		return "_" + strValue;
 	}

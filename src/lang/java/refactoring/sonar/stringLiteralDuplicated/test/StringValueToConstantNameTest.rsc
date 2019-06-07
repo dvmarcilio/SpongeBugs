@@ -138,3 +138,7 @@ public test bool mixedCamelCaseAndNonCamelCase() {
 public test bool a() {
 	return stringValueToConstantName("\"bundle-audit ({}): {}\"") == "BUNDLE_AUDIT";
 }
+
+public test bool b() {
+	return stringValueToConstantName("----------------------------------------------------") == "NEEDS_NAME";
+}
