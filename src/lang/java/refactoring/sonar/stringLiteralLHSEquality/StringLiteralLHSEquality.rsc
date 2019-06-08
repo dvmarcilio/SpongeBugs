@@ -26,12 +26,11 @@ public void refactorAllStringLiteralLHSEquality(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, ".equals(\"") != -1;
+	return findFirst(javaFileContent, ".equals(\"") != -1 || findFirst(javaFileContent, ".equalsIgnoreCase(\"") != -1;
 }
 
 public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
-	
 	unit = visit(unit) {
 		case (Expression) `<Expression exp>`: {
 			modified = false;
@@ -75,6 +74,37 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 						insert expRefactored;						
 					}
 				}
+				
+				// equalsIgnoreCase
+				case (Expression) `<EqualityExpression exp1> != null && <ExpressionName beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
+					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
+						modified = true;
+						expRefactored = parse(#Expression, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert expRefactored;						
+					}
+				}
+				case (Expression) `<EqualityExpression exp1> != null && <Primary beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
+					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
+						modified = true;
+						expRefactored = parse(#Expression, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert expRefactored;						
+					}
+				}
+				
+				case (Expression) `<EqualityExpression exp1> != null && !<ExpressionName beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
+					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
+						modified = true;
+						expRefactored = parse(#Expression, "!<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert expRefactored;						
+					}
+				}
+				case (Expression) `<EqualityExpression exp1> != null && !<Primary beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
+					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
+						modified = true;
+						expRefactored = parse(#Expression, "!<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert expRefactored;						
+					}
+				}
 			}
 			
 			if (modified) {
@@ -82,6 +112,8 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 				insert (Expression) `<Expression exp>`;
 			}
 		}
+		
+		
 	
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
@@ -97,6 +129,20 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if (isStringLiteral("<args>")) {
 						modified = true;
 						mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
+						insert mi;
+					}
+				}
+				case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
+					if (isStringLiteral("<args>")) {
+						modified = true;
+						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						insert mi;
+					}
+				}
+				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
+					if (isStringLiteral("<args>")) {
+						modified = true;
+						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
 						insert mi;
 					}
 				}
