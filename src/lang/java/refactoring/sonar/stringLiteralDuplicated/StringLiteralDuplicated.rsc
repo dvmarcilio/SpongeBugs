@@ -4,6 +4,7 @@ import IO;
 import lang::java::\syntax::Java18;
 import ParseTree;
 import String;
+import List;
 import Map;
 import Set;
 
@@ -12,6 +13,9 @@ import lang::java::refactoring::sonar::stringLiteralDuplicated::StringValueToCon
 private str DEFAULT_IDENTATION = "    ";
 
 private int SONAR_MINIMUM_DUPLICATED_COUNT = 3;
+
+// facilitate review, can be modified later
+private int MAXIMUM_CONSTANTS_TO_CONSIDER = 3;
 
 // Sonar considers minimum length of 5 + 2 (quotes)
 private int SONAR_MINIMUM_LITERAL_LENGTH = 7;
@@ -243,7 +247,12 @@ private str generateConstantsToBeAddedAsStr() {
 	// only for eclipse
 	//constantsToBeAddedStrs = [ const + " //$NON-NLS-1$" | str const <- constantsToBeAddedStrs ];
 	constantsToBeAddedStrs = [ DEFAULT_IDENTATION + const | str const <- constantsToBeAddedStrs ];
-	return "\n" + intercalate("\n", constantsToBeAddedStrs);
+	
+	count = size(constantsToBeAddedStrs);
+	if (count > MAXIMUM_CONSTANTS_TO_CONSIDER)
+		throw "Not fixing because <count> constants were transformed. (maximum <MAXIMUM_CONSTANTS_TO_CONSIDER>)";
+	
+	return "\n" + intercalate("\n", constantsToBeAddedStrs) + "\n";
 }
 
 private list[FieldDeclaration] createNeededConstants() {
