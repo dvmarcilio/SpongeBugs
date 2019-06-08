@@ -18,7 +18,7 @@ public void refactorAllStringLiteralLHSEquality(list[loc] locs) {
 				refactorFileStringLiteralLHSEquality(fileLoc);
 			}
 		} catch: {
-			println("Exception file: " + fileLoc.file);
+			println("Exception file (StringLiteralLHSEquality): " + fileLoc.file);
 			continue;
 		}
 	}
@@ -115,44 +115,35 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 		
 		
 	
-		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
-			modified = false;
-			mdl = visit(mdl) {
 				case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
 					if (isStringLiteral("<args>")) {
-						modified = true;
+						shouldRewrite = true;
 						mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
 						insert mi;
 					}
 				}
 				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
 					if (isStringLiteral("<args>")) {
-						modified = true;
+						shouldRewrite = true;
 						mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
 						insert mi;
 					}
 				}
 				case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
 					if (isStringLiteral("<args>")) {
-						modified = true;
+						shouldRewrite = true;
 						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
 						insert mi;
 					}
 				}
 				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
 					if (isStringLiteral("<args>")) {
-						modified = true;
+						shouldRewrite = true;
 						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
 						insert mi;
 					}
 				}
-			}
 			
-			if (modified) {
-				shouldRewrite = true;
-				insert (MethodDeclaration) `<MethodDeclaration mdl>`;
-			}
-		}
 	}
 	
 	if (shouldRewrite) {
