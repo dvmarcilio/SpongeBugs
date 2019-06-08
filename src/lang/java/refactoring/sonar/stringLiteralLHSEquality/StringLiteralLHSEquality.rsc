@@ -31,7 +31,7 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 
 public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
-	unit = visit(unit) {
+	unit = top-down visit(unit) {
 		case (Expression) `<Expression exp>`: {
 			modified = false;
 			exp = visit(exp) {
@@ -113,36 +113,34 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 			}
 		}
 		
-		
-	
-				case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
-					if (isStringLiteral("<args>")) {
-						shouldRewrite = true;
-						mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
-						insert mi;
-					}
-				}
-				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
-					if (isStringLiteral("<args>")) {
-						shouldRewrite = true;
-						mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
-						insert mi;
-					}
-				}
-				case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
-					if (isStringLiteral("<args>")) {
-						shouldRewrite = true;
-						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
-						insert mi;
-					}
-				}
-				case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
-					if (isStringLiteral("<args>")) {
-						shouldRewrite = true;
-						mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
-						insert mi;
-					}
-				}
+		case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
+			if (isStringLiteral("<args>")) {
+				shouldRewrite = true;
+				mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
+				insert mi;
+			}
+		}
+		case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>equals(<ArgumentList? args>)`: {
+			if (isStringLiteral("<args>")) {
+				shouldRewrite = true;
+				mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
+				insert mi;
+			}
+		}
+		case (MethodInvocation) `<ExpressionName beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
+			if (isStringLiteral("<args>")) {
+				shouldRewrite = true;
+				mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+				insert mi;
+			}
+		}
+		case (MethodInvocation) `<Primary beforeFunc>.<TypeArguments? ts>equalsIgnoreCase(<ArgumentList? args>)`: {
+			if (isStringLiteral("<args>")) {
+				shouldRewrite = true;
+				mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+				insert mi;
+			}
+		}
 			
 	}
 	
