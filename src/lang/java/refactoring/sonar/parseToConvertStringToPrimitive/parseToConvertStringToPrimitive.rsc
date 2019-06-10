@@ -138,6 +138,9 @@ private RefactoredMethodInvocation refactorExpression(CompilationUnit unit, Meth
 		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).equals(<ArgumentList? args2>)`: {
 			continue;
 		}
+		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).compareTo(<ArgumentList? args2>)`: {
+			continue;
+		}
 		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>)`: {
 			if("<expName>" in wrappers) {
 				return refactorMethodInvocation(unit, mdl, expName, args);				
