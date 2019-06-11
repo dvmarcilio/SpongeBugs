@@ -42,6 +42,7 @@ private map[str, Var] localVarsByName = ();
 
 private bool shouldRewrite = false;
 
+private data RefactoredExp = refactoredExp(bool wasRefactored, Expression exp);
 private data RefactoredMethodInvocation = refactoredMI(bool wasRefactored, MethodInvocation mi);
 
 public void refactorAllParseToConvertStringToPrimitive(list[loc] locs) {
@@ -82,19 +83,19 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 			localVarsByName = ();
 			mdl = top-down-break visit(mdl) {
 				case (LocalVariableDeclaration) `<UnannPrimitiveType varType> <Identifier varName> = <Expression rhs>`: {
-					miRefactored = refactorExpression(unit, mdl, rhs);
-					if (miRefactored.wasRefactored) {
+					expRefactored = refactorExpression(unit, mdl, rhs);
+					if (expRefactored.wasRefactored) {
 						modified = true;
-						insert parse(#LocalVariableDeclaration, "<varType> <varName> = <miRefactored.mi>");
+						insert parse(#LocalVariableDeclaration, "<varType> <varName> = <expRefactored.exp>");
 					}
 				}
 				case (ReturnStatement) `return <Expression exp>;`: {
 					methodReturnType = retrieveMethodReturnTypeAsStr(mdl);
-					if (methodReturnType in getPrimitives() && isMethodInvocation("<exp>")) {
-						miRefactored = refactorExpression(unit, mdl, exp);
-						if (miRefactored.wasRefactored) {
+					if (methodReturnType in getPrimitives() && isMethodInvocation("<exp>")) {	
+						expRefactored = refactorExpression(unit, mdl, exp);
+						if (expRefactored.wasRefactored) {
 							modified = true;
-							insert parse(#ReturnStatement, "return <miRefactored.mi>;");
+							insert parse(#ReturnStatement, "return <expRefactored.exp>;");
 						}
 					}
 				}
@@ -102,10 +103,10 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 					findFields(unit);
 					findLocalVars(mdl);
 					if (isLhsOfAPrimitiveType("<lhs>") && isMethodInvocation("<rhs>")) {
-						miRefactored = refactorExpression(unit, mdl, rhs);
-						if (miRefactored.wasRefactored) {
+						expRefactored = refactorExpression(unit, mdl, rhs);
+						if (expRefactored.wasRefactored) {
 							modified = true;
-							insert parse(#Assignment, "<lhs> = <miRefactored.mi>");
+							insert parse(#Assignment, "<lhs> = <expRefactored.exp>");
 						}						
 					}
 				}
@@ -122,33 +123,46 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 	} 
 }
 
-private RefactoredMethodInvocation refactorExpression(CompilationUnit unit, MethodDeclaration mdl, Expression exp) {
-	top-down-break visit(exp) {
-		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).<Identifier methodName>()`: {
-			if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
-				return refactorMethodInvocation(unit, mdl, expName, args);			
-			}
-		}
-		// Eclipse special cases
-		case (MethodInvocation) `(<ExpressionName expName>.valueOf(<ArgumentList? args>)).<Identifier methodName>()`: {
-			if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
-				return refactorMethodInvocation(unit, mdl, expName, args);					
-			}
-		}
+private RefactoredExp refactorExpression(CompilationUnit unit, MethodDeclaration mdl, Expression exp) {
+	modified = false;
+	refactoredExpression = top-down-break visit(exp) {
 		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).equals(<ArgumentList? args2>)`: {
 			continue;
 		}
 		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).compareTo(<ArgumentList? args2>)`: {
 			continue;
 		}
+		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>).<Identifier methodName>()`: {
+			if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
+				mi = refactorMethodInvocation(unit, mdl, expName, args);
+				if (mi.wasRefactored) {
+					modified = true;
+					insert mi.mi;				
+				}			
+			}
+		}
+		// Eclipse special cases
+		case (MethodInvocation) `(<ExpressionName expName>.valueOf(<ArgumentList? args>)).<Identifier methodName>()`: {
+			if("<expName>" in wrappers && "<methodName>" == typeValueByType["<expName>"]) {
+				mi = refactorMethodInvocation(unit, mdl, expName, args);
+				if (mi.wasRefactored) {
+					modified = true;
+					insert mi.mi;				
+				}					
+			}
+		}
 		case (MethodInvocation) `<ExpressionName expName>.valueOf(<ArgumentList? args>)`: {
 			if("<expName>" in wrappers) {
-				return refactorMethodInvocation(unit, mdl, expName, args);				
+				mi = refactorMethodInvocation(unit, mdl, expName, args);
+				if (mi.wasRefactored) {
+					modified = true;
+					insert mi.mi;				
+				}				
 			}
 		}
 	}
 	
-	return refactoredMI(false, parse(#MethodInvocation, "a.a()"));
+	return refactoredExp(modified, refactoredExpression);
 }
 
 private RefactoredMethodInvocation refactorMethodInvocation(CompilationUnit unit, MethodDeclaration mdl,
