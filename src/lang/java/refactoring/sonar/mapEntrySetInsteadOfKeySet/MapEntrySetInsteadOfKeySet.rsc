@@ -30,8 +30,11 @@ public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 				shouldRewrite = false;
 				refactorFileEntrySetInsteadOfKeySet(fileLoc);
 			}
+		} catch Ambiguity: {
+			println("Ambiguity file (MapEntrySetInsteadOfKeySet): " + fileLoc.file);
+			continue;
 		} catch: {
-			println("Exception file: " + fileLoc.file);
+			println("Exception file (MapEntrySetInsteadOfKeySet): " + fileLoc.file);
 			continue;
 		}
 	}
@@ -215,8 +218,12 @@ private Statement replaceGetCalls(Statement loopBody, set[MethodInvocation] mapG
 
 private CompilationUnit addNeededImports(CompilationUnit unit) {
 	importDecls = retrieveImportDeclarations(unit);
-	if (!isAnyImportPresent(importDecls, "java.util.Map.*", "java.util.Map.Entry")) {
-		unit = addImport(unit, importDecls, "java.util.Map.Entry");
+	entryImport = "import java.util.Map.Entry;";
+	unitStr = unparse(unit);
+	if (!isAnyImportPresent(importDecls, "java.util.*", "java.util.Map.*", "java.util.Map.Entry")) {
+		//unit = addImport(unit, importDecls, "java.util.Map.Entry");
+		mapImport = "import java.util.Map;";
+		unitStr = replaceFirst(unitStr, mapImport, "<mapImport>\n<entryImport>");
 	}
-	return unit;
+	return parse(#CompilationUnit, unitStr);
 }
