@@ -20,9 +20,10 @@ private bool skipTestFiles = true;
 public void allSonarFixes(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			doAllSonarFixesForFile(fileLoc);
+			if (!startsWith(fileLoc.file, "_"))
+				doAllSonarFixesForFile(fileLoc);
 		} catch: {
-			println("Exception file: " + fileLoc.file);
+			println("Exception file (SonarFixes): " + fileLoc.file);
 			continue;
 		}	
 	}
@@ -36,7 +37,9 @@ public void doAllSonarFixesForFile(loc fileLoc) {
 private bool shouldAnalyzeFile(loc fileLoc) {
 	if (!skipTestFiles)
 		return true;
-	return !endsWith(fileNameWithoutExtension(fileLoc), "Test") && findFirst(fileLoc.path, "src/test/java") == -1;
+	fileName = fileNameWithoutExtension(fileLoc);
+	return !endsWith(fileName, "Test") && findFirst(fileLoc.path, "src/test/java") == -1
+		&& !startsWith(fileName, "package-info");
 }
 
 private str fileNameWithoutExtension(loc fileLoc) {
@@ -46,19 +49,20 @@ private str fileNameWithoutExtension(loc fileLoc) {
 
 public void allSonarFixesForFile(loc fileLoc) {
 	//transformStringLiteralDuplicated(fileLoc);
-	//refactorStringPrimitiveConstructor(fileLoc);
+	refactorStringPrimitiveConstructor(fileLoc);
 	
 	// avoiding modifying each module
 	fileAsList = [fileLoc];
 	
-	//replaceAllEmptyConstantWithGenericMethods(fileAsList);
-	//stringIndexOfSingleQuoteChar(fileAsList);
+	refactorAllReferenceComparison(fileAsList);
 	//refactorAllStringLiteralLHSEquality(fileAsList);
-	//refactorAllToEqualsIgnoreCase(fileAsList);
+
+	replaceAllEmptyConstantWithGenericMethods(fileAsList);
+	stringIndexOfSingleQuoteChar(fileAsList);
+	refactorAllToEqualsIgnoreCase(fileAsList);
 	//refactorAllToCollectionIsEmpty(fileAsList);
-	//refactorAllStringConcatenatedLoop(fileAsList);
+	refactorAllStringConcatenatedLoop(fileAsList);
 	resourcesShouldAllBeClosed(fileAsList);
-	//refactorAllReferenceComparison(fileAsList);
-	//refactorAllEntrySetInsteadOfKeySet(fileAsList);
-	//refactorAllParseToConvertStringToPrimitive(fileAsList);
+	refactorAllEntrySetInsteadOfKeySet(fileAsList);
+	refactorAllParseToConvertStringToPrimitive(fileAsList);
 }
