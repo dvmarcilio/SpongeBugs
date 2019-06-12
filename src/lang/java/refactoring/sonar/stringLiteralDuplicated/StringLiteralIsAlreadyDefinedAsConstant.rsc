@@ -16,8 +16,7 @@ public void allStringLiteralsAlreadyDefinedAsConstant(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				resetState();
-				refactorStringLiteralIsAlreadyDefinedAsConstant(fileLoc);
+				refactorForEachClassBody(fileLoc);
 			}
 		} catch: {
 			println("Exception file (StringLiteralIsAlreadyDefinedAsConstant): <fileLoc.file>");
@@ -31,18 +30,35 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	return findFirst(javaFileContent, "private static final String") != -1;
 }
 
-private void resetState() {
-	shouldRewrite = false;
-	constantByStrLiteral = ();
-	definedConstants = [];
+private void refactorForEachClassBody(loc fileLoc) {
+	unit = retrieveCompilationUnitFromLoc(fileLoc);
+	for(classBody <- retrieveClassBodies(unit)) {
+		resetState();
+		doRefactorForEachClassBody(fileLoc, unit, classBody);
+		unit = retrieveCompilationUnitFromLoc(fileLoc);		
+	}	
 }
 
-public void refactorStringLiteralIsAlreadyDefinedAsConstant(loc fileLoc) {
-	unit = retrieveCompilationUnitFromLoc(fileLoc);
+private CompilationUnit retrieveCompilationUnitFromLoc(loc fileLoc) {
+	javaFileContent = readFile(fileLoc);
+	return parse(#CompilationUnit, javaFileContent);
+}
+
+private list[ClassBody] retrieveClassBodies(CompilationUnit unit) {
+	list[ClassBody] classBodies = [];
+	top-down-break visit(unit) {
+		case (ClassBody) `<ClassBody classBody>`: { 
+			classBodies += classBody;
+		}
+	}
+	return classBodies;
+}
+
+private void doRefactorForEachClassBody(loc fileLoc, CompilationUnit unit, ClassBody classBody) {
 	loadConstantByStrLiteral(unit);
 	
-	unit = top-down-break visit(unit) {
-		case (StatementWithoutTrailingSubstatement) `<StatementWithoutTrailingSubstatement stmt>`: {
+	refactoredClassBody = top-down-break visit(classBody) {
+		case (BlockStatement) `<BlockStatement stmt>`: {
 			modified = false;
 			stmtRefactored = stmt;
 			top-down-break visit(stmt) {
@@ -50,8 +66,8 @@ public void refactorStringLiteralIsAlreadyDefinedAsConstant(loc fileLoc) {
 					strLiteralAsStr = "<strLiteral>";
 					if (strLiteralAsStr in constantByStrLiteral) {
 						modified = true;
-						stmtRefactoredStr = replaceFirst("<stmt>", strLiteralAsStr, constantByStrLiteral[strLiteralAsStr]);
-						stmtRefactored = parse(#StatementWithoutTrailingSubstatement, stmtRefactoredStr); 
+						stmtRefactoredStr = replaceAll("<stmt>", strLiteralAsStr, constantByStrLiteral[strLiteralAsStr]);
+						stmtRefactored = parse(#BlockStatement, stmtRefactoredStr); 
 					}
 				}
 			}
@@ -63,13 +79,20 @@ public void refactorStringLiteralIsAlreadyDefinedAsConstant(loc fileLoc) {
 	}
 	
 	if (shouldRewrite) {
+		unit = top-down-break visit(unit) {
+			case (ClassBody) `<ClassBody possibleClassBodyToRefactor>`: {
+				if(possibleClassBodyToRefactor == classBody)
+					insert refactoredClassBody;
+			}
+		}
 		writeFile(fileLoc, unit);
 	}
 }
 
-private CompilationUnit retrieveCompilationUnitFromLoc(loc fileLoc) {
-	javaFileContent = readFile(fileLoc);
-	return parse(#CompilationUnit, javaFileContent);
+private void resetState() {
+	shouldRewrite = false;
+	constantByStrLiteral = ();
+	definedConstants = [];
 }
 
 private void loadConstantByStrLiteral(CompilationUnit unit) {
