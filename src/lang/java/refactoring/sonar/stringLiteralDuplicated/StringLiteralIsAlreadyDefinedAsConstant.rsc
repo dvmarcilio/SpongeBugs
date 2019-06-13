@@ -8,6 +8,9 @@ import List;
 import Map;
 import Set;
 
+// Sonar considers minimum length of 5 + 2 (quotes)
+private int SONAR_MINIMUM_LITERAL_LENGTH = 7;
+
 private map[str, str] constantByStrLiteral = ();
 
 private bool shouldRewrite = false;
@@ -64,7 +67,7 @@ private void doRefactorForEachClassBody(loc fileLoc, CompilationUnit unit, Class
 			top-down-break visit(stmt) {
 				case (StringLiteral) `<StringLiteral strLiteral>`: {
 					strLiteralAsStr = "<strLiteral>";
-					if (strLiteralAsStr in constantByStrLiteral) {
+					if (strLiteralAsStr in constantByStrLiteral && size(strLiteralAsStr) >= SONAR_MINIMUM_LITERAL_LENGTH) {
 						modified = true;
 						stmtRefactoredStr = replaceAll("<stmt>", strLiteralAsStr, constantByStrLiteral[strLiteralAsStr]);
 						stmtRefactored = parse(#BlockStatement, stmtRefactoredStr); 
