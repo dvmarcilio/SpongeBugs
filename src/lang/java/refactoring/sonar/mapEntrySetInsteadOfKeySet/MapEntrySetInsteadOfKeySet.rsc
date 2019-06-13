@@ -23,6 +23,8 @@ private data MapExp = mapExp(bool isMapReference, str name, Expression exp);
 
 private str ENTRY_NAME = "entry";
 
+private bool KEEP_KEY_AS_A_LOOP_VARIABLE = true;
+
 public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
@@ -59,26 +61,26 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 			mdl = visit(mdl) {
 				case (EnhancedForStatement) `<EnhancedForStatement enhancedForStmt>`: {
 					enhancedForStmt = visit(enhancedForStmt) {
-						case (EnhancedForStatement) `for ( <VariableModifier* vm> <UnannType ut> <VariableDeclaratorId iteratedVarName>: <Expression exp> ) <Statement loopBody>`: {
+						case (EnhancedForStatement) `for ( <VariableModifier* vm> <UnannType iteratedVarType> <VariableDeclaratorId iteratedVarName>: <Expression exp> ) <Statement loopBody>`: {
 							map[str, Var] localVarsByName = findVarsInstantiatedInMethod(mdl);
 							possibleMapExp = isExpressionCallingKeySetOnAMapInstance(exp, localVarsByName);
 							if (possibleMapExp.isMapReference) {
-									set[MethodInvocation] mapGetCalls = callsToMapGet(loopBody, possibleMapExp, iteratedVarName);
+								set[MethodInvocation] mapGetCalls = callsToMapGet(loopBody, possibleMapExp, iteratedVarName);
 								if (size(mapGetCalls) > 0) {
 									modified = true;
 									mapVar = expVar(possibleMapExp.exp, localVarsByName);
 									
-									loopBody = refactorLoopBody(loopBody, possibleMapExp, mapVar , mapGetCalls, iteratedVarName);
+									loopBody = refactorLoopBody(loopBody, mapGetCalls, "<iteratedVarType>", iteratedVarName);
 									
-									ut = parse(#UnannType, "Entry<mapVar.generics>");
-									iteratedVarName = parse(#VariableDeclaratorId, ENTRY_NAME);
-									exp = parse(#Expression, "<possibleMapExp.exp>.entrySet()");
+									refactoredIteratedVarType = parse(#UnannType, "Entry<mapVar.generics>");
+									refactoredIteratedVarName = parse(#VariableDeclaratorId, ENTRY_NAME);
+									refactoredExp = parse(#Expression, "<possibleMapExp.exp>.entrySet()");
 									
 									// Ugly, but works to add a space after VariableModifier, if it's the case
 									if (isEmpty("<vm>")) {
-									insert (EnhancedForStatement) `for (<VariableModifier* vm><UnannType ut> <VariableDeclaratorId iteratedVarName> : <Expression exp>) <Statement loopBody>`;					
+										insert (EnhancedForStatement) `for (<VariableModifier* vm><UnannType refactoredIteratedVarType> <VariableDeclaratorId refactoredIteratedVarName> : <Expression refactoredExp>) <Statement loopBody>`;					
 									} else {
-										insert (EnhancedForStatement) `for (<VariableModifier* vm> <UnannType ut> <VariableDeclaratorId iteratedVarName> : <Expression exp>) <Statement loopBody>`;														
+										insert (EnhancedForStatement) `for (<VariableModifier* vm> <UnannType refactoredIteratedVarType> <VariableDeclaratorId refactoredIteratedVarName> : <Expression refactoredExp>) <Statement loopBody>`;														
 									}
 							
 								}
@@ -166,13 +168,13 @@ private bool isBeforeFuncAMapInstance(str beforeFunc, map[str, Var] localVarsByN
 	return false;
 }
 
-private set[MethodInvocation] callsToMapGet(Statement loopBody, MapExp mapExp, VariableDeclaratorId iteratedVarName) {
+private set[MethodInvocation] callsToMapGet(Statement loopBody, MapExp mapExpr, VariableDeclaratorId iteratedVarName) {
 	set[MethodInvocation] mapGetCalls = {};
 	visit(loopBody) {
 		case (MethodInvocation) `<MethodInvocation mi>`: {
 			visit(mi) {
 				case (MethodInvocation) `<ExpressionName beforeFunc>.get(<ArgumentList? args>)`: {
-					if ("<beforeFunc>" == "<mapExp.exp>" && trim("<args>") == trim("<iteratedVarName>")) {
+					if ("<beforeFunc>" == "<mapExpr.exp>" && trim("<args>") == trim("<iteratedVarName>")) {
 						mapGetCalls += mi;
 					}
 				}
@@ -191,12 +193,53 @@ private Var expVar(Expression exp, map[str, Var] localVarsByName) {
 	throw "Exp should be either a field or a local var";
 }
 
-private Statement refactorLoopBody(Statement loopBody, MapExp mapExp, Var var,
-		set[MethodInvocation] mapGetCalls, VariableDeclaratorId iteratedVarName) {
+private Statement refactorLoopBody(Statement loopBody, set[MethodInvocation] mapGetCalls, 
+		str iteratedVarType, VariableDeclaratorId iteratedVarName) {
 	loopBody = replaceGetCalls(loopBody, mapGetCalls);
 	
 	iteratedVarNameStr = trim("<iteratedVarName>");
 	
+	if (shouldKeepKeyAsLoopVar(loopBody, iteratedVarNameStr)) {
+		loopBodyStr = "<loopBody>";
+		keyAsVar = "<iteratedVarType><iteratedVarName>= <ENTRY_NAME>.getKey();";
+		loopBodyStr = replaceFirst(loopBodyStr, "{", "{\n<keyAsVar>");
+		return parse(#Statement, loopBodyStr);;
+	} else {
+		return refactorLoopBodyWithoutKeepingKeyAsLoopVar(loopBody, iteratedVarNameStr);
+	}
+	
+	
+}
+
+private bool shouldKeepKeyAsLoopVar(Statement loopBody, str iteratedVarNameStr) {
+	return KEEP_KEY_AS_A_LOOP_VARIABLE && 
+		size(iteratedVarNameStr) >= 3 && 
+		iteratedVarNameStr != "key" && 
+		loopBodyReferencesKey(loopBody, iteratedVarNameStr);
+}
+
+private bool loopBodyReferencesKey(Statement loopBody, str iteratedVarNameStr) {
+	visit (loopBody) {
+		case (Identifier) `<Identifier id>`: {
+			if (trim("<id>") == iteratedVarNameStr)
+				return true;
+		}
+	}
+	return false;
+}
+
+private Statement replaceGetCalls(Statement loopBody, set[MethodInvocation] mapGetCalls) {
+	loopBody = visit(loopBody) {
+		case (MethodInvocation) `<MethodInvocation mi>`: {
+			if (mi in mapGetCalls) {
+				insert parse(#MethodInvocation, "<ENTRY_NAME>.getValue()");
+			}
+		}
+	}
+	return loopBody;
+}
+
+private Statement refactorLoopBodyWithoutKeepingKeyAsLoopVar(Statement loopBody, str iteratedVarNameStr) {
 	loopBody = visit(loopBody) {
 		case (Expression) `<ExpressionName expName>`: {
 			if (trim("<expName>") == iteratedVarNameStr)
@@ -232,17 +275,6 @@ private bool containsIteratedVarNameAtLeast3Chars(str iteratedVarNameStr, str ex
 		return findFirst(expNameStr, iteratedVarNameStr) != 1;
 	}
 	return false;
-}
-
-private Statement replaceGetCalls(Statement loopBody, set[MethodInvocation] mapGetCalls) {
-	loopBody = visit(loopBody) {
-		case (MethodInvocation) `<MethodInvocation mi>`: {
-			if (mi in mapGetCalls) {
-				insert parse(#MethodInvocation, "<ENTRY_NAME>.getValue()");
-			}
-		}
-	}
-	return loopBody;
 }
 
 private CompilationUnit addNeededImports(CompilationUnit unit) {
