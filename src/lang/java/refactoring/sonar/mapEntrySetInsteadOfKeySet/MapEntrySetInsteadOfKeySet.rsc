@@ -52,6 +52,8 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 	findFields(unit);
 	
 	unit = top-down-break visit(unit) {
+		// what about static initializers?
+	
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
 			mdl = visit(mdl) {
@@ -192,17 +194,44 @@ private Var expVar(Expression exp, map[str, Var] localVarsByName) {
 private Statement refactorLoopBody(Statement loopBody, MapExp mapExp, Var var,
 		set[MethodInvocation] mapGetCalls, VariableDeclaratorId iteratedVarName) {
 	loopBody = replaceGetCalls(loopBody, mapGetCalls);
+	
+	iteratedVarNameStr = trim("<iteratedVarName>");
+	
 	loopBody = visit(loopBody) {
 		case (Expression) `<ExpressionName expName>`: {
-			if(trim("<expName>") == trim("<iteratedVarName>"))
+			if (trim("<expName>") == iteratedVarNameStr)
 				insert parse(#Expression, "<ENTRY_NAME>.getKey()");
 		}
 		case (UnaryExpression) `<UnaryExpression expName>`: {
-			if(trim("<expName>") == trim("<iteratedVarName>"))
+			if (trim("<expName>") == iteratedVarNameStr) {
 				insert parse(#UnaryExpression, "<ENTRY_NAME>.getKey()");
+			} else {
+				expNameStr = "<expName>";
+				if (containsIteratedVarNameInRightSituation(iteratedVarNameStr, expNameStr)) {
+					try {
+						expRefactoredStr = replaceFirst(expNameStr, iteratedVarNameStr, "<ENTRY_NAME>.getKey()");
+						expRefactored = parse(#UnaryExpression, expRefactoredStr);
+						insert expRefactored;
+					} catch: continue;
+				}
+			}
 		}
 	}
 	return loopBody;
+}
+
+private bool containsIteratedVarNameInRightSituation(str iteratedVarNameStr, str expNameStr) {
+	return findFirst(expNameStr, "<iteratedVarNameStr>.") != -1 ||
+		endsWith(expNameStr, iteratedVarNameStr) ||
+		containsIteratedVarNameAtLeast3Chars(iteratedVarNameStr, expNameStr);
+}
+
+// does not cover all cases
+private bool containsIteratedVarNameAtLeast3Chars(str iteratedVarNameStr, str expNameStr) {
+	if (size(iteratedVarNameStr) >= 3) {
+		return findFirst(expNameStr, iteratedVarNameStr) != 1;
+	}
+	return false;
 }
 
 private Statement replaceGetCalls(Statement loopBody, set[MethodInvocation] mapGetCalls) {
