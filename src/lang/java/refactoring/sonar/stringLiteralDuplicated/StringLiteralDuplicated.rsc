@@ -15,20 +15,20 @@ private str DEFAULT_IDENTATION = "    ";
 private int SONAR_MINIMUM_DUPLICATED_COUNT = 3;
 
 // facilitate review, can be modified later
-private int MAXIMUM_CONSTANTS_TO_CONSIDER = 3;
+private int MAXIMUM_CONSTANTS_TO_CONSIDER = 999;
 
 // Sonar considers minimum length of 5 + 2 (quotes)
 private int SONAR_MINIMUM_LITERAL_LENGTH = 7;
 
 private map[str, int] countByStringLiterals = ();
 
-private map[str, set[StatementWithoutTrailingSubstatement]] stmtsByStringLiterals = ();
+private map[str, set[BlockStatement]] stmtsByStringLiterals = ();
 
-private set[StatementWithoutTrailingSubstatement] stmtsToBeRefactored = {};
+private set[BlockStatement] stmtsToBeRefactored = {};
 
 private map[str, str] constantByStrLiteral = ();
 
-private map[StatementWithoutTrailingSubstatement, StatementWithoutTrailingSubstatement] refactoredByOriginalStmts = ();
+private map[BlockStatement, BlockStatement] refactoredByOriginalStmts = ();
 
 private list[FieldDeclaration] alreadyDefinedConstants = [];
 
@@ -93,7 +93,7 @@ private void populateMapsWithStringsOfInterestThatOccurEqualOrGreaterThanMinimum
 
 private void populateMapsWithStringsOfInterestCount(ClassBody classBody) {
 	top-down-break visit(classBody) {
-		case (StatementWithoutTrailingSubstatement) `<StatementWithoutTrailingSubstatement stmt>`: {
+		case (BlockStatement) `<BlockStatement stmt>`: {
 			top-down-break visit(stmt) {
 				case (StringLiteral) `<StringLiteral strLiteral>`: {
 					strLiteralAsStr = "<strLiteral>";
@@ -115,7 +115,7 @@ private void increaseStringLiteralCount(str strLiteral) {
 	}
 }
 
-private void addStmtToStringLiteralsStmts(str strLiteral, StatementWithoutTrailingSubstatement stmt) {
+private void addStmtToStringLiteralsStmts(str strLiteral, BlockStatement stmt) {
 	if (strLiteral in stmtsByStringLiterals) {
 		stmtsByStringLiterals[strLiteral] += {stmt};
 	} else {
@@ -134,7 +134,7 @@ private void filterMapsWithOnlyOccurrencesEqualOrGreaterThanMinimum() {
 
 private void populateMapOfStmtsToBeRefactored() {
 	stmtsToBeRefactored = { *stmts |
-		 set[StatementWithoutTrailingSubstatement] stmts <- range(stmtsByStringLiterals) };
+		 set[BlockStatement] stmts <- range(stmtsByStringLiterals) };
 }
 
 private void refactorDuplicatedOccurrencesToUseConstant(loc fileLoc, CompilationUnit unit, ClassBody classBody) {
@@ -199,7 +199,7 @@ private void populateOriginalAndRefactoredStmts(set[str] strLiterals) {
 				str constantName = constantByStrLiteral["<strLiteral>"];
 				str stmtReplacedStringLiteralWithConstant = replaceAll(stmtToBeRefactoredStr, strLiteral, constantName);
 				//str stmtWithConstantAndOneLessNonNls = removeNonNlsCommentsForEclipse(stmtReplacedStringLiteralWithConstant);
-				stmtRefactored = parse(#StatementWithoutTrailingSubstatement, stmtReplacedStringLiteralWithConstant);
+				stmtRefactored = parse(#BlockStatement, stmtReplacedStringLiteralWithConstant);
 				refactoredByOriginalStmts[stmtToBeRefactored] = stmtRefactored;		
 			}
 		}
@@ -268,10 +268,10 @@ private list[FieldDeclaration] createNeededConstants() {
 
 private ClassBody changeStatementsToUseConstants(ClassBody classBody) {
 	classBody = top-down visit(classBody) {
-		case (StatementWithoutTrailingSubstatement) `<StatementWithoutTrailingSubstatement stmt>`: {
+		case (BlockStatement) `<BlockStatement stmt>`: {
 			if (stmt in refactoredByOriginalStmts) {
 				refactored = refactoredByOriginalStmts[stmt];
-				insert (StatementWithoutTrailingSubstatement) `<StatementWithoutTrailingSubstatement refactored>`;
+				insert (BlockStatement) `<BlockStatement refactored>`;
 			}
 		}
 	}
