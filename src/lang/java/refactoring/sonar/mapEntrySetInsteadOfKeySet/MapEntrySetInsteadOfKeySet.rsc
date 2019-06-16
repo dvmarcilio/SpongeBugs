@@ -282,9 +282,12 @@ private CompilationUnit addNeededImports(CompilationUnit unit) {
 	entryImport = "import java.util.Map.Entry;";
 	unitStr = unparse(unit);
 	if (!isAnyImportPresent(importDecls, "java.util.*", "java.util.Map.*", "java.util.Map.Entry")) {
-		//unit = addImport(unit, importDecls, "java.util.Map.Entry");
-		mapImport = "import java.util.Map;";
-		unitStr = replaceFirst(unitStr, mapImport, "<mapImport>\n<entryImport>");
+		if (findFirst(unitStr, "import java.util.Map;") != -1) {
+			mapImport = "import java.util.Map;";
+			unitStr = replaceFirst(unitStr, mapImport, "<mapImport>\n<entryImport>");
+		} else {
+			unitStr = unparse(addImport(unit, importDecls, "java.util.Map.Entry"));
+		}
 	}
 	return parse(#CompilationUnit, unitStr);
 }
