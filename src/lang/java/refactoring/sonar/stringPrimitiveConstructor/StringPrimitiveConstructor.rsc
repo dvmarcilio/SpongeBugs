@@ -10,7 +10,7 @@ import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
 
-private set[str] classesToCheck = getPrimitiveWrappers() + "String";
+private set[str] classesToCheck = getPrimitiveWrappers() + "String" + "BigDecimal";
 
 private map[str, str] primitivesByWrappers = (
 	"Float": "float",
@@ -27,12 +27,12 @@ private bool shouldRewrite = false;
 
 public void stringPrimitiveConstructor(list[loc] locs) {
 	for(fileLoc <- locs) {
-		//try {
+		try {
 			refactorStringPrimitiveConstructor(fileLoc);
-		//} catch: {
-		//	println("Exception file: " + fileLoc.file);
-		//	continue;
-		//}	
+		} catch: {
+			println("Exception file (StringPrimitiveConstructor): " + fileLoc.file);
+			continue;
+		}	
 	}
 }
 
@@ -46,7 +46,7 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 			classType = "<typeInstantiated>";
 			args = "<arguments>";
 			if (isViolation(classType, args, unit)) {
-				refactored = refactorViolation(classType, args, unit);
+				refactored = refactorViolation("<classType>", "<args>");
 				shouldRewrite = true;
 				insert (Expression) `<Expression refactored>`;
 			}
