@@ -25,11 +25,14 @@ private str ENTRY_NAME = "entry";
 
 private bool KEEP_KEY_AS_A_LOOP_VARIABLE = true;
 
+private bool isUtilWildCardImportPresent = false;
+private bool isMapEntryExplicitImportPresent = false;
+private bool isMapWildCardImportPresent = false;
+
 public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				shouldRewrite = false;
 				refactorFileEntrySetInsteadOfKeySet(fileLoc);
 			}
 		} catch Ambiguity: {
@@ -49,7 +52,16 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 		findFirst(javaFileContent, ".get(") != 1;
 }
 
+private void resetImportPresenceBools() {
+	isUtilWildCardImportPresent = false;
+	isMapEntryExplicitImportPresent = false;
+	isMapWildCardImportPresent = false;
+}
+
 public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
+	shouldRewrite = false;
+	resetImportPresenceBools();
+
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	findFields(unit);
 	
@@ -72,7 +84,8 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 									
 									loopBody = refactorLoopBody(loopBody, mapGetCalls, "<iteratedVarType>", iteratedVarName);
 									
-									refactoredIteratedVarType = parse(#UnannType, "Entry<mapVar.generics>");
+									mapEntryReference = getMapEntryQualifiedReference(unit);
+									refactoredIteratedVarType = parse(#UnannType, "<mapEntryReference><mapVar.generics>");
 									refactoredIteratedVarName = parse(#VariableDeclaratorId, ENTRY_NAME);
 									refactoredExp = parse(#Expression, "<possibleMapExp.exp>.entrySet()");
 									
@@ -277,17 +290,44 @@ private bool containsIteratedVarNameAtLeast3Chars(str iteratedVarNameStr, str ex
 	return false;
 }
 
+private str getMapEntryQualifiedReference(CompilationUnit unit) {
+	computeImportsPresence(unit);
+	if (isUtilWildCardImportPresent && !isMapWildCardImportPresent && !isMapEntryExplicitImportPresent) {
+		return "Map.Entry";
+	} else {
+		return "Entry";
+	}
+}
+
+private void computeImportsPresence(CompilationUnit unit) {
+	unitStr = "<unit>";
+	if (findFirst(unitStr, "import java.util.*;") != -1) {
+		isUtilWildCardImportPresent = true;
+	}
+	if (findFirst(unitStr, "import java.util.Map.*;") != -1) {
+		isMapWildCardImportPresent = true;
+	}
+	if (findFirst(unitStr, "import java.util.Map.Entry;") != -1) {
+		isMapEntryExplicitImportPresent = true;
+	}
+}
+
 private CompilationUnit addNeededImports(CompilationUnit unit) {
 	importDecls = retrieveImportDeclarations(unit);
 	entryImport = "import java.util.Map.Entry;";
 	unitStr = unparse(unit);
-	if (!isAnyImportPresent(importDecls, "java.util.*", "java.util.Map.*", "java.util.Map.Entry")) {
+	if (needsToAddMapEntryImport()) {
 		if (findFirst(unitStr, "import java.util.Map;") != -1) {
 			mapImport = "import java.util.Map;";
 			unitStr = replaceFirst(unitStr, mapImport, "<mapImport>\n<entryImport>");
-		} else {
+		}
+		else {
 			unitStr = unparse(addImport(unit, importDecls, "java.util.Map.Entry"));
 		}
 	}
 	return parse(#CompilationUnit, unitStr);
+}
+
+private bool needsToAddMapEntryImport() {
+	return !isUtilWildCardImportPresent && !isMapWildCardImportPresent && !isMapEntryExplicitImportPresent;
 }
