@@ -30,10 +30,6 @@ syntax Imports = ImportDeclaration*;
 /*
  * Productions from §4 (Types, Values, and Variables)
  */
- 
- syntax Type = PrimitiveType
-             | ReferenceType
-             ;
              
  syntax PrimitiveType = Annotation* NumericType
                       | Annotation* "boolean" 
@@ -143,8 +139,8 @@ syntax SingleStaticImportDeclaration = "import" "static" TypeName "." Identifier
 syntax StaticImportOnDemandDeclaration = "import" "static" TypeName "." "*" ";"+ ;                         
 
 
-syntax TypeDeclaration = ClassDeclaration ";"*
-                       | InterfaceDeclaration ";"* 
+syntax TypeDeclaration = ClassDeclaration !>> ";"*
+                       | InterfaceDeclaration !>> ";"*
                        ;
 
 syntax ClassDeclaration = NormalClassDeclaration
