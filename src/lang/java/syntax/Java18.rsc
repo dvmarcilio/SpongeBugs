@@ -409,7 +409,7 @@ syntax ElementValue = ConditionalExpression
                     
 syntax ElementValueArrayInitializer = "{" ElementValueList? ","? "}" ;
 
-syntax ElementValueList = { ElementValue "," }*;
+syntax ElementValueList = {ElementValue ","}+;
 
 syntax MarkerAnnotation = "@" TypeName ;
 
