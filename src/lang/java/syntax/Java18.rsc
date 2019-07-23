@@ -430,14 +430,14 @@ syntax VariableInitializerList = { VariableInitializer "," }+ ;
 syntax Block = "{" BlockStatements? "}" ;
              
 
-syntax BlockStatements = BlockStatement BlockStatement* ;
+syntax BlockStatements = BlockStatement+ ;
 
-syntax BlockStatement = LocalVariableDeclarationStatement 
+syntax BlockStatement = LocalVariableDeclarationStatement ";"
                       | ClassDeclaration 
                       | Statement
                       ;
                       
-syntax LocalVariableDeclarationStatement = LocalVariableDeclaration ";"+ ;
+syntax LocalVariableDeclarationStatement = LocalVariableDeclaration;
 
 syntax LocalVariableDeclaration = VariableModifier* UnannType VariableDeclaratorList ;
 
