@@ -25,6 +25,8 @@ private map[str, str] primitivesByWrappers = (
 
 private bool shouldRewrite = false;
 
+
+
 public void stringPrimitiveConstructor(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
@@ -40,6 +42,8 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
 	unit = parse(#CompilationUnit, javaFileContent);
 	shouldRewrite = false;
+	
+	// TODO find fields
 	
 	unit = top-down visit(unit) {
 		case (Expression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
@@ -72,6 +76,9 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 		
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
+			
+			// TODO find methodVars
+			
 			mdl = visit(mdl) {
 				case (Expression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
 					classType = "<typeInstantiated>";
@@ -118,7 +125,9 @@ private bool isViolation(str typeInstantiated, str args, CompilationUnit unit) {
 		if (typeInstantiated == "String") {
 			return (isEmpty(args) || isOnlyOneArgument(args)) && findFirst(args, "\"") != -1;
 		} else if(typeInstantiated == "BigDecimal") {
-			return isOnlyOneArgument(args) && isNotCast(args) && findFirst(args, "\"") == -1 && findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1;
+			return isOnlyOneArgument(args) && isNotCast(args) && findFirst(args, "\"") == -1 &&
+				 findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1 &&
+				 canRefactorBigDecimal(args, unit);
 		} else {
 			return isOnlyOneArgument(args) && isNotCast(args) && isArgumentPrimitiveOfWrapper(typeInstantiated, args, unit);
 		}
@@ -131,12 +140,38 @@ private bool isViolation(str typeInstantiated, str args, CompilationUnit unit, M
 		if (typeInstantiated == "String") {
 			return (isEmpty(args) || isOnlyOneArgument(args)) && findFirst(args, "\"") != -1;
 		} else if(typeInstantiated == "BigDecimal") {
-			return isOnlyOneArgument(args) && isNotCast(args) && findFirst(args, "\"") == -1 && findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1;
+			return isOnlyOneArgument(args) && isNotCast(args) && findFirst(args, "\"") == -1 &&
+			 	findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1 &&
+			 	canRefactorBigDecimal(args, unit, mdl);
 		} else {
 			return isOnlyOneArgument(args) && isNotCast(args) && isArgumentPrimitiveOfWrapper(typeInstantiated, args, unit, mdl);
 		}
 	}
 	return false;
+}
+
+private bool canRefactorBigDecimal(str args, CompilationUnit unit) {
+	set[MethodVar] fields = findClassFields(unit);
+	
+	try {
+		return !isArgumentFromMethodVarsAString(fields);
+	} catch: 
+		return false; // being over cautious
+}
+
+private bool canRefactorBigDecimal(str args, CompilationUnit unit, MethodDeclaration mdl) {
+	set[MethodVar] fields = findClassFields(unit);
+	set[MethodVar] localVars = findlocalVars(mdl);
+	
+	try {
+		return !isArgumentFromMethodVarsAString(fields + localVars);
+	} catch: 
+		return false; // being over cautious
+}
+
+private bool isArgumentFromMethodVarsAString(str args, set[MethodVar] availableVars) {
+	MethodVar v = findByName(avaialableVars, trim(args));
+	return trim(v.varType) == "String";
 }
 
 private bool isArgumentPrimitiveOfWrapper(str typeInstantiated, str args, CompilationUnit unit) {
