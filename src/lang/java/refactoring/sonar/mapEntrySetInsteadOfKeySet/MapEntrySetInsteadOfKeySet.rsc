@@ -17,7 +17,8 @@ private map[str, Var] fieldsByName = ();
 
 private bool shouldRewrite = false;
 
-private set[str] mapTypes = {"Map", "HashMap", "LinkedHashMap", "TreeMap"};
+private set[str] mapTypes = {"Map", "HashMap", "LinkedHashMap", "TreeMap", "EnumMap", "ConcurrentHashMap",
+ 	"ConcurrentMap", "SortedMap", "NavigableMap"};
 
 private data MapExp = mapExp(bool isMapReference, str name, Expression exp);
 
