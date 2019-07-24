@@ -9,17 +9,14 @@ import lang::java::refactoring::forloop::ClassFieldsFinder;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::MethodVar;
 
-private bool shouldRewrite = false;
-
 public void refactorAllToCollectionIsEmpty(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				shouldRewrite = false;
 				refactorCollectionIsEmpty(fileLoc);
 			}
 		} catch: {
-			println("Exception file: " + fileLoc.file);
+			println("Exception file (CollectionIsEmpty): " + fileLoc.file);
 			continue;
 		}	
 	}
@@ -39,47 +36,38 @@ private bool hasSizeComparison(str javaFileContent) {
 
 public void refactorCollectionIsEmpty(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
+	shouldRewrite = false;
 	
 	unit = top-down visit(unit) {
 		// we are missing lambda bodies here
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
-			modified = false;
-			mdl = bottom-up-break visit(mdl) {
-				case (Expression) `<EqualityExpression equalityExpression>`: {
-					Expression refactoredExp = parse(#Expression, "<equalityExpression>");
-					equalityExpression = visit(equalityExpression) {
-						case (EqualityExpression) `<ExpressionName beforeFunc>.size() == 0`: {
-							if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
-								modified = true;
-								refactoredExp = parse(#Expression, "<beforeFunc>.isEmpty()");
-							}
-						}
-						case (EqualityExpression) `<ExpressionName beforeFunc>.size() != 0`: {
-							if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
-								modified = true;
-								refactoredExp = parse(#Expression, "!<beforeFunc>.isEmpty()");
-							}
-						}
-						case (RelationalExpression) `<ExpressionName beforeFunc>.size() \> 0`: {
-							if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
-								modified = true;
-								refactoredExp = parse(#Expression, "!<beforeFunc>.isEmpty()");
-							}
-						}
-						case (RelationalExpression) `<ExpressionName beforeFunc>.size() \>= 1`: {
-							if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
-								modified = true;
-								refactoredExp = parse(#Expression, "!<beforeFunc>.isEmpty()");
-							}
-						}
+			mdl = visit(mdl) {
+				case (EqualityExpression) `<ExpressionName beforeFunc>.size() == 0`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
 					}
-					if (modified) {
-						insert refactoredExp;
+				}
+				case (EqualityExpression) `<ExpressionName beforeFunc>.size() != 0`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						insert parse(#EqualityExpression, "!<beforeFunc>.isEmpty()");
+					}
+				}
+				case (RelationalExpression) `<ExpressionName beforeFunc>.size() \> 0`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
+					}
+				}
+				case (RelationalExpression) `<ExpressionName beforeFunc>.size() \>= 1`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
 					}
 				}
 			}
-			if (modified) {
-				shouldRewrite = true;
+			if (shouldRewrite) {
 				insert mdl;
 			}
 		}
@@ -95,7 +83,7 @@ private bool isBeforeFuncReferencingACollection(ExpressionName beforeFunc, Metho
 		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
 			try {
 				set[MethodVar] vars = findLocalVariables(methodHeader, mBody) + findClassFields(unit);
-				MethodVar var = findByName(vars, "<beforeFunc>");
+				MethodVar var = findByName(vars, trim("<beforeFunc>"));
 				return isCollection(var);
 			} catch EmptySet(): {
 				return false;

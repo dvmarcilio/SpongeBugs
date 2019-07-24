@@ -8,7 +8,8 @@ public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isPa
 	bool isDeclaredWithinLoop, bool isEffectiveFinal);
 
 private set[str] collections = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "LinkedHashSet",
-	 "TreeSet", "Map", "HashMap", "LinkedHashMap", "Queue"};
+	 "TreeSet", "Queue", "Stack", "SortedSet", "EnumSet", "ArrayDeque", "ConcurrentLinkedDeque", "ConcurrentLinkedQueue",
+	 "Vector", "Deque", "NavigableSet"};
 
 public bool isArray(MethodVar methodVar) {
 	return methodVar.varType == "array";
