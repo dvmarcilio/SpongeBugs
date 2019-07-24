@@ -97,7 +97,7 @@ private void populateMapsWithStringsOfInterestCount(ClassBody classBody) {
 			top-down-break visit(stmt) {
 				case (StringLiteral) `<StringLiteral strLiteral>`: {
 					strLiteralAsStr = "<strLiteral>";
-					if (size(strLiteralAsStr) > SONAR_MINIMUM_LITERAL_LENGTH) {
+					if (size(strLiteralAsStr) >= SONAR_MINIMUM_LITERAL_LENGTH) {
 						increaseStringLiteralCount(strLiteralAsStr);
 						addStmtToStringLiteralsStmts(strLiteralAsStr, stmt);
 					}
