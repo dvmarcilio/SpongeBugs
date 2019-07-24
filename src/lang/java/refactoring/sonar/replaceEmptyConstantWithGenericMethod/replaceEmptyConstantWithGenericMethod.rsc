@@ -10,9 +10,13 @@ import lang::java::util::CompilationUnitUtils;
 
 private set[str] constantsToCheck = {"EMPTY_SET", "EMPTY_LIST", "EMPTY_MAP"};
 
-private set[str] collections = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "LinkedHashSet",
-	 "TreeSet", "Queue", "Stack", "SortedSet", "EnumSet", "ArrayDeque", "ConcurrentLinkedDeque", "ConcurrentLinkedQueue",
-	 "Vector", "Deque", "NavigableSet"};
+ private set[str] maps = {"Map", "HashMap", "LinkedHashMap", "TreeMap", "EnumMap", "ConcurrentHashMap",
+ 	"ConcurrentMap", "SortedMap", "NavigableMap"};
+ private set[str] sets = {"Set", "HashSet", "LinkedHashSet",
+	 "TreeSet",  "SortedSet", "EnumSet", "NavigableSet"};
+ private set[str] lists = {"List", "ArrayList", "LinkedList", "Stack", "Vector"};
+ private set[str] collections = maps + sets + lists;
+	 
 
 private bool shouldRewrite = false;
 
