@@ -165,7 +165,7 @@ syntax Superclass = "extends" ClassType ;
 
 syntax Superinterfaces = "implements" {InterfaceType ","}+ ;
 
-syntax ClassBody = classBody : "{" ClassBodyDeclaration* decls "}" ";"? ;
+syntax ClassBody = classBody : "{" ClassBodyDeclaration* decls "}" !>> ";"* ;
 
 syntax ClassBodyDeclaration = ClassMemberDeclaration 
                             | InstanceInitializer 
@@ -415,7 +415,9 @@ syntax SingleElementAnnotation = "@" TypeName "(" ElementValue ")" ;
  * Productions from §10 (Arrays)
  */
  
-syntax ArrayInitializer = "{" VariableInitializerList? ","? "}" ; 
+syntax ArrayInitializer = "{" VariableInitializerList? ","? "}"
+                        | "{" VariableInitializerList? ","? "}" "[" Expression "]"
+                        ;
 
 syntax VariableInitializerList = { VariableInitializer "," }+ ;
 
@@ -429,7 +431,7 @@ syntax Block = "{" BlockStatements? "}" ;
 syntax BlockStatements = BlockStatement+ ;
 
 syntax BlockStatement = LocalVariableDeclarationStatement ";"
-                      | ClassDeclaration 
+                      | ClassDeclaration
                       | Statement
                       ;
                       
