@@ -10,6 +10,10 @@ import lang::java::util::CompilationUnitUtils;
 
 private set[str] constantsToCheck = {"EMPTY_SET", "EMPTY_LIST", "EMPTY_MAP"};
 
+private set[str] collections = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "LinkedHashSet",
+	 "TreeSet", "Queue", "Stack", "SortedSet", "EnumSet", "ArrayDeque", "ConcurrentLinkedDeque", "ConcurrentLinkedQueue",
+	 "Vector", "Deque", "NavigableSet"};
+
 private bool shouldRewrite = false;
 
 private map[str, str] methodInvocationByConstantName = (
@@ -49,7 +53,7 @@ public void replaceEmptyConstantWithGenericMethod(loc fileLoc) {
 					exp = visit(exp) {
 						case (Expression) `Collections.<Identifier constantName>`: {						
 							if (isConstantOfInterest("<constantName>")) {
-								if (methodHasGenericReturnType(mdl)) {
+								if (methodReturnsACollection(mdl)) {
 									modified = true;
 									Expression refactored = generateCorrectMethodInvocationFromConstantName("<constantName>");
 									insert (Expression) `<Expression refactored>`;
@@ -79,8 +83,13 @@ private bool isConstantOfInterest(str constName) {
 	return constName in constantsToCheck;
 }
 
-private bool methodHasGenericReturnType(MethodDeclaration mdl) {
-	return findFirst(retrieveMethodReturnTypeAsStr(mdl), "\<") != -1;
+private bool methodReturnsACollection(MethodDeclaration mdl) {
+	methodReturn = retrieveMethodReturnTypeAsStr(mdl);
+	for (collectionType <- collections) {
+		if (startsWith(methodReturn, collectionType))
+			return true;
+	}
+	return false;
 }
 
 private Expression generateCorrectMethodInvocationFromConstantName(str constName) {
