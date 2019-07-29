@@ -2,6 +2,16 @@
 
 Automatically fixing SonarQube and SpotBugs Java rules with source-to-source transformations.
 
+```
+@inproceedings{Marcilio:SCAM:2019,
+  author    = {Diego Marcilio and Carlo A. Furia and Rodrigo Bonifácio and Gustavo Pinto.},
+  title     = {Automatically Generating Fix Suggestions in Response to Static Code Analysis Warnings},
+  booktitle = {19th {IEEE} International Working Conference on Source Code Analysis and Manipulation, {SCAM} 2019, Cleverland, US, September 30 - October 01, 2019},
+  pages     = {01-10},
+  year      = {2019},
+}
+```
+
 ## Running
 
 For now, SpongeBugs can be run through Eclipse IDE. More details coming soon.
