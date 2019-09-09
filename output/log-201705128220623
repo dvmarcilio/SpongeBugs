@@ -1,8 +1,0 @@
-[Project Analyzer] processing project: flink
-- applying multicatch into /Users/rbonifacio/Documents/scam-2017/flink/flink-runtime/src/main/java/org/apache/flink/runtime/operators/hash/CompactingHashTable.java
-- applying multicatch into /Users/rbonifacio/Documents/scam-2017/flink/flink-core/src/main/java/org/apache/flink/api/java/typeutils/runtime/PojoComparator.java
-- Number of files:  4823
-- Processed Filies: 2
-- Exported Files:   2
-- Total of applied transformations: 2
-- Errors: 34
