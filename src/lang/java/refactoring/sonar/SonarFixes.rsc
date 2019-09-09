@@ -173,7 +173,7 @@ private void doFixForRulesFromFile(loc javaFile, list[str] rules) {
 		for (rule <- rulesOrder) {
 			if (rule in rules) {
 				refactorFunction = functionByRule[rule];
-				refactorFunction([fileLoc]);
+				refactorFunction([javaFile]);
 			}
 		}
 	}
