@@ -12,6 +12,12 @@ import lang::java::refactoring::forloop::MethodVar;
 
 private bool shouldRewrite = false;
 
+// StringBuilder and String common methods
+// String actually has indexOf that takes 'char' as argument
+// Leaving it out to assure correctness
+private set[str] commonMethods = {"substring", "length", "charAt", 
+	"codePointAt", "codePointBefore", "codePointCount"};
+
 // Just so we don't get a unitialized exception
 ExpressionName expLHSToConsider = parse(#ExpressionName, "a");
 
@@ -23,7 +29,7 @@ public void refactorAllStringConcatenatedLoop(list[loc] locs) {
 				refactorStringConcatenatedLoop(fileLoc);
 			}
 		} catch: {
-			println("Exception file: " + fileLoc.file);
+			println("Exception file (StringConcatenatedLoop): " + fileLoc.file);
 			continue;
 		}	
 	}
@@ -151,7 +157,9 @@ private bool methodReturnsStringFromExpLHS(MethodDeclaration mdl, ExpressionName
 	return methodReturnsString && returnsExpString;
 }
 
-private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {	
+private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {
+	mdl = replaceReferencesWithToStringCall(mdl, expName);
+
 	mdl = visit(mdl) {
 		case (LocalVariableDeclaration) `<UnannType varType> <Identifier varId> <Dims? _> = <Expression expRHS>`: {
 			if (trim("<varType>") == "String" && trim("<varId>") == "<expName>") {
@@ -192,4 +200,48 @@ private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {
 	}
 	
 	return mdl;
+}
+
+private MethodDeclaration replaceReferencesWithToStringCall(MethodDeclaration mdl, ExpressionName varName) {
+	mdl = bottom-up-break visit(mdl) {
+		// can be made better
+		case (MethodInvocation) `<MethodInvocation mi>`: {
+			modified = false;
+			mi = visit(mi) {
+				case (ExpressionName) `<ExpressionName expressionName>`: {
+					if (trim("<expressionName>") == "<varName>" && !callsACommonMethod(mi)) {
+						modified = true;
+						insert parse(#ExpressionName, "<varName>.toString");
+					}
+				}
+			}
+			if (modified)
+				insert parse(#MethodInvocation, replaceAll("<mi>", "<varName>.toString", "<varName>.toString()"));
+		}
+		
+		case (ArgumentList) `<ArgumentList argumentList>`: {
+			modified = false;
+			argumentList = visit(argumentList) {
+				case (Expression) `<Expression possibleString>`: {
+					if (trim("<possibleString>") == "<varName>") {
+						modified = true;
+						insert parse(#Expression, "<varName>.toString()");
+					}
+				}
+			}
+			if (modified)
+				insert argumentList;
+		}
+	}
+	
+	return mdl;
+}
+
+private bool callsACommonMethod(MethodInvocation mi) {
+	miStr = "<mi>";
+	for (commonMethod <- commonMethods) {
+		if (findFirst(miStr, ".<commonMethod>(") != -1)
+			return true;
+	}
+	return false;
 }
