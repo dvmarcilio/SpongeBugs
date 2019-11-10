@@ -12,7 +12,7 @@ import lang::java::refactoring::sonar::stringConcatenatedLoop::StringConcatenate
 import lang::java::refactoring::sonar::referenceComparison::ReferenceComparison;
 import lang::java::refactoring::sonar::mapEntrySetInsteadOfKeySet::MapEntrySetInsteadOfKeySet;
 import lang::java::refactoring::sonar::parseToConvertStringToPrimitive::parseToConvertStringToPrimitive;
-import lang::java::refactoring::sonar::stringLiteralDuplicated::StringLiteralIsAlreadyDefinedAsConstant;
+import lang::java::refactoring::sonar::stringLiteralDuplicated::StringLiteralsAlreadyDefinedAsConstant;
 import IO;
 import String;
 import Map;

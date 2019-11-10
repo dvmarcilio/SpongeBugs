@@ -1,4 +1,4 @@
-module lang::java::refactoring::sonar::stringLiteralDuplicated::StringLiteralIsAlreadyDefinedAsConstant
+module lang::java::refactoring::sonar::stringLiteralDuplicated::StringLiteralsAlreadyDefinedAsConstant
 
 import IO;
 import lang::java::\syntax::Java18;
@@ -22,7 +22,7 @@ public void allStringLiteralsAlreadyDefinedAsConstant(list[loc] locs) {
 				refactorForEachClassBody(fileLoc);
 			}
 		} catch: {
-			println("Exception file (StringLiteralIsAlreadyDefinedAsConstant): <fileLoc.file>");
+			println("Exception file (StringLiteralsAlreadyDefinedAsConstant): <fileLoc.file>");
 			continue;
 		}
 	}
@@ -49,7 +49,7 @@ private CompilationUnit retrieveCompilationUnitFromLoc(loc fileLoc) {
 
 private list[ClassBody] retrieveClassBodies(CompilationUnit unit) {
 	list[ClassBody] classBodies = [];
-	top-down-break visit(unit) {
+	bottom-up-break visit(unit) {
 		case (ClassBody) `<ClassBody classBody>`: { 
 			classBodies += classBody;
 		}
