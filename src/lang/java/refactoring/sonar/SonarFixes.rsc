@@ -22,8 +22,6 @@ import lang::java::m3::M3Util;
 import lang::java::\syntax::Java18;
 import ParseTree;
 
-private bool skipTestFiles = true;
-
 public void allSonarFixesForDirectory(loc dirLoc, bool ignoreTestFiles) {
     javaFiles = javaFilesFromDir(dirLoc, ignoreTestFiles);
     allSonarFixes(javaFiles);
@@ -85,8 +83,6 @@ public void doAllSonarFixesForFile(loc fileLoc) {
 }
 
 private bool shouldAnalyzeFile(loc fileLoc) {
-	if (!skipTestFiles)
-		return true;
 	fileName = fileNameWithoutExtension(fileLoc);
 	return !endsWith(fileName, "Test") && findFirst(fileLoc.path, "src/test/java") == -1
 		&& !startsWith(fileName, "package-info");
@@ -97,8 +93,7 @@ private str fileNameWithoutExtension(loc fileLoc) {
 	return substring(fileLoc.file, 0, indexOfExtension);
 }
 
-private map[str, void (list[loc])] functionByRule = 
-	(
+private map[str, void (list[loc])] functionByRule = (
 	"B1": refactorAllReferenceComparison,
 	"B2": stringPrimitiveConstructor,
 	"C1": stringLiteralDuplicated,
@@ -109,7 +104,7 @@ private map[str, void (list[loc])] functionByRule =
 	"C7": refactorAllEntrySetInsteadOfKeySet,
 	"C8": refactorAllToCollectionIsEmpty,
 	"C9": replaceAllEmptyConstantWithGenericMethods
-	);
+);
 	
 // should we review this order?	
 private list[str] rulesOrder = ["B2", "B1", "C9", "C2", "C8", "C3", "C7", "C4", "C1", "C5"];	
