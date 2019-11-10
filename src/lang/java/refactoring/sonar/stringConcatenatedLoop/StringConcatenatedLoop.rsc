@@ -203,15 +203,21 @@ private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {
 }
 
 private MethodDeclaration replaceReferencesWithToStringCall(MethodDeclaration mdl, ExpressionName varName) {
-	mdl = bottom-up-break visit(mdl) {
+	mdl = visit(mdl) {
 		// can be made better
 		case (MethodInvocation) `<MethodInvocation mi>`: {
 			modified = false;
-			mi = visit(mi) {
+			mi = bottom-up-break visit(mi) {
 				case (ExpressionName) `<ExpressionName expressionName>`: {
-					if (trim("<expressionName>") == "<varName>" && !callsACommonMethod(mi)) {
+					if (trim("<expressionName>") == "<varName>" && shouldChangeMethodInvocation(mi, varName)) {
 						modified = true;
 						insert parse(#ExpressionName, "<varName>.toString");
+					}
+				}
+				case (Primary) `<Primary primary>`: {
+					if (trim("<primary>") == "<varName>" && shouldChangeMethodInvocation(mi, varName)) {
+						modified = true;
+						insert parse(#Primary, "<varName>.toString");
 					}
 				}
 			}
@@ -237,8 +243,18 @@ private MethodDeclaration replaceReferencesWithToStringCall(MethodDeclaration md
 	return mdl;
 }
 
-private bool callsACommonMethod(MethodInvocation mi) {
+private bool shouldChangeMethodInvocation(MethodInvocation mi, ExpressionName varName) {
 	miStr = "<mi>";
+	return doesNotCallMethod(miStr, varName, "append") &&
+		doesNotCallMethod(miStr, varName, "toString") &&
+		!callsACommonMethod(miStr);
+}
+
+private bool doesNotCallMethod(str miStr, ExpressionName varName, str methodName) {
+	return findFirst(miStr, "<varName>.<methodName>(") == -1;
+}
+
+private bool callsACommonMethod(str miStr) {
 	for (commonMethod <- commonMethods) {
 		if (findFirst(miStr, ".<commonMethod>(") != -1)
 			return true;
