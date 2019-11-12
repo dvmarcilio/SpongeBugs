@@ -49,8 +49,8 @@ public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
 	return findFirst(javaFileContent, "java.util.") != -1 &&
-		findFirst(javaFileContent, ".keySet()") != 1 &&
-		findFirst(javaFileContent, ".get(") != 1;
+		findFirst(javaFileContent, ".keySet()") != -1 &&
+		findFirst(javaFileContent, ".get(") != -1;
 }
 
 private void resetImportPresenceBools() {
@@ -263,7 +263,7 @@ private Statement refactorLoopBodyWithoutKeepingKeyAsLoopVar(Statement loopBody,
 			if (trim("<expName>") == iteratedVarNameStr) {
 				insert parse(#UnaryExpression, "<ENTRY_NAME>.getKey()");
 			} else {
-				expNameStr = "<expName>";
+				expNameStr = trim("<expName>");
 				if (containsIteratedVarNameInRightSituation(iteratedVarNameStr, expNameStr)) {
 					try {
 						expRefactoredStr = replaceFirst(expNameStr, iteratedVarNameStr, "<ENTRY_NAME>.getKey()");
@@ -278,17 +278,8 @@ private Statement refactorLoopBodyWithoutKeepingKeyAsLoopVar(Statement loopBody,
 }
 
 private bool containsIteratedVarNameInRightSituation(str iteratedVarNameStr, str expNameStr) {
-	return findFirst(expNameStr, "<iteratedVarNameStr>.") != -1 ||
-		endsWith(expNameStr, iteratedVarNameStr) ||
-		containsIteratedVarNameAtLeast3Chars(iteratedVarNameStr, expNameStr);
-}
-
-// does not cover all cases
-private bool containsIteratedVarNameAtLeast3Chars(str iteratedVarNameStr, str expNameStr) {
-	if (size(iteratedVarNameStr) >= 3) {
-		return findFirst(expNameStr, iteratedVarNameStr) != 1;
-	}
-	return false;
+	return startsWith(expNameStr, "<iteratedVarNameStr>.") ||
+		expNameStr == iteratedVarNameStr; 
 }
 
 private str getMapEntryQualifiedReference(CompilationUnit unit) {
