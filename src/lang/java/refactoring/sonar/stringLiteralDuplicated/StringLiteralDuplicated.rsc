@@ -7,6 +7,7 @@ import String;
 import List;
 import Map;
 import Set;
+import Location;
 
 import lang::java::refactoring::sonar::stringLiteralDuplicated::StringValueToConstantName;
 
@@ -32,10 +33,22 @@ private map[BlockStatement, BlockStatement] refactoredByOriginalStmts = ();
 
 private list[FieldDeclaration] alreadyDefinedConstants = [];
 
+private bool shouldWriteLog = false;
+
+private loc logPath; 
+
+private str detailedLogFileName = "STRING_LITERAL_DUPLICATED_DETAILED.txt";
+private str countLogFileName = "STRING_LITERAL_DUPLICATED_COUNT.txt"; 
+
 public void stringLiteralDuplicated(list[loc] locs) {
+	shouldWriteLog = false;
+	doStringLiteralDuplicated(locs);
+}
+
+private void doStringLiteralDuplicated(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			transformStringLiteralDuplicated(fileLoc);
+			doTransformStringLiteralDuplicated(fileLoc);
 		} catch: {
 			println("Exception file: " + fileLoc.file);
 			continue;
@@ -43,9 +56,26 @@ public void stringLiteralDuplicated(list[loc] locs) {
 	}
 }
 
+public void stringLiteralDuplicated(list[loc] locs, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doStringLiteralDuplicated(locs);
+}
+
 public void transformStringLiteralDuplicated(loc fileLoc) {
+	shouldWriteLog = false;
+	doTransformStringLiteralDuplicated(fileLoc);	
+}
+
+private void doTransformStringLiteralDuplicated(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	refactorForEachClassBody(fileLoc, unit);
+}
+
+public void transformStringLiteralDuplicated(loc fileLoc, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doTransformStringLiteralDuplicated(fileLoc);
 }
 
 private CompilationUnit retrieveCompilationUnitFromLoc(loc fileLoc) {
@@ -229,6 +259,7 @@ private void refactorOriginalToRefactoredStmts(loc fileLoc, CompilationUnit unit
 	}
 	
 	writeFile(fileLoc, unit);
+	writeLog(fileLoc);
 }
 
 private ClassBody addNeededConstants(ClassBody classBody) {
@@ -276,4 +307,51 @@ private ClassBody changeStatementsToUseConstants(ClassBody classBody) {
 		}
 	}
 	return classBody;
+}
+
+private void writeLog(loc fileLoc) {
+	if (shouldWriteLog)
+		doWriteLog(fileLoc);
+}
+
+private void doWriteLog(loc fileLoc) {
+	if (!exists(logPath))
+		mkDirectory(logPath);
+	
+	detailedLogMap = createDetailedLogMap(fileLoc);	
+	detailedFilePath = logPath + detailedLogFileName;
+	writeToLogFile(detailedLogMap, detailedFilePath);
+	
+	filePathStr = fileLoc.authority + fileLoc.path;
+	countFilePath = logPath + countLogFileName;
+	countLogStr = "<filePathStr>: <size(range(constantByStrLiteral))>";
+	writeToLogFile(countLogStr, countFilePath);
+
+}
+
+private map[str, list[str]] createDetailedLogMap(loc fileLoc) {
+	filePathStr = fileLoc.authority + fileLoc.path;
+	map[str, list[str]] logMap = ();
+	logMap[filePathStr] = [];
+	
+	for (constantCreated <- range(constantByStrLiteral)) {
+		logMap[filePathStr] += "Created constant <constantCreated>";
+	}
+	
+	return logMap;
+}
+
+private void writeToLogFile(map[str, list[str]] detailedLogMap, loc filePath) {
+	mapStr = toString(detailedLogMap);
+	if (exists(filePath))
+		appendToFile(filePath, "\n" + mapStr);
+	else
+		writeFile(filePath, mapStr);
+} 
+
+private void writeToLogFile(str countStr, loc filePath) {
+	if (exists(filePath))
+		appendToFile(filePath, "\n" + countStr);
+	else
+		writeFile(filePath, countStr);
 }
