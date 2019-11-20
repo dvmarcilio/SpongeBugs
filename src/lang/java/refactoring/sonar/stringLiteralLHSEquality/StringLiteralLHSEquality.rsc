@@ -8,14 +8,30 @@ import Set;
 import lang::java::util::MethodDeclarationUtils;
 import lang::java::util::CompilationUnitUtils;
 
-private bool shouldRewrite = false;
+private bool shouldWriteLog = false;
+
+private loc logPath;
+
+private str countLogFileName = "STRING_LITERAL_LHS_EQUALITY_COUNT.txt";
+
+private int timesReplaced = 0;
 
 public void refactorAllStringLiteralLHSEquality(list[loc] locs) {
+	shouldWriteLog = false;
+	doRefactorAllStringLiteralLHSEquality(locs);
+}
+
+public void refactorAllStringLiteralLHSEquality(list[loc] locs, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorAllStringLiteralLHSEquality(locs);
+}
+
+private void doRefactorAllStringLiteralLHSEquality(list[loc] locs) {
 	for (fileLoc <- locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				shouldRewrite = false;
-				refactorFileStringLiteralLHSEquality(fileLoc);
+				doRefactorFileStringLiteralLHSEquality(fileLoc);
 			}
 		} catch: {
 			println("Exception file (StringLiteralLHSEquality): " + fileLoc.file);
@@ -30,7 +46,22 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 }
 
 public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
+	shouldWriteLog = false;
+	doRefactorFileStringLiteralLHSEquality(fileLoc);
+}
+
+public void refactorFileStringLiteralLHSEquality(loc fileLoc, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorFileStringLiteralLHSEquality(fileLoc);
+}
+
+private void doRefactorFileStringLiteralLHSEquality(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
+	
+	shouldRewrite = false;
+	timesReplaced = 0;
+	
 	unit = top-down visit(unit) {
 		case (Expression) `<Expression exp>`: {
 			modified = false;
@@ -49,6 +80,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
 						expRefactored = parse(#Expression, "<args>.equals(<beforeFunc>)");
+						timesReplaced += 1;
 						insert expRefactored;						
 					}
 				}
@@ -56,6 +88,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
 						expRefactored = parse(#Expression, "<args>.equals(<beforeFunc>)");
+						timesReplaced += 1;
 						insert expRefactored;						
 					}
 				}
@@ -64,6 +97,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
 						expRefactored = parse(#Expression, "!<args>.equals(<beforeFunc>)");
+						timesReplaced += 1;
 						insert expRefactored;						
 					}
 				}
@@ -71,6 +105,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
 						expRefactored = parse(#Expression, "!<args>.equals(<beforeFunc>)");
+						timesReplaced += 1;
 						insert expRefactored;						
 					}
 				}
@@ -80,6 +115,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
 						expRefactored = parse(#Expression, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						timesReplaced += 1;
 						insert expRefactored;						
 					}
 				}
@@ -87,6 +123,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
 						expRefactored = parse(#Expression, "<args>.equalsIgnoreCase(<beforeFunc>)");
+						timesReplaced += 1;
 						insert expRefactored;						
 					}
 				}
@@ -95,6 +132,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
 						expRefactored = parse(#Expression, "!<args>.equalsIgnoreCase(<beforeFunc>)");
+						timesReplaced += 1;
 						insert expRefactored;						
 					}
 				}
@@ -102,6 +140,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 					if ("<exp1>" == "<beforeFunc>" && isStringLiteral("<args>")) {
 						modified = true;
 						expRefactored = parse(#Expression, "!<args>.equalsIgnoreCase(<beforeFunc>)");
+						timesReplaced += 1;
 						insert expRefactored;						
 					}
 				}
@@ -117,6 +156,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 			if (isStringLiteral("<args>")) {
 				shouldRewrite = true;
 				mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
+				timesReplaced += 1;
 				insert mi;
 			}
 		}
@@ -124,6 +164,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 			if (isStringLiteral("<args>")) {
 				shouldRewrite = true;
 				mi = parse(#MethodInvocation, "<args>.equals(<beforeFunc>)");
+				timesReplaced += 1;
 				insert mi;
 			}
 		}
@@ -131,6 +172,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 			if (isStringLiteral("<args>")) {
 				shouldRewrite = true;
 				mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+				timesReplaced += 1;
 				insert mi;
 			}
 		}
@@ -138,6 +180,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 			if (isStringLiteral("<args>")) {
 				shouldRewrite = true;
 				mi = parse(#MethodInvocation, "<args>.equalsIgnoreCase(<beforeFunc>)");
+				timesReplaced += 1;
 				insert mi;
 			}
 		}
@@ -146,6 +189,7 @@ public void refactorFileStringLiteralLHSEquality(loc fileLoc) {
 	
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
+		doWriteLog(fileLoc);
 	}
 }
 
@@ -156,4 +200,25 @@ private bool isStringLiteral(str args) {
 	} catch: {
 		return false;
 	}
+}
+
+private void doWriteLog(loc fileLoc) {
+	if (shouldWriteLog)
+		writeToCountLogFile(fileLoc);
+}
+
+private void writeToCountLogFile(loc fileLoc) {
+	filePathStr = fileLoc.authority + fileLoc.path;
+	countFilePath = logPath + countLogFileName;
+	
+	countStr = "<filePathStr>: <timesReplaced>";
+	
+	writeToLogFile(countStr, countFilePath);
+}
+
+private void writeToLogFile(str countStr, loc fileLoc) {
+	if (exists(fileLoc))
+		appendToFile(fileLoc, "\n" + countStr);
+	else
+		writeFile(fileLoc, countStr);
 }
