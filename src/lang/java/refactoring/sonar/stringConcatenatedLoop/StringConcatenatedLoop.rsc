@@ -9,8 +9,20 @@ import lang::java::util::MethodDeclarationUtils;
 import lang::java::util::CompilationUnitUtils;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::MethodVar;
+import lang::java::refactoring::sonar::LogUtils;
+import lang::java::util::MethodDeclarationUtils;
 
-private bool shouldRewrite = false;
+private bool shouldWriteLog = false;
+
+private loc logPath;
+
+private str detailedLogFileName = "STRING_CONCATENATED_LOOP_DETAILED.txt";
+private str countLogFileName = "STRING_CONCATENATED_LOOP_COUNT.txt";
+
+// SonarQube only counts as issues string concatenation inside loops
+// Although you necessarilly need to change other references outside the loop
+// their detection only shows references inside the loops
+private map[str, int] timesReplacedByScope = ();
 
 // StringBuilder and String common methods
 // String actually has indexOf that takes 'char' as argument
@@ -22,11 +34,21 @@ private set[str] commonMethods = {"substring", "length", "charAt",
 ExpressionName expLHSToConsider = parse(#ExpressionName, "a");
 
 public void refactorAllStringConcatenatedLoop(list[loc] locs) {
+	shouldWriteLog = false;
+	doRefactorAllStringConcatenatedLoop(locs);
+}
+
+public void refactorAllStringConcatenatedLoop(list[loc] locs, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorAllStringConcatenatedLoop(locs);
+}
+
+private void doRefactorAllStringConcatenatedLoop(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				shouldRewrite = false;
-				refactorStringConcatenatedLoop(fileLoc);
+				doRefactorStringConcatenatedLoop(fileLoc);
 			}
 		} catch: {
 			println("Exception file (StringConcatenatedLoop): " + fileLoc.file);
@@ -45,7 +67,21 @@ private bool containForLoop(str javaFileContent) {
 }
 
 public void refactorStringConcatenatedLoop(loc fileLoc) {
+	shouldWriteLog = false;
+	doRefactorStringConcatenatedLoop(fileLoc);
+}
+
+public void refactorStringConcatenatedLoop(loc fileLoc, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorStringConcatenatedLoop(fileLoc);
+}
+
+private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
+	
+	shouldRewrite = false;
+	timesReplacedByScope = ();
 	
 	unit = visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
@@ -99,6 +135,7 @@ public void refactorStringConcatenatedLoop(loc fileLoc) {
 	
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
+		writeLog(fileLoc, logPath, detailedLogFileName, countLogFileName, timesReplacedByScope);
 	}
 }
 
@@ -108,6 +145,7 @@ private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
 			if(isStringAndDeclaredWithinMethod(mdl, expLHS) && methodReturnsStringFromExpLHS(mdl, expLHS)) {
 				expLHSToConsider = expLHS;
 				refactoredToAppend = parse(#StatementExpression, "<expLHS>.append(<exp>)");
+				countModificationForLog(retrieveMethodSignature(mdl));
 				insert refactoredToAppend;
 			}
 		}
@@ -175,7 +213,7 @@ private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {
 			}
 			
 			if (expLHS == expName && trim("<op>") == "+=") {
-				assignmentExp = parse(#StatementExpression, "<expLHS>.append(<expRHS>)");
+				assignmentExp = parse(#StatementExpression, "<expLHS>g(<expRHS>)");
 				insert assignmentExp;
 			}
 		}
@@ -260,4 +298,12 @@ private bool callsACommonMethod(str miStr) {
 			return true;
 	}
 	return false;
+}
+
+private void countModificationForLog(str scope) {
+	if (scope in timesReplacedByScope) {
+		timesReplacedByScope[scope] += 1;
+	} else { 
+		timesReplacedByScope[scope] = 1;
+	}
 }
