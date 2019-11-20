@@ -11,8 +11,6 @@ import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
 import lang::java::util::GeneralUtils;
-import util::Benchmark;
-import util::Math;
 
 private data Var = newVar(str name, str varType);
 

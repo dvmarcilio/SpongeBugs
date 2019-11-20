@@ -34,8 +34,6 @@ private loc logPath;
 private str detailedLogFileName = "WRAPPERS_CONSTRUCTORS_DETAILED.txt";
 private str countLogFileName = "WRAPPERS_CONSTRUCTORS_COUNT.txt";
 
-private int timesModified = 0;
-
 private map[str, int] timesReplacedByScope = ();
 
 public void stringPrimitiveConstructor(list[loc] locs, loc logPathArg) {
