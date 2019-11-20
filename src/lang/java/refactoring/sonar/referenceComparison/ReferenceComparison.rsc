@@ -18,8 +18,6 @@ private data Var = newVar(str name, str varType);
 
 private map[str, Var] fieldsByName = ();
 
-private bool shouldRewrite = false;
-
 private set[str] primitiveTypes = {"int", "double", "float", "char", "byte", "short", "long", "boolean"};
 
 // List and Collections actually does not override equals
@@ -32,11 +30,26 @@ private set[str] ignoreTypes = { "enum", "Object" } + primitiveTypes + typesWith
 // We could change if we know that a class overrides equals() 
 private set[str] classesToConsider = getPrimitiveWrappers() + "String";
 
+private loc logPath;
+
+private bool shouldWriteLog = false;
+
+private str detailedLogFileName = "REFERENCE_COMPARISON_DETAILED.txt";
+private str countLogFileName = "REFERENCE_COMPARISON_COUNT.txt";
+
+private int timesModified = 0;
+
+private map[str, int] timesReplacedByScope = ();
+
 public void refactorAllReferenceComparison(list[loc] locs) {
+	shouldWriteLog = false;
+	doRefactorAllReferenceComparison(locs);
+}
+
+private void doRefactorAllReferenceComparison(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				shouldRewrite = false;
 				fieldsByName = ();
 				refactorFileReferenceComparison(fileLoc);
 			}
@@ -45,6 +58,12 @@ public void refactorAllReferenceComparison(list[loc] locs) {
 			continue;
 		}
 	}
+}
+
+public void refactorAllReferenceComparison(list[loc] locs, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorAllReferenceComparison(locs);
 }
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
@@ -67,15 +86,20 @@ private bool hasEqualityOperator(str javaFileContent) {
 public void refactorFileReferenceComparison(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	
+	shouldRewrite = false;
+	timesReplacedByScope = ();
+	
 	unit = top-down-break visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
+			mDeclStr = "";
 			continueWithAnalysis = true;
 			map[str, Var] localVarsByName = ();
 			modified = false;
 			visit(mdl) {
 				case (MethodDeclarator) `<MethodDeclarator mDecl>`: {
 					// Not analyzing equals()
-					continueWithAnalysis = findFirst("<mDecl>", "equals(") != 1;
+					mDeclStr = "<mDecl>";
+					continueWithAnalysis = findFirst(mDeclStr, "equals(") != 1;
 				}
 			}
 			if (continueWithAnalysis) {
@@ -86,6 +110,7 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 							localVarsByName = findVarsInstantiatedInMethod(mdl);
 						if (isComparisonOfInterest("<lhs>", "<rhs>", localVarsByName)) {
 							modified = true;
+							countModificationForLog(mDeclStr);
 							insert(parse(#Expression, "<lhs>.equals(<rhs>)"));
 						}					
 					}
@@ -95,6 +120,7 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 							localVarsByName = findVarsInstantiatedInMethod(mdl);
 						if (isComparisonOfInterest("<lhs>", "<rhs>", localVarsByName)) {
 							modified = true;
+							countModificationForLog(mDeclStr);
 							insert(parse(#Expression, "!<lhs>.equals(<rhs>)"));
 						}					
 					}
@@ -109,6 +135,7 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 			findFields(unit);
 			if (isComparisonOfInterest("<lhs>", "<rhs>")) {
 				shouldRewrite = true;
+				countModificationForLog("outside of method");
 				insert(parse(#Expression, "<lhs>.equals(<rhs>)"));
 			}
 		}
@@ -116,6 +143,7 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 			findFields(unit);
 			if (isComparisonOfInterest("<lhs>", "<rhs>")) {
 				shouldRewrite = true;
+				countModificationForLog("outside of method");
 				insert(parse(#Expression, "!<lhs>.equals(<rhs>)"));
 			}
 		}
@@ -124,6 +152,7 @@ public void refactorFileReferenceComparison(loc fileLoc) {
 
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
+		writeLog(fileLoc);
 	} 
 }
 
@@ -200,4 +229,70 @@ private bool isLiteral(str exp) {
 		return true;
 	} catch:
 		return false;
+}
+
+private void countModificationForLog(str scope) {
+	if (scope in timesReplacedByScope) {
+		timesReplacedByScope[scope] += 1;
+	} else { 
+		timesReplacedByScope[scope] = 1;
+	}
+}
+
+private void writeLog(loc fileLoc) {
+	if (shouldWriteLog)
+		doWriteLog(fileLoc);
+}
+
+private void doWriteLog(loc fileLoc) {
+	if(!exists(logPath))
+		mkDirectory(logPath);
+	
+	filePathStr = fileLoc.authority + fileLoc.path;
+		
+	detailedLogMap = createDetailedLogMap(filePathStr);
+	detailedFilePath = logPath + detailedLogFileName;
+	writeToLogFile(detailedLogMap, detailedFilePath);
+	
+	writeToCountLogFile(filePathStr);
+}
+
+private map[str, list[str]] createDetailedLogMap(str filePathStr) {
+	map[str, list[str]] logMap = ();
+	logMap[filePathStr] = [];
+	
+	for (scope <- domain(timesReplacedByScope)) {
+		timesReplaced = timesReplacedByScope[scope];
+		logMap[filePathStr] += "Replaced <timesReplaced> in <scope>";
+	}
+	
+	return logMap;
+}
+
+private void writeToLogFile(map[str, list[str]] detailedLogMap, loc filePath) {
+	mapStr = toString(detailedLogMap);
+	if (exists(filePath))
+		appendToFile(filePath, "\n" + mapStr);
+	else
+		writeFile(filePath, mapStr);
+}
+
+private void writeToCountLogFile(str filePathStr) {
+	countFilePath = logPath + countLogFileName;
+	
+	timesReplaced = 0;
+	for (scope <- domain(timesReplacedByScope)) {
+		timesReplaced += timesReplacedByScope[scope];
+	}
+	
+	countStr = "<filePathStr>: <timesReplaced>";
+	
+	writeToLogFile(countStr, countFilePath);
+} 
+
+private void writeToLogFile(str countStr, loc fileLoc) {
+	if (exists(fileLoc))
+		appendToFile(fileLoc, "\n" + countStr);
+	else
+		writeFile(fileLoc, countStr);
 }
