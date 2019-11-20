@@ -154,7 +154,7 @@ private void doRefactorStringPrimitiveConstructor(loc fileLoc) {
 	
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
-		writeLog(fileLoc, logPath, detailedLogFileName, countLogFileName, timesReplacedByScope);
+		doWriteLog(fileLoc);
 	}
 }
 
@@ -283,4 +283,9 @@ private void countModificationForLog(str scope) {
 	} else { 
 		timesReplacedByScope[scope] = 1;
 	}
+}
+
+private void doWriteLog(loc fileLoc) {
+	if (shouldWriteLog)
+		writeLog(fileLoc, logPath, detailedLogFileName, countLogFileName, timesReplacedByScope);
 }
