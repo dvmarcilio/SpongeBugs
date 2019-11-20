@@ -12,6 +12,7 @@ import lang::java::util::GeneralUtils;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
+import lang::java::refactoring::sonar::LogUtils;
 
 // {"Byte", "Character", "Short", "Integer", "Long", "Float", "Double", "Boolean"};
 
@@ -40,18 +41,34 @@ private data Var = newVar(str name, str varType);
 private map[str, Var] fieldsByName = ();
 private map[str, Var] localVarsByName = ();
 
-private bool shouldRewrite = false;
-
 private data RefactoredExp = refactoredExp(bool wasRefactored, Expression exp);
 private data RefactoredMethodInvocation = refactoredMI(bool wasRefactored, MethodInvocation mi);
 
+private bool shouldWriteLog = false;
+
+private loc logPath;
+
+private str detailedLogFileName = "PARSE_TO_CONVERT_STRING_DETAILED.txt";
+private str countLogFileName = "PARSE_TO_CONVERT_STRING_COUNT.txt";
+
+private map[str, int] timesReplacedByScope = ();
+
 public void refactorAllParseToConvertStringToPrimitive(list[loc] locs) {
+	shouldWriteLog = false;
+	doRefactorAllParseToConvertStringToPrimitive(locs);
+}
+
+public void refactorAllParseToConvertStringToPrimitive(list[loc] locs, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorAllParseToConvertStringToPrimitive(locs);
+}
+
+private void doRefactorAllParseToConvertStringToPrimitive(list[loc] locs) {
 	for (fileLoc <- locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				shouldRewrite = false;
-				fieldsByName = ();
-				refactorFileParseToConvertStringToPrimitive(fileLoc);
+				doRefactorFileParseToConvertStringToPrimitive(fileLoc);
 			}
 		} catch: {
 			println("Exception file: " + fileLoc.file);
@@ -75,17 +92,35 @@ private bool hasWrapper(str javaFileContent) {
 
 
 public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
+	shouldWriteLog = false;
+	doRefactorFileParseToConvertStringToPrimitive(fileLoc);
+}
+
+public void refactorFileParseToConvertStringToPrimitive(loc fileLoc, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorFileParseToConvertStringToPrimitive(fileLoc);
+}
+
+private void doRefactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
+	
+	shouldRewrite = false;
+	fieldsByName = ();
+	timesReplacedByScope = ();
 	
 	unit = top-down-break visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
 			localVarsByName = ();
+			methodSignature = retrieveMethodSignature(mdl);
+			
 			mdl = top-down-break visit(mdl) {
 				case (LocalVariableDeclaration) `<UnannPrimitiveType varType> <Identifier varName> = <Expression rhs>`: {
 					expRefactored = refactorExpression(unit, mdl, rhs);
 					if (expRefactored.wasRefactored) {
 						modified = true;
+						countModificationForLog(methodSignature);
 						insert parse(#LocalVariableDeclaration, "<varType> <varName> = <expRefactored.exp>");
 					}
 				}
@@ -95,6 +130,7 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 						expRefactored = refactorExpression(unit, mdl, exp);
 						if (expRefactored.wasRefactored) {
 							modified = true;
+							countModificationForLog(methodSignature);
 							insert parse(#ReturnStatement, "return <expRefactored.exp>;");
 						}
 					}
@@ -106,6 +142,7 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 						expRefactored = refactorExpression(unit, mdl, rhs);
 						if (expRefactored.wasRefactored) {
 							modified = true;
+							countModificationForLog(methodSignature);
 							insert parse(#Assignment, "<lhs> = <expRefactored.exp>");
 						}						
 					}
@@ -120,6 +157,7 @@ public void refactorFileParseToConvertStringToPrimitive(loc fileLoc) {
 	
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
+		doWriteLog(fileLoc);
 	} 
 }
 
@@ -240,4 +278,17 @@ private bool isMethodInvocation(str exp) {
 	} catch: {
 		return false;
 	}
+}
+
+private void countModificationForLog(str scope) {
+	if (scope in timesReplacedByScope) {
+		timesReplacedByScope[scope] += 1;
+	} else {
+		timesReplacedByScope[scope] = 1;
+	}
+}
+
+private void doWriteLog(loc fileLoc) {
+	if (shouldWriteLog)
+		writeLog(fileLoc, logPath, detailedLogFileName, countLogFileName, timesReplacedByScope);
 }
