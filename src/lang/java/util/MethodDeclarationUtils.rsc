@@ -73,3 +73,12 @@ public Result retrieveResultFromMethod(MethodDeclaration mdl) {
 		case (Result) `<Result result>`: return result;
 	}
 }
+
+public str retrieveMethodSignature(MethodDeclaration mdl) {
+	visit(mdl) {
+		case (MethodDeclarator) `<MethodDeclarator mDecl>`: {
+			return "<mDecl>";
+		}
+	}
+	throw "No MethodDeclarator found in MethodDeclaration";
+}

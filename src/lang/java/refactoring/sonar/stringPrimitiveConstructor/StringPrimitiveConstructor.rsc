@@ -9,6 +9,8 @@ import lang::java::util::GeneralUtils;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
+import lang::java::refactoring::sonar::LogUtils;
+import lang::java::util::MethodDeclarationUtils;
 
 private set[str] classesToCheck = getPrimitiveWrappers() + "String" + "BigDecimal";
 
@@ -25,12 +27,43 @@ private map[str, str] primitivesByWrappers = (
 
 private bool shouldRewrite = false;
 
+private bool shouldWriteLog = false;
 
+private loc logPath;
+
+private str detailedLogFileName = "WRAPPERS_CONSTRUCTORS_DETAILED.txt";
+private str countLogFileName = "WRAPPERS_CONSTRUCTORS_COUNT.txt";
+
+private int timesModified = 0;
+
+private map[str, int] timesReplacedByScope = ();
+
+public void stringPrimitiveConstructor(list[loc] locs, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doStringPrimitiveConstructor(locs);
+}
+
+public void refactorStringPrimitiveConstructor(loc fileLoc) {
+	shouldWriteLog = false;
+	doRefactorStringPrimitiveConstructor(fileLoc);
+}
+
+public void refactorStringPrimitiveConstructor(loc fileLoc, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorStringPrimitiveConstructor(fileLoc);
+}
 
 public void stringPrimitiveConstructor(list[loc] locs) {
+	shouldWriteLog = false;
+	doStringPrimitiveConstructor(locs);
+}
+
+private void doStringPrimitiveConstructor(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			refactorStringPrimitiveConstructor(fileLoc);
+			doRefactorStringPrimitiveConstructor(fileLoc);
 		} catch: {
 			println("Exception file (StringPrimitiveConstructor): " + fileLoc.file);
 			continue;
@@ -38,12 +71,13 @@ public void stringPrimitiveConstructor(list[loc] locs) {
 	}
 }
 
-public void refactorStringPrimitiveConstructor(loc fileLoc) {
+private void doRefactorStringPrimitiveConstructor(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
 	unit = parse(#CompilationUnit, javaFileContent);
 	shouldRewrite = false;
 	
 	// TODO find fields
+	timesReplacedByScope = ();
 	
 	unit = top-down visit(unit) {
 		case (Expression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
@@ -52,6 +86,7 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 			if (isViolation(classType, args, unit)) {
 				refactored = refactorViolation("<classType>", "<args>");
 				shouldRewrite = true;
+				countModificationForLog("outside of method");
 				insert (Expression) `<Expression refactored>`;
 			}
 		}
@@ -64,6 +99,7 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 					if (isViolation(classType, instantiationArgs, unit)) {
 						refactored = refactorViolationAsPrimary(classType, instantiationArgs);
 						modified = true;
+						countModificationForLog("outside of method");
 						insert (Primary) `<Primary refactored>`;
 					}
 				}
@@ -76,6 +112,7 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 		
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
+			methodSignature = retrieveMethodSignature(mdl);
 			
 			// TODO find methodVars
 			
@@ -86,6 +123,7 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 					if (isViolation(classType, args, unit, mdl)) {
 						refactored = refactorViolation(classType, args);
 						modified = true;
+						countModificationForLog(methodSignature);
 						insert (Expression) `<Expression refactored>`;
 					}
 				}
@@ -97,6 +135,7 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 							if (isViolation(classType, instantiationArgs, unit, mdl)) {
 								refactored = refactorViolationAsPrimary(classType, instantiationArgs);
 								modified = true;
+								countModificationForLog(methodSignature);
 								insert (Primary) `<Primary refactored>`;
 							}
 						}
@@ -117,6 +156,7 @@ public void refactorStringPrimitiveConstructor(loc fileLoc) {
 	
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
+		writeLog(fileLoc, logPath, detailedLogFileName, countLogFileName, timesReplacedByScope);
 	}
 }
 
@@ -126,8 +166,7 @@ private bool isViolation(str typeInstantiated, str args, CompilationUnit unit) {
 			return (isEmpty(args) || isOnlyOneArgument(args)) && findFirst(args, "\"") != -1;
 		} else if(typeInstantiated == "BigDecimal") {
 			return isOnlyOneArgument(args) && isNotCast(args) && findFirst(args, "\"") == -1 &&
-				 findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1 &&
-				 canRefactorBigDecimal(args, unit);
+				 findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1;
 		} else {
 			return isOnlyOneArgument(args) && isNotCast(args) && isArgumentPrimitiveOfWrapper(typeInstantiated, args, unit);
 		}
@@ -141,8 +180,7 @@ private bool isViolation(str typeInstantiated, str args, CompilationUnit unit, M
 			return (isEmpty(args) || isOnlyOneArgument(args)) && findFirst(args, "\"") != -1;
 		} else if(typeInstantiated == "BigDecimal") {
 			return isOnlyOneArgument(args) && isNotCast(args) && findFirst(args, "\"") == -1 &&
-			 	findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1 &&
-			 	canRefactorBigDecimal(args, unit, mdl);
+			 	findFirst(args, "BigInteger") == -1 && findFirst(args, "group()") == -1;
 		} else {
 			return isOnlyOneArgument(args) && isNotCast(args) && isArgumentPrimitiveOfWrapper(typeInstantiated, args, unit, mdl);
 		}
@@ -150,27 +188,29 @@ private bool isViolation(str typeInstantiated, str args, CompilationUnit unit, M
 	return false;
 }
 
+// TODO: need to rethink this 
 private bool canRefactorBigDecimal(str args, CompilationUnit unit) {
 	set[MethodVar] fields = findClassFields(unit);
 	
 	try {
-		return !isArgumentFromMethodVarsAString(fields);
-	} catch: 
+		return !isArgumentFromMethodVarsAString(args, fields);
+	} catch:
 		return false; // being over cautious
 }
 
+// TODO: need to rethink this
 private bool canRefactorBigDecimal(str args, CompilationUnit unit, MethodDeclaration mdl) {
 	set[MethodVar] fields = findClassFields(unit);
 	set[MethodVar] localVars = findlocalVars(mdl);
 	
 	try {
-		return !isArgumentFromMethodVarsAString(fields + localVars);
+		return !isArgumentFromMethodVarsAString(args, fields + localVars);
 	} catch: 
 		return false; // being over cautious
 }
 
 private bool isArgumentFromMethodVarsAString(str args, set[MethodVar] availableVars) {
-	MethodVar v = findByName(avaialableVars, trim(args));
+	MethodVar v = findByName(availableVars, trim(args));
 	return trim(v.varType) == "String";
 }
 
@@ -237,4 +277,12 @@ private Expression refactorNonStringViolation(str classType, str arg) {
 private Primary refactorViolationAsPrimary(str classType, str arg) {
 	refactoredExp = refactorViolation(classType, arg);
 	return parse(#Primary, "<refactoredExp>");
+}
+
+private void countModificationForLog(str scope) {
+	if (scope in timesReplacedByScope) {
+		timesReplacedByScope[scope] += 1;
+	} else { 
+		timesReplacedByScope[scope] = 1;
+	}
 }
