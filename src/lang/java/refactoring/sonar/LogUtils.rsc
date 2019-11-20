@@ -2,6 +2,7 @@ module lang::java::refactoring::sonar::LogUtils
 
 import IO;
 import Map;
+import String;
 
 public void writeLog(loc fileLoc, loc logPath, 
 	str detailedLogFileName, str countLogFileName, 
@@ -26,7 +27,7 @@ private map[str, list[str]] createDetailedLogMap(str filePathStr, map[str, int] 
 	
 	for (scope <- domain(timesReplacedByScope)) {
 		timesReplaced = timesReplacedByScope[scope];
-		logMap[filePathStr] += "Replaced <timesReplaced> in <scope>";
+		logMap[filePathStr] += "Replaced <timesReplaced> in <trim(scope)>";
 	}
 	
 	return logMap;
