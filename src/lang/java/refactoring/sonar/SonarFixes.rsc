@@ -18,6 +18,7 @@ import String;
 import Map;
 import List;
 import lang::java::m3::M3Util;
+import DateTime;
 
 import lang::java::\syntax::Java18;
 import ParseTree;
@@ -54,6 +55,34 @@ public void allSonarFixes(list[loc] locs) {
 	}
 }
 
+public void allSonarFixes(list[loc] locs, loc logPath) {
+	doAllSonarFixes(locs, createNowFolderForLogs(logPath));
+}
+
+private loc createNowFolderForLogs(loc logPath) {
+	if(!exists(logPath))
+		mkDirectory(logPath);
+	
+	if (!isDirectory(logPath))
+		throw "logPath is not a directory";
+
+	nowStr = printDateTime(now(), "dd-MM-yy_HH-mm-ss");
+	nowLogPath = logPath + nowStr;
+	mkDirectory(nowLogPath);
+	return nowLogPath;
+}
+
+private void doAllSonarFixes(list[loc] locs, loc logPath) {
+	for(fileLoc <- locs) {
+		try {
+			if (!startsWith(fileLoc.file, "_"))
+				doAllSonarFixesForFile(fileLoc, logPath);
+		} catch: {
+			println("Exception file (SonarFixes): " + fileLoc.file);
+		}
+	}
+}
+
 public void tryToParseAll(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
@@ -80,6 +109,11 @@ public int countConsideredFiles(list[loc] locs) {
 public void doAllSonarFixesForFile(loc fileLoc) {
 	if (shouldAnalyzeFile(fileLoc))
 		allSonarFixesForFile(fileLoc);
+}
+
+public void doAllSonarFixesForFile(loc fileLoc, loc logPath) {
+	if (shouldAnalyzeFile(fileLoc))
+		allSonarFixesForFile(fileLoc, logPath);
 }
 
 private bool shouldAnalyzeFile(loc fileLoc) {
@@ -128,6 +162,26 @@ public void allSonarFixesForFile(loc fileLoc) {
 	allStringLiteralsAlreadyDefinedAsConstant(fileAsList);
 	
 	refactorAllStringLiteralLHSEquality(fileAsList);
+}
+
+public void allSonarFixesForFile(loc fileLoc, loc logPath) {
+	fileAsList = [fileLoc];
+
+	refactorStringPrimitiveConstructor(fileLoc, logPath);
+
+	refactorAllReferenceComparison(fileAsList, logPath);
+
+	replaceAllEmptyConstantWithGenericMethods(fileAsList, logPath);
+	stringIndexOfSingleQuoteChar(fileAsList, logPath);
+	refactorAllToCollectionIsEmpty(fileAsList, logPath);
+	refactorAllStringConcatenatedLoop(fileAsList, logPath);
+	refactorAllEntrySetInsteadOfKeySet(fileAsList, logPath);
+	refactorAllParseToConvertStringToPrimitive(fileAsList, logPath);
+	
+	transformStringLiteralDuplicated(fileLoc, logPath);
+	allStringLiteralsAlreadyDefinedAsConstant(fileAsList, logPath);
+	
+	refactorAllStringLiteralLHSEquality(fileAsList, logPath);
 }
 
 private void stringLiteralDuplicated(list[loc] fileAsList) {
