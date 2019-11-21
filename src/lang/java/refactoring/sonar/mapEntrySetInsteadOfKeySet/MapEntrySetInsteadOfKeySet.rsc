@@ -9,13 +9,21 @@ import lang::java::util::CompilationUnitUtils;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::ClassFieldsFinder;
-import lang::java::util::CompilationUnitUtils;
+import lang::java::util::MethodDeclarationUtils;
+import lang::java::refactoring::sonar::LogUtils;
+
+private bool shouldWriteLog = false;
+
+private loc logPath;
+
+private str detailedLogFileName = "MAP_ENTRYSET_DETAILED.txt";
+private str countLogFileName = "MAP_ENTRYSET_COUNT.txt";
+
+private map[str, int] timesReplacedByScope = ();
 
 private data Var = newVar(str name, str varType, str generics);
 
 private map[str, Var] fieldsByName = ();
-
-private bool shouldRewrite = false;
 
 private set[str] mapTypes = {"Map", "HashMap", "LinkedHashMap", "TreeMap", "EnumMap", "ConcurrentHashMap",
  	"ConcurrentMap", "SortedMap", "NavigableMap"};
@@ -31,10 +39,21 @@ private bool isMapEntryExplicitImportPresent = false;
 private bool isMapWildCardImportPresent = false;
 
 public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
+	shouldWriteLog = false;
+	doRefactorAllEntrySetInsteadOfKeySet(locs);
+}
+
+public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorAllEntrySetInsteadOfKeySet(locs);
+}
+
+private void doRefactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
 			if (shouldContinueWithASTAnalysis(fileLoc)) {
-				refactorFileEntrySetInsteadOfKeySet(fileLoc);
+				doRefactorFileEntrySetInsteadOfKeySet(fileLoc);
 			}
 		} catch Ambiguity: {
 			println("Ambiguity file (MapEntrySetInsteadOfKeySet): " + fileLoc.file);
@@ -60,8 +79,20 @@ private void resetImportPresenceBools() {
 }
 
 public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
+	shouldWriteLog = false;
+	doRefactorFileEntrySetInsteadOfKeySet(fileLoc);
+}
+
+public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc, loc logPathArg) {
+	shouldWriteLog = true;
+	logPath = logPathArg;
+	doRefactorFileEntrySetInsteadOfKeySet(fileLoc);
+}
+
+private void doRefactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 	shouldRewrite = false;
 	resetImportPresenceBools();
+	timesReplacedByScope = ();
 
 	unit = retrieveCompilationUnitFromLoc(fileLoc);
 	findFields(unit);
@@ -108,6 +139,7 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 			}
 			if (modified) {
 				shouldRewrite = true;
+				countModificationForLog(retrieveMethodSignature(mdl));
 				insert mdl;
 			}
 		}
@@ -116,6 +148,7 @@ public void refactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 	if (shouldRewrite) {
 		unit = addNeededImports(unit);
 		writeFile(fileLoc, unit);
+		doWriteLog(fileLoc);
 	} 
 }
 
@@ -322,4 +355,17 @@ private CompilationUnit addNeededImports(CompilationUnit unit) {
 
 private bool needsToAddMapEntryImport() {
 	return !isUtilWildCardImportPresent && !isMapWildCardImportPresent && !isMapEntryExplicitImportPresent;
+}
+
+private void countModificationForLog(str scope) {
+	if (scope in timesReplacedByScope) {
+		timesReplacedByScope[scope] += 1;
+	} else {
+		timesReplacedByScope[scope] = 1;
+	}
+}
+
+private void doWriteLog(loc fileLoc) {
+	if (shouldWriteLog)
+		writeLog(fileLoc, logPath, detailedLogFileName, countLogFileName, timesReplacedByScope);
 }
