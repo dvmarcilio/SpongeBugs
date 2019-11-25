@@ -10,6 +10,7 @@ import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::sonar::LogUtils;
 import lang::java::util::MethodDeclarationUtils;
+import lang::java::util::GeneralUtils;
 
 private bool shouldWriteLog = false;
 
@@ -126,13 +127,18 @@ private bool isBeforeFuncReferencingACollection(ExpressionName beforeFunc, Metho
 			try {
 				set[MethodVar] vars = findLocalVariables(methodHeader, mBody) + findClassFields(unit);
 				MethodVar var = findByName(vars, trim("<beforeFunc>"));
-				return isCollection(var);
+				return isCollection(var) && isCollectionImportPresent(unit, var.varType);
 			} catch EmptySet(): {
 				return false;
 			}
 		}
 	}
 	return false;
+}
+
+private bool isCollectionImportPresent(CompilationUnit unit, str varType) {
+	varType = removeGenericsFromVarType(varType);
+	return findFirst("<unit>", "import java.util.<trim(varType)>;") != -1;
 }
 
 private void countModificationForLog(str scope) {

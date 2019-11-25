@@ -2,6 +2,7 @@ module lang::java::refactoring::forloop::MethodVar
 
 import Set;
 import String;
+import lang::java::util::GeneralUtils;
 
 // TODO Review if using a Set is the best choice. Probably not.
 public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, 
@@ -9,7 +10,7 @@ public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isPa
 
 private set[str] collections = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "LinkedHashSet",
 	 "TreeSet", "Queue", "Stack", "SortedSet", "EnumSet", "ArrayDeque", "ConcurrentLinkedDeque", "ConcurrentLinkedQueue",
-	 "Vector", "Deque", "NavigableSet"};
+	 "Vector", "Deque", "NavigableSet", "Collection"};
 
 public bool isArray(MethodVar methodVar) {
 	return methodVar.varType == "array";
@@ -36,13 +37,10 @@ public bool isParameter(MethodVar methodVar) {
 
 // We might miss some
 public bool isCollection(MethodVar methodVar) {
-	if (methodVar.varType in collections)
+	varType = removeGenericsFromVarType(methodVar.varType);
+	if (varType in collections)
 		return true;
 	
-	for (collectionType <- collections) {
-		if (startsWith(methodVar.varType, collectionType))
-			return true;
-	}
 	return false;
 } 
 
