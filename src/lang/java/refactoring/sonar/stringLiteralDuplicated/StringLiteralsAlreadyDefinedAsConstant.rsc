@@ -50,7 +50,8 @@ public void allStringLiteralsAlreadyDefinedAsConstant(list[loc] locs, loc logPat
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, "private static final String") != -1;
+	return findFirst(javaFileContent, "static final String") != -1 ||
+		findFirst(javaFileContent, "final static String") != -1;
 }
 
 private void refactorForEachClassBody(loc fileLoc) {
