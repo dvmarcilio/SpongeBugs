@@ -138,7 +138,8 @@ private bool isBeforeFuncReferencingACollection(ExpressionName beforeFunc, Metho
 
 private bool isCollectionImportPresent(CompilationUnit unit, str varType) {
 	varType = removeGenericsFromVarType(varType);
-	return findFirst("<unit>", "import java.util.<trim(varType)>;") != -1;
+	return findFirst("<unit>", "import java.util.<trim(varType)>;") != -1 ||
+		findFirst("<unit>", "import java.util.*;") != -1;
 }
 
 private void countModificationForLog(str scope) {
