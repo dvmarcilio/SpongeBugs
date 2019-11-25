@@ -123,8 +123,10 @@ private void doRefactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 									
 									// Ugly, but works to add a space after VariableModifier, if it's the case
 									if (isEmpty("<vm>")) {
+										countModificationForLog(retrieveMethodSignature(mdl));
 										insert (EnhancedForStatement) `for (<VariableModifier* vm><UnannType refactoredIteratedVarType> <VariableDeclaratorId refactoredIteratedVarName> : <Expression refactoredExp>) <Statement loopBody>`;					
 									} else {
+										countModificationForLog(retrieveMethodSignature(mdl));
 										insert (EnhancedForStatement) `for (<VariableModifier* vm> <UnannType refactoredIteratedVarType> <VariableDeclaratorId refactoredIteratedVarName> : <Expression refactoredExp>) <Statement loopBody>`;														
 									}
 							
@@ -139,7 +141,6 @@ private void doRefactorFileEntrySetInsteadOfKeySet(loc fileLoc) {
 			}
 			if (modified) {
 				shouldRewrite = true;
-				countModificationForLog(retrieveMethodSignature(mdl));
 				insert mdl;
 			}
 		}
