@@ -141,13 +141,27 @@ private void loadConstantByStrLiteral(CompilationUnit unit) {
 							}
 						}
 					}
-					if (!isEmpty(constantName) && !isEmpty(strLiteral)) {
+					if (!isEmpty(constantName) && !isEmpty(strLiteral) &&
+						 isFieldOnlyUsingASingleString(flDecl, constantName, strLiteral)) {
 						constantByStrLiteral[strLiteral] = constantName;
 					}
 				}
 			}
 		}
 	}
+}
+
+// Not considering these cases:
+// even when concatenating other defined constants
+// 
+//// private static final String ROOT = "C:/";
+//// private static final String WORK_FOLDER = "dev/";
+//// private static final String WHERE_TO_SAVE = ROOT + WORK_FOLDER;
+//
+//// static final String HOST_ID = "org.eclipse.e4.ui.workbench.renderers.swt";
+//// protected static final String CONTRIBUTION_URI_PREFIX = "bundleclass://" + HOST_ID;
+private bool isFieldOnlyUsingASingleString(FieldDeclaration flDecl, str constantName, str strLiteral) {
+	return endsWith("<flDecl>", "<constantName> = <strLiteral>;");
 }
 
 private void increaseTimesReplacedByConstant(str constant) {
