@@ -13,20 +13,26 @@ private set[str] collections = {"List", "ArrayList", "LinkedList", "Set", "HashS
 	 "Vector", "Deque", "NavigableSet", "Collection"};
 
 public bool isArray(MethodVar methodVar) {
-	return methodVar.varType == "array";
+	return trim(methodVar.varType) == "array";
 }
 
 public bool isString(MethodVar methodVar) {
-	return methodVar.varType == "String";
+	return trim(methodVar.varType) == "String";
 }
 
 public bool isInteger(MethodVar methodVar) {
-	varType = methodVar.varType;
+	varType = trim(methodVar.varType);
 	return varType == "int" || varType == "Integer"; 
 }
 
+public bool isDouble(MethodVar methodVar) {
+	varType = trim(methodVar.varType);
+	return varType == "double" || varType == "Double"; 
+}
+
+// fragile
 public bool isIterable(MethodVar methodVar) {
-	varType = methodVar.varType;
+	varType = trim(methodVar.varType);
 	return startsWith(varType, "Iterable");
 }
 
