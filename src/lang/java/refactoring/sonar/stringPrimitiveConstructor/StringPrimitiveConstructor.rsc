@@ -138,9 +138,6 @@ private void doRefactorStringPrimitiveConstructor(loc fileLoc) {
 							}
 						}
 					}
-					if (modified) {
-						insert (MethodInvocation) `<Primary possibleInstantiation>.<TypeArguments? ts><Identifier id>(<ArgumentList? args>)`;
-					}
 				}				
 			}
 			if (modified) {
