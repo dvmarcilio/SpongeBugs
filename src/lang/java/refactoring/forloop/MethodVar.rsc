@@ -30,6 +30,16 @@ public bool isDouble(MethodVar methodVar) {
 	return varType == "double" || varType == "Double"; 
 }
 
+public bool isFloat(MethodVar methodVar) {
+	varType = trim(methodVar.varType);
+	return varType == "float" || varType == "Float";
+}
+
+public bool isNumber(MethodVar methodVar) {
+	varType = trim(methodVar.varType);
+	return varType == "Number";
+}
+
 // fragile
 public bool isIterable(MethodVar methodVar) {
 	varType = trim(methodVar.varType);
