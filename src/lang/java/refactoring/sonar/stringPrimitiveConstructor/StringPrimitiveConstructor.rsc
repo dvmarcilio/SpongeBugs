@@ -77,9 +77,9 @@ private void doStringPrimitiveConstructor(list[loc] locs) {
 	}
 }
 
-private void doStringPrimitiveConstructor(CompilationUnit unit) {
+private void doStringPrimitiveConstructor(loc fileLoc, CompilationUnit unit) {
 	//if (shouldAnalyzeFile(unit))
-	doRefactorStringPrimitiveConstructor(unit);
+	doRefactorStringPrimitiveConstructor(fileLoc, unit);
 }
 
 // we need to measure how long it takes with and without
@@ -93,6 +93,13 @@ private bool shouldAnalyzeFile(CompilationUnit unit) {
 }
 
 private void doRefactorStringPrimitiveConstructor(loc fileLoc, CompilationUnit unit) {
+	try {
+		reallyDoRefactorStringPrimitiveConstructor(fileLoc, unit);
+	} catch:
+		println("Exception file (StringPrimitiveConstructor): " + fileLoc.file);
+}
+
+private void reallyDoRefactorStringPrimitiveConstructor(loc fileLoc, CompilationUnit unit) {
 	shouldRewrite = false;
 	
 	timesReplacedByScope = ();
@@ -116,14 +123,14 @@ private void doRefactorStringPrimitiveConstructor(loc fileLoc, CompilationUnit u
 				
 				case (MethodInvocation) `<Primary possibleInstantiation> . <TypeArguments? ts> <Identifier id> (<ArgumentList? args>)`: {
 					possibleInstantiation = visit(possibleInstantiation) {
-						case (Primary) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
+						case (Expression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
 							classType = "<typeInstantiated>";
 							instantiationArgs = "<arguments>";
 							if (isViolation(classType, instantiationArgs, unit, mdl)) {
-								refactored = refactorViolationAsPrimary(classType, instantiationArgs);
+								refactored = refactorViolationAsExpression(classType, instantiationArgs);
 								modified = true;
 								countModificationForLog(methodSignature);
-								insert (Primary) `<Primary refactored>`;
+								insert (Expression) `<Primary refactored>`;
 							}
 						}
 					}
@@ -154,21 +161,18 @@ private void doRefactorStringPrimitiveConstructor(loc fileLoc, CompilationUnit u
 				case (MethodInvocation) `<Primary possibleInstantiation> . <TypeArguments? ts> <Identifier id> (<ArgumentList? args>)`: {
 					miModified = false;
 					possibleInstantiation = visit(possibleInstantiation) {
-						case (Primary) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
+						case (Expression) `new <Identifier typeInstantiated><TypeArgumentsOrDiamond? _>(<ArgumentList? arguments>)`: {
 							classType = "<typeInstantiated>";
 							instantiationArgs = "<arguments>";
 							if (isViolation(classType, instantiationArgs, unit)) {
-								println("2: <mi>");
-								refactored = refactorViolationAsPrimary(classType, instantiationArgs);
-								println("2: <refactored>");
+								refactored = refactorViolationAsExpression(classType, instantiationArgs);
 								modified = true;
 								miModified = true;
-								insert (Primary) `<Primary refactored>`;
+								insert (Expression) `<Primary refactored>`;
 							}
 						}
 					}
 					if (miModified) {
-						println("2: miModified\n");
 						insert mi;
 					}
 				}
@@ -341,9 +345,8 @@ private Expression refactorNonStringViolation(str classType, str arg) {
 	return parse(#Expression, "<classType>.valueOf(<arg>)");
 }
 
-private Primary refactorViolationAsPrimary(str classType, str arg) {
-	refactoredExp = refactorViolation(classType, arg);
-	return parse(#Primary, "<refactoredExp>");
+private Expression refactorViolationAsExpression(str classType, str arg) {
+	return refactorViolation(classType, arg);
 }
 
 private void countModificationForLog(str scope) {

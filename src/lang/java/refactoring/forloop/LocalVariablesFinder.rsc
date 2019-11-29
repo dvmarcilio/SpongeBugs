@@ -49,7 +49,7 @@ private set[MethodVar] findVariablesInsideBody(MethodBody methodBody) {
 	set[str] varsWithinLoopNames = {};
 	top-down visit(methodBody) {
 	
-		case EnhancedForStatement enhancedForStmt: {
+		case (EnhancedForStatement) `<EnhancedForStatement enhancedForStmt>`: {
 			visit(enhancedForStmt) {	
 				case (EnhancedForStatement) `for (<VariableModifier* varMod> <UnannType varType> <VariableDeclaratorId varId> : <Expression _> ) <Statement _>`:
 					 methodVars += createLocalMethodVarWithinLoop(figureIfIsFinal(varMod), varId, varType);
