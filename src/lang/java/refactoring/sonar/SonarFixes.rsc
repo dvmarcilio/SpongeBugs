@@ -34,13 +34,27 @@ private list[loc] javaFilesFromDir(loc dirLoc, bool ignoreTestFiles) {
     	return javaFiles;
     }
     
+	return filterLocs(javaFiles);
+}
+
+private list[loc] filterLocs(list[loc] files) {
 	javaFilesToFix = [];
-	for (javaFile <- javaFiles) {
+	for (javaFile <- files) {
 		if (shouldAnalyzeFile(javaFile))
 			javaFilesToFix += javaFile;
 	}
 	return javaFilesToFix;
-    
+}
+
+private bool shouldAnalyzeFile(loc fileLoc) {
+	fileName = fileNameWithoutExtension(fileLoc);
+	return !endsWith(fileName, "Test.java") && findFirst(fileLoc.path, "src/test/java") == -1
+		&& !startsWith(fileName, "package-info");
+}
+
+public void allSonarFixesForDirectory(loc dirLoc, bool ignoreTestFiles, loc logPath) {
+    javaFiles = javaFilesFromDir(dirLoc, ignoreTestFiles);
+    doAllSonarFixes(javaFiles, createNowFolderForLogs(logPath));
 }
 
 public void allSonarFixes(list[loc] locs) {
@@ -55,7 +69,9 @@ public void allSonarFixes(list[loc] locs) {
 	}
 }
 
-public void allSonarFixes(list[loc] locs, loc logPath) {
+public void allSonarFixes(list[loc] locs, bool ignoreTestFiles, loc logPath) {
+	if (ignoreTestFiles)
+		locs = filterLocs(locs);
 	doAllSonarFixes(locs, createNowFolderForLogs(logPath));
 }
 
@@ -73,10 +89,11 @@ private loc createNowFolderForLogs(loc logPath) {
 }
 
 private void doAllSonarFixes(list[loc] locs, loc logPath) {
+	nowLogPath = createNowFolderForLogs(logPath);
 	for(fileLoc <- locs) {
 		try {
 			if (!startsWith(fileLoc.file, "_"))
-				doAllSonarFixesForFile(fileLoc, logPath);
+				doAllSonarFixesForFile(fileLoc, nowLogPath);
 		} catch: {
 			println("Exception file (SonarFixes): " + fileLoc.file);
 		}
@@ -86,10 +103,10 @@ private void doAllSonarFixes(list[loc] locs, loc logPath) {
 public void tryToParseAll(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (!startsWith(fileLoc.file, "_") != -1 && !startsWith(fileName, "package-info"))
+			if (!startsWith(fileLoc.file, "_") && !startsWith(fileLoc.file, "package-info"))
 				parse(#CompilationUnit, readFile(fileLoc));
 		} catch: {
-			println("Exception file (SonarFixes): " + fileLoc);
+			println("Exception file (SonarFixes): " + fileLoc.file);
 		}	
 	}
 }
@@ -112,14 +129,9 @@ public void doAllSonarFixesForFile(loc fileLoc) {
 }
 
 public void doAllSonarFixesForFile(loc fileLoc, loc logPath) {
+	nowLogPath = createNowFolderForLogs(logPath);
 	if (shouldAnalyzeFile(fileLoc))
-		allSonarFixesForFile(fileLoc, logPath);
-}
-
-private bool shouldAnalyzeFile(loc fileLoc) {
-	fileName = fileNameWithoutExtension(fileLoc);
-	return !endsWith(fileName, "Test") && findFirst(fileLoc.path, "src/test/java") == -1
-		&& !startsWith(fileName, "package-info");
+		allSonarFixesForFile(fileLoc, nowLogPath);
 }
 
 private str fileNameWithoutExtension(loc fileLoc) {
@@ -128,6 +140,19 @@ private str fileNameWithoutExtension(loc fileLoc) {
 }
 
 private map[str, void (list[loc])] functionByRule = (
+	"B1": refactorAllReferenceComparison,
+	"B2": stringPrimitiveConstructor,
+	"C1": stringLiteralDuplicated,
+	"C2": stringIndexOfSingleQuoteChar,
+	"C3": refactorAllStringConcatenatedLoop,
+	"C4": refactorAllParseToConvertStringToPrimitive,
+	"C5": refactorAllStringLiteralLHSEquality,
+	"C7": refactorAllEntrySetInsteadOfKeySet,
+	"C8": refactorAllToCollectionIsEmpty,
+	"C9": replaceAllEmptyConstantWithGenericMethods
+);
+
+private map[str, void (list[loc], loc)] logFunctionByRule = (
 	"B1": refactorAllReferenceComparison,
 	"B2": stringPrimitiveConstructor,
 	"C1": stringLiteralDuplicated,
@@ -166,6 +191,7 @@ public void allSonarFixesForFile(loc fileLoc) {
 
 public void allSonarFixesForFile(loc fileLoc, loc logPath) {
 	fileAsList = [fileLoc];
+	logPath = createNowFolderForLogs(logPath);
 
 	refactorStringPrimitiveConstructor(fileLoc, logPath);
 
@@ -189,17 +215,28 @@ private void stringLiteralDuplicated(list[loc] fileAsList) {
 	allStringLiteralsAlreadyDefinedAsConstant(fileAsList);
 }
 
-private void stringPrimitiveConstructor(list[loc] fileAsList) {
-	refactorStringPrimitiveConstructor(fileAsList[0]);
+private void stringLiteralDuplicated(list[loc] fileAsList, loc logPath) {
+	transformStringLiteralDuplicated(fileAsList[0], logPath);
+	allStringLiteralsAlreadyDefinedAsConstant(fileAsList, logPath);
 }
 
 public void sonarFixesForFileIncludes(loc javaFile, list[str] rules) {
 	fixForRulesFromFile(javaFile, rules);
 }
 
+public void sonarFixesForFileIncludes(loc javaFile, list[str] rules, loc logPath) {
+	fixForRulesFromFile(javaFile, rules, logPath);
+}
+
 public void sonarFixesForDirectoryIncludes(loc dirLoc, list[str] rules, bool ignoreTestFiles) {
 	list[loc] javaFiles = javaFilesFromDir(dirLoc, ignoreTestFiles);
 	fixForRules(javaFiles, rules);
+}
+
+public void sonarFixesForDirectoryIncludes(loc dirLoc, list[str] rules, bool ignoreTestFiles, loc logPath) {
+	list[loc] javaFiles = javaFilesFromDir(dirLoc, ignoreTestFiles);
+	nowLogPath = createNowFolderForLogs(logPath);
+	fixForRules(javaFiles, rules, nowLogPath);
 }
 
 private void fixForRules(list[loc] javaFiles, list[str] rules) {
@@ -208,9 +245,25 @@ private void fixForRules(list[loc] javaFiles, list[str] rules) {
 	}
 }
 
+private void fixForRules(list[loc] javaFiles, list[str] rules, loc logPath) {
+	for(javaFile <- javaFiles) {
+		fixForRulesFromFile(javaFile, rules);
+	}
+}
+
 private void fixForRulesFromFile(loc javaFile, list[str] rules) {
 	try {
 		doFixForRulesFromFile(javaFile, rules);
+	} catch: {
+		println("Exception file (SonarFixes): " + fileLoc.file);
+		continue;
+	}
+}
+
+private void fixForRulesFromFile(loc javaFile, list[str] rules, loc logPath) {
+	try {
+		nowLogPath = createNowFolderForLogs(logPath);
+		doFixForRulesFromFile(javaFile, rules, nowLogPath);
 	} catch: {
 		println("Exception file (SonarFixes): " + fileLoc.file);
 		continue;
@@ -228,13 +281,35 @@ private void doFixForRulesFromFile(loc javaFile, list[str] rules) {
 	}
 }
 
+private void doFixForRulesFromFile(loc javaFile, list[str] rules, loc logPath) {
+	if (!startsWith(javaFile.file, "_")) {
+		for (rule <- rulesOrder) {
+			if (rule in rules) {
+				refactorFunction = logFunctionByRule[rule];
+				refactorFunction([javaFile], logPath);
+			}
+		}
+	}
+}
+
 public void sonarFixesForFileExcludes(loc javaFile, list[str] excludeRules) {
 	fixForRulesFromFile(javaFile, rulesAfterExclusion(excludeRules));
+}
+
+public void sonarFixesForFileExcludes(loc javaFile, list[str] excludeRules, loc logPath) {
+	nowLogPath = createNowFolderForLogs(logPath);
+	fixForRulesFromFile(javaFile, rulesAfterExclusion(excludeRules), nowLogPath);
 }
 
 public void sonarFixesForDirectoryExcludes(loc dirLoc, list[str] excludeRules, bool ignoreTestFiles) {
 	list[loc] javaFiles = javaFilesFromDir(dirLoc, ignoreTestFiles);
 	fixForRules(javaFiles, rulesAfterExclusion(excludeRules));
+}
+
+public void sonarFixesForDirectoryExcludes(loc dirLoc, list[str] excludeRules, bool ignoreTestFiles, loc logPath) {
+	nowLogPath = createNowFolderForLogs(logPath);
+	list[loc] javaFiles = javaFilesFromDir(dirLoc, ignoreTestFiles);
+	fixForRules(javaFiles, rulesAfterExclusion(excludeRules), nowLogPath);
 }
 
 private list[str] rulesAfterExclusion(list[str] excludeRules) {
