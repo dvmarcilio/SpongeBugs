@@ -61,7 +61,7 @@ public void allSonarFixes(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
 			if (!startsWith(fileLoc.file, "_"))
-				doAllSonarFixesForFile(fileLoc);
+				allSonarFixesForFile(fileLoc);
 		} catch: {
 			println("Exception file (SonarFixes): " + fileLoc.file);
 			continue;
@@ -111,11 +111,11 @@ public void tryToParseAll(list[loc] locs) {
 	}
 }
 
-public int countConsideredFiles(list[loc] locs) {
+public int countConsideredFiles(list[loc] locs, bool ignoreTestFiles = true) {
 	count = 0;
 	for (fileLoc <- locs) {
 		if (!startsWith(fileLoc.file, "_")) {
-			if (shouldAnalyzeFile(fileLoc)){
+			if (ignoreTestFiles && shouldAnalyzeFile(fileLoc)){
 				count += 1;	
 			}
 		}
@@ -123,15 +123,9 @@ public int countConsideredFiles(list[loc] locs) {
 	return count;
 }
 
-public void doAllSonarFixesForFile(loc fileLoc) {
-	if (shouldAnalyzeFile(fileLoc))
-		allSonarFixesForFile(fileLoc);
-}
-
-public void doAllSonarFixesForFile(loc fileLoc, loc logPath) {
+private void doAllSonarFixesForFile(loc fileLoc, loc logPath) {
 	nowLogPath = createNowFolderForLogs(logPath);
-	if (shouldAnalyzeFile(fileLoc))
-		allSonarFixesForFile(fileLoc, nowLogPath);
+	allSonarFixesForFile(fileLoc, nowLogPath);
 }
 
 private str fileNameWithoutExtension(loc fileLoc) {
