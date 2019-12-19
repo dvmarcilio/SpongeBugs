@@ -219,7 +219,8 @@ public void sonarFixesForFileIncludes(loc javaFile, list[str] rules) {
 }
 
 public void sonarFixesForFileIncludes(loc javaFile, list[str] rules, loc logPath) {
-	fixForRulesFromFile(javaFile, rules, logPath);
+	nowLogPath = createNowFolderForLogs(logPath);
+	fixForRulesFromFile(javaFile, rules, nowLogPath);
 }
 
 public void sonarFixesForDirectoryIncludes(loc dirLoc, list[str] rules, bool ignoreTestFiles) {
@@ -241,7 +242,7 @@ private void fixForRules(list[loc] javaFiles, list[str] rules) {
 
 private void fixForRules(list[loc] javaFiles, list[str] rules, loc logPath) {
 	for(javaFile <- javaFiles) {
-		fixForRulesFromFile(javaFile, rules);
+		fixForRulesFromFile(javaFile, rules, logPath);
 	}
 }
 
@@ -256,8 +257,7 @@ private void fixForRulesFromFile(loc javaFile, list[str] rules) {
 
 private void fixForRulesFromFile(loc javaFile, list[str] rules, loc logPath) {
 	try {
-		nowLogPath = createNowFolderForLogs(logPath);
-		doFixForRulesFromFile(javaFile, rules, nowLogPath);
+		doFixForRulesFromFile(javaFile, rules, logPath);
 	} catch: {
 		println("Exception file (SonarFixes): " + fileLoc.file);
 		continue;
