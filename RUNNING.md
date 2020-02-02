@@ -22,7 +22,9 @@ You can pass several path arguments to the jar, including directories and .java 
 
 ### Including/excluding rules
 You can either include some rules, or exclude rules. You can't have both.
+
 Use `,` as a separator if you want more than one rule, with no spaces in between. 
+
 See the [Rules](#rules) section for more details on each rule.
 
 Running only with rules C1 and C5:
