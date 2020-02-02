@@ -3,13 +3,17 @@
 Automatically fixing SonarQube and SpotBugs Java rules with source-to-source transformations.
 
 ```
-@inproceedings{Marcilio:SCAM:2019,
-  author    = {Diego Marcilio and Carlo A. Furia and Rodrigo Bonifácio and Gustavo Pinto.},
-  title     = {Automatically Generating Fix Suggestions in Response to Static Code Analysis Warnings},
-  booktitle = {19th {IEEE} International Working Conference on Source Code Analysis and Manipulation, {SCAM} 2019, Cleverland, US, September 30 - October 01, 2019},
-  pages     = {01-10},
-  year      = {2019},
-}
+@INPROCEEDINGS{Marcilio:SCAM:2019,
+author={Diego {Marcilio} and Carlo A. {Furia} and Rodrigo {Bonifácio} and Gustavo {Pinto}},
+booktitle={2019 19th International Working Conference on Source Code Analysis and Manipulation (SCAM)},
+title={Automatically Generating Fix Suggestions in Response to Static Code Analysis Warnings},
+year={2019},
+pages={34-44},
+keywords={Java;program debugging;program diagnostics;program verification;public domain software;software maintenance;software quality;static code analysis warnings;static code analysis tools;fix suggestions;open-source projects;industrial projects;Java program transformation;SpotBugs tools;SonarQube tools;Static Analysis Tools;Program Repair;Program Transformation},
+doi={10.1109/SCAM.2019.00013},
+ISSN={1942-5430},
+month={Sep.},}
+
 ```
 
 ## Running
