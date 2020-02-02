@@ -21,7 +21,7 @@ Please download the [runnable.jar](https://github.com/dvmarcilio/SpongeBugs/rele
 
 For a quickstart with default settings (all rules and ignoring test files):
 
-    java -jar spongebugs-runner-20-12-19.jar project/path/src
+    java -jar spongebugs-runner-20-12-19.jar /tmp/project/path/src
     
 Please make sure that your java points to a JDK (at least version 8).
 
