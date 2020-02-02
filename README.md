@@ -23,7 +23,7 @@ For a quickstart with default settings (all rules and ignoring test files):
 
     java -jar spongebugs-runner-20-12-19.jar /tmp/project/path/src
     
-Please make sure that your java points to a JDK (at least version 8).
+Please make sure that your java points to a JDK (version >= 8).
 
 You can pass several path arguments to the jar, including directories and .java files. Make sure to provide full paths.
 
