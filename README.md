@@ -25,7 +25,7 @@ For a quickstart with default settings (all rules and ignoring test files):
     
 Please make sure that your java points to a JDK (at least version 8).
 
-You can pass as many paths as arguments to the jar, including directories and .java files. Make sure to provide full paths.
+You can pass several path arguments to the jar, including directories and .java files. Make sure to provide full paths.
 
 For more advanced settings, such as including/excluding specific rules, or to not ignore test files, refer to [RUNNING.md](RUNNING.md).
 
