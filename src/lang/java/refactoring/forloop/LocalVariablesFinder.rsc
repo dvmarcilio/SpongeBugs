@@ -39,7 +39,7 @@ private MethodVar createParameterMethodVar(bool isFinal, VariableDeclaratorId va
 	bool isParameter = true;
 	bool isDeclaredWithinLoop = false;
 	bool isEffectiveFinal = true;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal, false);
 }
 
 // XXX ugly and not really DRY way of checking for vars within loop
@@ -100,7 +100,7 @@ private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId,
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = false;
 	bool isEffectiveFinal = true;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal, false);
 }
 
 private MethodVar createLocalMethodVarWithinLoop(bool isFinal, VariableDeclaratorId varId, UnannType varType) {
@@ -109,7 +109,7 @@ private MethodVar createLocalMethodVarWithinLoop(bool isFinal, VariableDeclarato
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = true;
 	bool isEffectiveFinal = true;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal, false);
 }
 
 private MethodVar createLocalMethodVar(bool isFinal, Identifier varId, UnannType varType, Dims? dims) {
@@ -124,7 +124,7 @@ private MethodVar createLocalMethodVar(bool isFinal, Identifier varId, UnannType
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = false;
 	bool isEffectiveFinal = true;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal, false);
 }
 
 private MethodVar createLocalMethodVarWithinLoop(bool isFinal, Identifier varId, UnannType varType, Dims? dims) {
@@ -139,7 +139,7 @@ private MethodVar createLocalMethodVar(bool isFinal, VariableDeclaratorId varId,
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = false;
 	bool isEffectiveFinal = true;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal, false);
 }
 
 // XXX ugly handling of non effective finals (mainly due to usage of sets)
@@ -158,5 +158,5 @@ private set[MethodVar] addNonEffectiveFinalVars(set[MethodVar] methodVars, set[s
 
 private MethodVar cloneMethodVarAsNonEffectiveFinal(MethodVar m) {
 	bool isEffectiveFinal = false;
-	return methodVar(m.isFinal, m.name, m.varType, m.isParameter, m.isDeclaredWithinLoop, isEffectiveFinal);
+	return methodVar(m.isFinal, m.name, m.varType, m.isParameter, m.isDeclaredWithinLoop, isEffectiveFinal, false);
 }

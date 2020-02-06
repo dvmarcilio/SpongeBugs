@@ -9,8 +9,8 @@ import lang::java::refactoring::forloop::MethodVar;
 
 public test bool methodParamShouldBeAvailableVar() {
 	prOp = prospectiveOperation("writer.write(thing);", FOR_EACH);	
-	methodVars = {methodVar(false, "thing", "String", false, true, false), 
-		methodVar(false, "writer", "PrintWriter", true, false, false)};
+	methodVars = {methodVar(false, "thing", "String", false, true, false, false), 
+		methodVar(false, "writer", "PrintWriter", true, false, false, false)};
 	
 	availableVars = retrieveAvailableVariables(prOp, methodVars);
 	
@@ -20,8 +20,8 @@ public test bool methodParamShouldBeAvailableVar() {
 
 public test bool varWithinLoopShouldNotBeAvailable() {
 	prOp = prospectiveOperation("rule.hasErrors()", FILTER);
-	methodVars = {methodVar(false, "count", "int", false, false, false), 
-		methodVar(false, "rule", "ElementRule", false, true, false)};
+	methodVars = {methodVar(false, "count", "int", false, false, false, false), 
+		methodVar(false, "rule", "ElementRule", false, true, false, false)};
 		
 	availableVars = retrieveAvailableVariables(prOp, methodVars);
 	
@@ -30,8 +30,8 @@ public test bool varWithinLoopShouldNotBeAvailable() {
 
 public test bool varNotWithinLoopShouldBeAvailable() {
 	prOp = prospectiveOperation("rule.hasErrors()", FILTER);
-	methodVars = {methodVar(false, "count", "int", false, false, false), 
-		methodVar(false, "rule", "ElementRule", false, true, false)};
+	methodVars = {methodVar(false, "count", "int", false, false, false, false), 
+		methodVar(false, "rule", "ElementRule", false, true, false, false)};
 		
 	availableVars = retrieveAvailableVariables(prOp, methodVars);
 	
@@ -50,7 +50,7 @@ public test bool localVariableDeclarationShouldBeAvailableVar() {
 
 public test bool localVariableDeclAlongWithVarNotWithinLoopShouldBeAvailableVars() {
 	prOp = prospectiveOperation("ClassLoader cl = entry.getKey();", MAP);
-	methodVars = {methodVar(false, "result", "List\<String\>", false, false, false)};
+	methodVars = {methodVar(false, "result", "List\<String\>", false, false, false, false)};
 	
 	availableVars = retrieveAvailableVariables(prOp, methodVars);
 	

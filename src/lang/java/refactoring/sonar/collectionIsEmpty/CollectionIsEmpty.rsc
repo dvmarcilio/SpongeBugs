@@ -80,6 +80,37 @@ private void doRefactorCollectionIsEmpty(loc fileLoc) {
 			methodSignature = retrieveMethodSignature(mdl);
 		
 			mdl = visit(mdl) {
+				// field access
+				case (EqualityExpression) `<Primary beforeFunc>.size() == 0`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+					}
+				}
+				case (EqualityExpression) `<Primary beforeFunc>.size() != 0`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#EqualityExpression, "!<beforeFunc>.isEmpty()");
+					}
+				}
+				case (RelationalExpression) `<Primary beforeFunc>.size() \> 0`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
+					}
+				}
+				case (RelationalExpression) `<Primary beforeFunc>.size() \>= 1`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
+					}
+				}
+				
+				// non field access
 				case (EqualityExpression) `<ExpressionName beforeFunc>.size() == 0`: {
 					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
 						shouldRewrite = true;
@@ -109,15 +140,102 @@ private void doRefactorCollectionIsEmpty(loc fileLoc) {
 					}
 				}
 			}
+			
 			if (shouldRewrite) {
 				insert mdl;
 			}
 		}
+		
+		// field access
+		case (EqualityExpression) `<Primary beforeFunc>.size() == 0`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+			}
+		}
+		case (EqualityExpression) `<Primary beforeFunc>.size() != 0`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "!<beforeFunc>.isEmpty()");
+			}
+		}
+		case (RelationalExpression) `<Primary beforeFunc>.size() \> 0`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
+			}
+		}
+		case (RelationalExpression) `<Primary beforeFunc>.size() \>= 1`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
+			}
+		}
+		
+		// non field access
+		case (EqualityExpression) `<ExpressionName beforeFunc>.size() == 0`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+			}
+		}
+		case (EqualityExpression) `<ExpressionName beforeFunc>.size() != 0`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "!<beforeFunc>.isEmpty()");
+			}
+		}
+		case (RelationalExpression) `<ExpressionName beforeFunc>.size() \> 0`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
+			}
+		}
+		case (RelationalExpression) `<ExpressionName beforeFunc>.size() \>= 1`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
+			}
+		}
+		
 	}
 	
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
 		doWriteLog(fileLoc);
+	}
+}
+
+private bool isBeforeFuncReferencingACollection(Primary beforeFunc, MethodDeclaration mdl, CompilationUnit unit) {
+	visit (mdl) {
+		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
+			try {
+				set[MethodVar] vars = findLocalVariables(methodHeader, mBody) + findClassFields(unit);
+				MethodVar var = findByName(vars, trim("<beforeFunc>"));
+				return isCollection(var) && isCollectionImportPresent(unit, var.varType);
+			} catch EmptySet(): {
+				return false;
+			}
+		}
+	}
+	return false;
+}
+
+private bool isBeforeFuncReferencingACollectionFieldChecker(Primary beforeFunc, CompilationUnit unit) {
+	try {
+		set[MethodVar] vars = findClassFields(unit);
+		MethodVar var = findByName(vars, trim("<beforeFunc>"));
+		return isCollection(var) && isCollectionImportPresent(unit, var.varType);
+	} catch EmptySet(): {
+		return false;
 	}
 }
 
@@ -134,6 +252,16 @@ private bool isBeforeFuncReferencingACollection(ExpressionName beforeFunc, Metho
 		}
 	}
 	return false;
+}
+
+private bool isBeforeFuncReferencingACollectionFieldChecker(ExpressionName beforeFunc, CompilationUnit unit) {
+	try {
+		set[MethodVar] vars = findClassFields(unit);
+		MethodVar var = findByName(vars, trim("<beforeFunc>"));
+		return isCollection(var) && isCollectionImportPresent(unit, var.varType);
+	} catch EmptySet(): {
+		return false;
+	}
 }
 
 private bool isCollectionImportPresent(CompilationUnit unit, str varType) {

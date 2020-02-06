@@ -48,7 +48,7 @@ private MethodVar createEffectiveFinalVar(bool isFinal, Identifier varId, UnannT
 	bool isParameter = false;
 	bool isDeclaredWithinLoop = false;
 	bool isEffectiveFinal = true;
-	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal);
+	return methodVar(isFinal, name, varTypeStr, isParameter, isDeclaredWithinLoop, isEffectiveFinal, true);
 }
 
 // XXX hard
