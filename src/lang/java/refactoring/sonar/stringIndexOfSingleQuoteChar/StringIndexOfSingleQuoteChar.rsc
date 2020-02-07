@@ -80,37 +80,66 @@ private void doRefactorStringIndexOfSingleQuoteChar(loc fileLoc) {
 			
 			mdl = bottom-up-break visit(mdl) {
 				case (MethodInvocation) `<Primary varName>.<TypeArguments? ts>indexOf(<ArgumentList? args>)`: {
-					if (isArgOfInterest("<args>") && isVarOfInterest(mdl, "<varName>")) {
+					argsStr = "<args>";
+					if (isSingleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
 						modified = true;
 						countModificationForLog(methodSignature);
-						argAsChar = parseSingleCharStringToCharAsArgumentList("<args>");
+						argAsChar = parseSingleCharStringToCharAsArgumentList(argsStr);
 						insert (MethodInvocation) `<Primary varName>.<TypeArguments? ts>indexOf(<ArgumentList argAsChar>)`;
+					} else if (isDoubleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
+						modified = true;
+						countModificationForLog(methodSignature);
+						ArgumentList refactoredDoubleArgList = refactorDoubleArgList(argsStr);
+						insert (MethodInvocation) `<Primary varName>.<TypeArguments? ts>indexOf(<ArgumentList refactoredDoubleArgList>)`;
 					}
 				}
+				
 				case (MethodInvocation) `<Primary varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList? args>)`: {
-					if (isArgOfInterest("<args>") && isVarOfInterest(mdl, "<varName>")) {
+					argsStr = "<args>";
+					if (isSingleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
 						modified = true;
 						countModificationForLog(methodSignature);
-						argAsChar = parseSingleCharStringToCharAsArgumentList("<args>");
+						argAsChar = parseSingleCharStringToCharAsArgumentList(argsStr);
 						insert (MethodInvocation) `<Primary varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList argAsChar>)`;
+					} else if (isDoubleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
+						modified = true;
+						countModificationForLog(methodSignature);
+						ArgumentList refactoredDoubleArgList = refactorDoubleArgList(argsStr);
+						insert (MethodInvocation) `<Primary varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList refactoredDoubleArgList>)`;
 					}
 				}
+				
 				case (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>indexOf(<ArgumentList? args>)`: {
-					if (isArgOfInterest("<args>") && isVarOfInterest(mdl, "<varName>")) {
+					argsStr = "<args>";
+					if (isSingleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
 						modified = true;
 						countModificationForLog(methodSignature);
-						argAsChar = parseSingleCharStringToCharAsArgumentList("<args>");
+						argAsChar = parseSingleCharStringToCharAsArgumentList(argsStr);
 						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>indexOf(<ArgumentList argAsChar>)`;
-					}
-				}
-				case (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList? args>)`: {
-					if (isArgOfInterest("<args>") && isVarOfInterest(mdl, "<varName>")) {
+					} else if (isDoubleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
 						modified = true;
 						countModificationForLog(methodSignature);
-						argAsChar = parseSingleCharStringToCharAsArgumentList("<args>");
-						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList argAsChar>)`;
+						refactoredDoubleArgList = refactorDoubleArgList(argsStr);
+						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>indexOf(<ArgumentList refactoredDoubleArgList>)`;
 					}
 				}
+				
+				case (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList? args>)`: {
+					argsStr = "<args>";
+					if (isSingleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
+						modified = true;
+						countModificationForLog(methodSignature);
+						argAsChar = parseSingleCharStringToCharAsArgumentList(argsStr);
+						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList argAsChar>)`;
+					} else if (isDoubleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
+						modified = true;
+						countModificationForLog(methodSignature);
+						ArgumentList refactoredDoubleArgList = refactorDoubleArgList(argsStr);
+						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList refactoredDoubleArgList>)`;
+					}
+				}
+				
+				
 			}
 			if (modified) {
 				shouldRewrite = true;
@@ -126,7 +155,7 @@ private void doRefactorStringIndexOfSingleQuoteChar(loc fileLoc) {
 	}
 }
 
-private bool isArgOfInterest(str arg) {
+private bool isSingleArgOfInterest(str arg) {
 	return isEscapedChar(arg) || isAStringWithSizeOne(arg);
 }
 
@@ -166,9 +195,13 @@ private bool isVarInTheChainAString(set[MethodVar] localVars, str varNameOrChain
 }
 
 private ArgumentList parseSingleCharStringToCharAsArgumentList(str singleCharString) {
-	replaced = replaceFirst(singleCharString, "\"", "\'");
-	replaced = replaceLast(replaced, "\"", "\'");
+	replaced = transformStringToChar(singleCharString);
 	return parse(#ArgumentList, replaced);
+}
+
+private str transformStringToChar(str singleCharString) {
+	replaced = replaceFirst(singleCharString, "\"", "\'");
+	return replaceLast(replaced, "\"", "\'");
 }
 
 private void countModificationForLog(str scope) {
@@ -182,4 +215,35 @@ private void countModificationForLog(str scope) {
 private void doWriteLog(loc fileLoc) {
 	if (shouldWriteLog)
 		writeLog(fileLoc, logPath, detailedLogFileName, countLogFileName, timesReplacedByScope);
+}
+
+private bool isDoubleArgOfInterest(str args) {
+	try {
+		return tryToParseIsDoubleArgOfInterest(args);
+	} catch:
+		return false;
+}
+
+private bool tryToParseIsDoubleArgOfInterest(str args) {
+	doubleArgs = parse(#DoubleArgumentIndexOf, args);
+	
+	top-down-break visit (doubleArgs) { 
+		case (DoubleArgumentIndexOf) `<StringLiteral strLiteral> , <IntegerLiteral intLiteral>`: {
+			return isSingleArgOfInterest("<strLiteral>");
+		}
+	}
+	
+	return false;
+}
+
+private ArgumentList refactorDoubleArgList(str argsStr) {
+	doubleArgs = parse(#DoubleArgumentIndexOf, argsStr);
+	top-down-break visit (doubleArgs) {
+		case (DoubleArgumentIndexOf) `<StringLiteral strLiteral> , <IntegerLiteral intLiteral>`: {
+			replaced = transformStringToChar("<strLiteral>");
+			return parse(#ArgumentList, "<replaced>, <intLiteral>");
+		}
+	}
+
+	return parse(#ArgumentList, argsStr);
 }
