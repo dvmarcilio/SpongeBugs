@@ -47,14 +47,7 @@ private void doRefactorAllToCollectionIsEmpty(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return findFirst(javaFileContent, "import java.util.") != -1 && hasSizeComparison(javaFileContent);
-}
-
-private bool hasSizeComparison(str javaFileContent) {
-	return findFirst(javaFileContent, ".size() \> 0")  != -1  ||
-	 	   findFirst(javaFileContent, ".size() \>= 1") != -1  ||
-		   findFirst(javaFileContent, ".size() != 0")  != -1  ||
-		   findFirst(javaFileContent, ".size() == 0")  != -1;
+	return findFirst(javaFileContent, "import java.util.") != -1 && findFirst(javaFileContent, ".size()") != -1;
 }
 
 public void refactorCollectionIsEmpty(loc fileLoc) {
@@ -75,7 +68,6 @@ private void doRefactorCollectionIsEmpty(loc fileLoc) {
 	timesReplacedByScope = ();
 	
 	unit = top-down visit(unit) {
-		// we are missing lambda bodies here
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			methodSignature = retrieveMethodSignature(mdl);
 		
@@ -109,6 +101,28 @@ private void doRefactorCollectionIsEmpty(loc fileLoc) {
 						insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
 					}
 				}
+				// unusual cases equivalent to isEmpty()
+				case (RelationalExpression) `<Primary beforeFunc>.size() \<= 0`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+					}
+				}
+				case (RelationalExpression) `<Primary beforeFunc>.size() \< 1`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+					}
+				}
+				case (EqualityExpression) `0 == <Primary beforeFunc>.size()`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+					}
+				}
 				
 				// non field access
 				case (EqualityExpression) `<ExpressionName beforeFunc>.size() == 0`: {
@@ -139,14 +153,37 @@ private void doRefactorCollectionIsEmpty(loc fileLoc) {
 						insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
 					}
 				}
+				// unusual cases equivalent to isEmpty()
+				case (EqualityExpression) `<ExpressionName beforeFunc>.size() \<= 0`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+					}
+				}
+				case (EqualityExpression) `<ExpressionName beforeFunc>.size() \< 1`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+					}
+				}
+				case (EqualityExpression) `0 == <ExpressionName beforeFunc>.size()`: {
+					if (isBeforeFuncReferencingACollection(beforeFunc, mdl, unit)) {
+						shouldRewrite = true;
+						countModificationForLog(methodSignature);
+						insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+					}
+				}
 			}
 			
 			if (shouldRewrite) {
 				insert mdl;
 			}
+			// #### End of inside MethodDeclaration checking
 		}
 		
-		// field access
+		// ### Beggining of *outside* MethodDeclaration checking
 		case (EqualityExpression) `<Primary beforeFunc>.size() == 0`: {
 			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
 				shouldRewrite = true;
@@ -175,8 +212,30 @@ private void doRefactorCollectionIsEmpty(loc fileLoc) {
 				insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
 			}
 		}
+		// unusual cases equivalent to isEmpty()
+		case (RelationalExpression) `<Primary beforeFunc>.size() \<= 0`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+			}
+		}
+		case (RelationalExpression) `<Primary beforeFunc>.size() \< 1`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+			}
+		}
+		case (EqualityExpression) `0 == <Primary beforeFunc>.size()`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+			}
+		}
 		
-		// non field access
+		
 		case (EqualityExpression) `<ExpressionName beforeFunc>.size() == 0`: {
 			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
 				shouldRewrite = true;
@@ -203,6 +262,28 @@ private void doRefactorCollectionIsEmpty(loc fileLoc) {
 				shouldRewrite = true;
 				countModificationForLog("outside of method");
 				insert parse(#RelationalExpression, "!<beforeFunc>.isEmpty()");
+			}
+		}
+		// unusual cases equivalent to isEmpty()
+		case (EqualityExpression) `<ExpressionName beforeFunc>.size() \<= 0`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+			}
+		}
+		case (EqualityExpression) `<ExpressionName beforeFunc>.size() \< 1`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
+			}
+		}
+		case (EqualityExpression) `0 == <ExpressionName beforeFunc>.size()`: {
+			if (isBeforeFuncReferencingACollectionFieldChecker(beforeFunc, unit)) {
+				shouldRewrite = true;
+				countModificationForLog("outside of method");
+				insert parse(#EqualityExpression, "<beforeFunc>.isEmpty()");
 			}
 		}
 		
