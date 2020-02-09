@@ -63,7 +63,10 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 }
 
 private bool containLoop(str javaFileContent) {
-	return findFirst(javaFileContent, "for") != -1 || findFirst(javaFileContent, "while") != -1;
+	return findFirst(javaFileContent, "for (") != -1 ||
+		findFirst(javaFileContent, "for( ") != -1 ||
+		findFirst(javaFileContent, "while (") != -1 ||
+		findFirst(javaFileContent, "while(") != -1;
 }
 
 public void refactorStringConcatenatedLoop(loc fileLoc) {
@@ -82,6 +85,7 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 	
 	shouldRewrite = false;
 	timesReplacedByScope = ();
+	expsLHSToConsider = [];
 	
 	unit = visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
@@ -92,8 +96,7 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 					refactored = refactorLoop(forStmt, mdl);
 					if ("<refactored>" != "<forStmt>") {
 						modified = true;
-						BasicForStatement refactored = parse(#BasicForStatement, "<refactored>");
-						insert refactored;
+						insert parse(#BasicForStatement, "<refactored>");
 					}
 				}
 				
@@ -101,8 +104,7 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 					refactored = refactorLoop(forStmt, mdl);
 					if ("<refactored>" != "<forStmt>") {
 						modified = true;
-						EnhancedForStatement refactored = parse(#EnhancedForStatement, "<refactored>");
-						insert refactored;
+						insert parse(#EnhancedForStatement, "<refactored>");
 					}
 				}
 				
@@ -110,8 +112,7 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 					refactored = refactorLoop(whileStmt, mdl);
 					if ("<refactored>" != "<whileStmt>") {
 						modified = true;
-						WhileStatement refactored = parse(#WhileStatement, "<refactored>");
-						insert refactored;
+						insert parse(#WhileStatement, "<refactored>");
 					}
 				}
 				
@@ -119,8 +120,7 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 					refactored = refactorLoop(doStmt, mdl);
 					if ("<refactored>" != "<doStmt>") {
 						modified = true;
-						DoStatement refactored = parse(#DoStatement, "<refactored>");
-						insert refactored;
+						insert parse(#DoStatement, "<refactored>");
 					}
 				}
 				
@@ -147,9 +147,8 @@ private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
 		case (StatementExpression) `<ExpressionName expLHS> += <Expression exp>`: {
 			if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {
 				expsLHSToConsider += expLHS;
-				refactoredToAppend = parse(#StatementExpression, "<expLHS>.append(<exp>)");
 				countModificationForLog(retrieveMethodSignature(mdl));
-				insert refactoredToAppend;
+				insert parse(#StatementExpression, "<expLHS>.append(<exp>)");
 			}
 		}
 
@@ -163,9 +162,8 @@ private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
 					expsLHSToConsider += expLHS;
 					appendArg = appendExpFromConcatPattern(expLHSstr, expStr);
 
-					refactoredToAppend = parse(#StatementExpression, "<expLHSstr>.append(<appendArg>)");
 					countModificationForLog(retrieveMethodSignature(mdl));
-					insert refactoredToAppend;
+					insert parse(#StatementExpression, "<expLHSstr>.append(<appendArg>)");
 				}
 			}
 		}
@@ -188,7 +186,7 @@ private bool isConcatenationPattern(str expLHS, str exp) {
 	expLHS = trim(expLHS);
 	exp = trim(exp);
 	indexOfAdd = findFirst(exp, "+");
-	return trim(substring(exp, 0, indexOfAdd)) == expLHS;
+	return indexOfAdd != -1 && trim(substring(exp, 0, indexOfAdd)) == expLHS;
 }
 
 private str appendExpFromConcatPattern(str expLHS, str exp) {
@@ -204,24 +202,21 @@ private MethodDeclaration refactorMdl(MethodDeclaration mdl, ExpressionName expN
 	mdl = visit(mdl) {
 		case (LocalVariableDeclaration) `<UnannType varType> <Identifier varId> <Dims? _> = <Expression expRHS>`: {
 			if (trim("<varType>") == "String" && trim("<varId>") == "<expName>") {
-				if (trim("<expRHS>") == "null")
+				expRHSstr = trim("<expRHS>");
+				if (expRHSstr == "null")
 					insert parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(\"null\")");
-				else {	
-					lvDecl = parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(<expRHS>)");
-					insert lvDecl;
+				else if(shouldConsiderRHS(expRHSstr)) {
+					insert parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(<expRHS>)");
 				}
 			}
 		}
 		
 		case (StatementExpression) `<ExpressionName expLHS> <AssignmentOperator op> <Expression expRHS>`: {
-			if (expLHS == expName && trim("<op>") == "=" && "<expRHS>" != "null") {
-				assignmentExp = parse(#StatementExpression, "<expLHS> = new StringBuilder(<expRHS>)");
-				insert assignmentExp;
-			}
-			
-			if (expLHS == expName && trim("<op>") == "+=") {
-				assignmentExp = parse(#StatementExpression, "<expLHS>.append(<expRHS>)");
-				insert assignmentExp;
+			expRHSstr = trim("<expRHS>");
+			if (expLHS == expName && trim("<op>") == "=" && expRHSstr != "null" && shouldConsiderRHS(expRHSstr)) {
+				insert parse(#StatementExpression, "<expLHS> = new StringBuilder(<expRHS>)");
+			} else if (expLHS == expName && trim("<op>") == "+=") {
+				insert parse(#StatementExpression, "<expLHS>.append(<expRHS>)");
 			}
 		}
 		
@@ -232,8 +227,7 @@ private MethodDeclaration refactorMdl(MethodDeclaration mdl, ExpressionName expN
 					returnExp = visit(returnExp) {
 						case (Expression) `<Expression _>`: {
 							if (trim("<returnExp>") == "<expName>") {
-								returnExpRefactored = parse(#Expression, "<expName>.toString()");
-								insert returnExpRefactored;
+								insert parse(#Expression, "<expName>.toString()");
 							}
 						}
 					}
@@ -246,6 +240,10 @@ private MethodDeclaration refactorMdl(MethodDeclaration mdl, ExpressionName expN
 	
 	return mdl;
 }
+
+private bool shouldConsiderRHS(str expRHSstr) {
+	return !startsWith(expRHSstr, "new StringBuilder(");
+} 
 
 private MethodDeclaration replaceReferencesWithToStringCall(MethodDeclaration mdl, ExpressionName varName) {
 	mdl = visit(mdl) {
