@@ -59,11 +59,11 @@ private void doRefactorAllStringConcatenatedLoop(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return containLoop(javaFileContent) && findFirst(javaFileContent, "+=") != -1 ;
+	return containLoop(javaFileContent);
 }
 
 private bool containLoop(str javaFileContent) {
-	return findFirst(javaFileContent, "for (") != -1 || findFirst(javaFileContent, "while(") != -1;
+	return findFirst(javaFileContent, "for") != -1 || findFirst(javaFileContent, "while") != -1;
 }
 
 public void refactorStringConcatenatedLoop(loc fileLoc) {
@@ -152,17 +152,20 @@ private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
 				insert refactoredToAppend;
 			}
 		}
-		case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <ExpressionName expRHS2>`: {
-			if (<"expLHS"> == <"expRHS">) {
-				if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
-					println("case 2");
-				}
-			}
-		}
-		case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <StringLiteral strLiteral>`: {
-			if (<"expLHS"> == <"expRHS">) {
-				if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
-					println("case 3");
+
+		case (StatementExpression) `<ExpressionName expLHS> = <Expression exp>`: {
+			if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {
+				// too difficult to concrete pattern match. let's do string
+				expLHSstr = "<expLHS>";
+				expStr = "<exp>";
+				if (isConcatenationPattern(expLHSstr, expStr)) {
+					shouldModify = true;
+					expsLHSToConsider += expLHS;
+					appendArg = appendExpFromConcatPattern(expLHSstr, expStr);
+
+					refactoredToAppend = parse(#StatementExpression, "<expLHSstr>.append(<appendArg>)");
+					countModificationForLog(retrieveMethodSignature(mdl));
+					insert refactoredToAppend;
 				}
 			}
 		}
@@ -179,6 +182,20 @@ private bool isStringAndDeclaredWithinMethod(MethodDeclaration mdl, ExpressionNa
 	} catch EmptySet(): {
 		return false;
 	}
+}
+
+private bool isConcatenationPattern(str expLHS, str exp) {
+	expLHS = trim(expLHS);
+	exp = trim(exp);
+	indexOfAdd = findFirst(exp, "+");
+	return trim(substring(exp, 0, indexOfAdd)) == expLHS;
+}
+
+private str appendExpFromConcatPattern(str expLHS, str exp) {
+	expLHS = trim(expLHS);
+	exp = trim(exp);
+	indexOfAdd = findFirst(exp, "+");
+	return trim(substring(exp, indexOfAdd + 1));
 }
 
 private MethodDeclaration refactorMdl(MethodDeclaration mdl, ExpressionName expName) {
