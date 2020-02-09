@@ -20,7 +20,7 @@ private str detailedLogFileName = "STRING_CONCATENATED_LOOP_DETAILED.txt";
 private str countLogFileName = "STRING_CONCATENATED_LOOP_COUNT.txt";
 
 // SonarQube only counts as issues string concatenation inside loops
-// Although you necessarilly need to change other references outside the loop
+// Although you necessarily need to change other references outside the loop
 // their detection only shows references inside the loops
 private map[str, int] timesReplacedByScope = ();
 
@@ -31,7 +31,7 @@ private set[str] commonMethods = {"substring", "length", "charAt",
 	"codePointAt", "codePointBefore", "codePointCount"};
 
 // Just so we don't get a unitialized exception
-ExpressionName expLHSToConsider = parse(#ExpressionName, "a");
+private list[ExpressionName] expsLHSToConsider = [];
 
 public void refactorAllStringConcatenatedLoop(list[loc] locs) {
 	shouldWriteLog = false;
@@ -59,11 +59,11 @@ private void doRefactorAllStringConcatenatedLoop(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return containForLoop(javaFileContent) && findFirst(javaFileContent, "+=") != -1;
+	return containLoop(javaFileContent) && findFirst(javaFileContent, "+=") != -1 ;
 }
 
-private bool containForLoop(str javaFileContent) {
-	return findFirst(javaFileContent, "for (") != -1 || findFirst(javaFileContent, "for(") != -1;
+private bool containLoop(str javaFileContent) {
+	return findFirst(javaFileContent, "for (") != -1 || findFirst(javaFileContent, "while(") != -1;
 }
 
 public void refactorStringConcatenatedLoop(loc fileLoc) {
@@ -127,7 +127,10 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 			}
 			if (modified) {
 				shouldRewrite = true;
-				mdlRefactored = ref(mdl, expLHSToConsider);
+				mdlRefactored = mdl;
+				for (expLHSToConsider <- expsLHSToConsider) {
+					mdlRefactored = refactorMdl(mdlRefactored, expLHSToConsider);
+				}
 				insert (MethodDeclaration) `<MethodDeclaration mdlRefactored>`;
 			}
 		}	
@@ -140,10 +143,10 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 }
 
 private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
-	loopStmt = top-down-break visit(loopStmt) {
+	loopStmt = top-down visit(loopStmt) {
 		case (StatementExpression) `<ExpressionName expLHS> += <Expression exp>`: {
-			if(isStringAndDeclaredWithinMethod(mdl, expLHS) && methodReturnsStringFromExpLHS(mdl, expLHS)) {
-				expLHSToConsider = expLHS;
+			if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {
+				expsLHSToConsider += expLHS;
 				refactoredToAppend = parse(#StatementExpression, "<expLHS>.append(<exp>)");
 				countModificationForLog(retrieveMethodSignature(mdl));
 				insert refactoredToAppend;
@@ -169,51 +172,38 @@ private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
 
 private bool isStringAndDeclaredWithinMethod(MethodDeclaration mdl, ExpressionName exp) {
 	set[MethodVar] vars = findlocalVars(mdl);
-	if ("<exp>" notin retrieveNonParametersNames(vars)) {
+	
+	try {
+		MethodVar var = findByName(vars, "<exp>");
+		return isString(var) && !var.isParameter;
+	} catch EmptySet(): {
 		return false;
 	}
-	
-	MethodVar var = findByName(vars, "<exp>");
-	return isString(var) && !var.isParameter;
 }
 
-private bool methodReturnsStringFromExpLHS(MethodDeclaration mdl, ExpressionName exp) {
-	methodReturnsString = false;
-	returnsExpString = false;
-	visit (mdl) {
-		case (MethodDeclaration) `<MethodModifier* mds> <MethodHeader methodHeader> <MethodBody mBody>`: {
-			visit (methodHeader) {
-				case (MethodHeader) `<Result returnType> <MethodDeclarator _> <Throws? _>`: {
-					methodReturnsString = trim("<returnType>") == "String";
-				}
-			}
-		}
-		case (ReturnStatement) `return <ExpressionName exp>;`: {
-			returnsExpString = true;
-		}
-	}
-	return methodReturnsString && returnsExpString;
-}
-
-private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {
+private MethodDeclaration refactorMdl(MethodDeclaration mdl, ExpressionName expName) {
 	mdl = replaceReferencesWithToStringCall(mdl, expName);
 
 	mdl = visit(mdl) {
 		case (LocalVariableDeclaration) `<UnannType varType> <Identifier varId> <Dims? _> = <Expression expRHS>`: {
 			if (trim("<varType>") == "String" && trim("<varId>") == "<expName>") {
-				lvDecl = parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(<expRHS>)");
-				insert lvDecl;
+				if (trim("<expRHS>") == "null")
+					insert parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(\"null\")");
+				else {	
+					lvDecl = parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(<expRHS>)");
+					insert lvDecl;
+				}
 			}
 		}
 		
 		case (StatementExpression) `<ExpressionName expLHS> <AssignmentOperator op> <Expression expRHS>`: {
-			if (expLHS == expName && trim("<op>") == "=") {
+			if (expLHS == expName && trim("<op>") == "=" && "<expRHS>" != "null") {
 				assignmentExp = parse(#StatementExpression, "<expLHS> = new StringBuilder(<expRHS>)");
 				insert assignmentExp;
 			}
 			
 			if (expLHS == expName && trim("<op>") == "+=") {
-				assignmentExp = parse(#StatementExpression, "<expLHS>g(<expRHS>)");
+				assignmentExp = parse(#StatementExpression, "<expLHS>.append(<expRHS>)");
 				insert assignmentExp;
 			}
 		}
@@ -242,6 +232,13 @@ private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {
 
 private MethodDeclaration replaceReferencesWithToStringCall(MethodDeclaration mdl, ExpressionName varName) {
 	mdl = visit(mdl) {
+	
+		case (AssignmentExpression) `<AssignmentExpression expressionName>`: {
+			if (trim("<expressionName>") == "<varName>") {
+				insert parse(#AssignmentExpression, "<varName>.toString()");
+			}
+		}
+	
 		// can be made better
 		case (MethodInvocation) `<MethodInvocation mi>`: {
 			modified = false;
