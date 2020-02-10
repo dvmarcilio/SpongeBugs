@@ -11,6 +11,7 @@ import lang::java::refactoring::forloop::LocalVariablesFinder;
 import lang::java::refactoring::forloop::MethodVar;
 import lang::java::refactoring::sonar::LogUtils;
 import lang::java::util::MethodDeclarationUtils;
+import lang::java::refactoring::forloop::ClassFieldsFinder;
 
 private bool shouldWriteLog = false;
 
@@ -29,9 +30,15 @@ private map[str, int] timesReplacedByScope = ();
 // Leaving it out to assure correctness
 private set[str] commonMethods = {"substring", "length", "charAt", 
 	"codePointAt", "codePointBefore", "codePointCount"};
-
+	
 // Just so we don't get a unitialized exception
 private list[ExpressionName] expsLHSToConsider = [];
+
+// This 'global state' is the best option for performance
+private set[MethodVar] currMethodVars = {};
+private set[MethodVar] currClassFields = {};
+
+private data NumberChecker = numberChecker(bool isNumber, str toStringExp);
 
 public void refactorAllStringConcatenatedLoop(list[loc] locs) {
 	shouldWriteLog = false;
@@ -143,17 +150,19 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 }
 
 private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
+	currMethodVars = findlocalVars(mdl);
 	loopStmt = top-down visit(loopStmt) {
 		case (StatementExpression) `<ExpressionName expLHS> += <Expression exp>`: {
-			if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {
+			if(isStringAndDeclaredWithinMethod(expLHS)) {
 				expsLHSToConsider += expLHS;
 				countModificationForLog(retrieveMethodSignature(mdl));
-				insert parse(#StatementExpression, "<expLHS>.append(<exp>)");
+				expStr = "<exp>";
+				insert parse(#StatementExpression, "<expLHS>.append(<firstArgWithToStringIfNeeded(expStr)>)");
 			}
 		}
 
 		case (StatementExpression) `<ExpressionName expLHS> = <Expression exp>`: {
-			if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {
+			if(isStringAndDeclaredWithinMethod(expLHS)) {
 				// too difficult to concrete pattern match. let's do string
 				expLHSstr = "<expLHS>";
 				expStr = "<exp>";
@@ -163,7 +172,7 @@ private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
 					appendArg = appendExpFromConcatPattern(expLHSstr, expStr);
 
 					countModificationForLog(retrieveMethodSignature(mdl));
-					insert parse(#StatementExpression, "<expLHSstr>.append(<appendArg>)");
+					insert parse(#StatementExpression, "<expLHSstr>.append(<firstArgWithToStringIfNeeded(appendArg)>)");
 				}
 			}
 		}
@@ -171,11 +180,9 @@ private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
 	return loopStmt;
 }
 
-private bool isStringAndDeclaredWithinMethod(MethodDeclaration mdl, ExpressionName exp) {
-	set[MethodVar] vars = findlocalVars(mdl);
-	
+private bool isStringAndDeclaredWithinMethod(ExpressionName exp) {
 	try {
-		MethodVar var = findByName(vars, "<exp>");
+		MethodVar var = findByName(currMethodVars, "<exp>");
 		return isString(var) && !var.isParameter;
 	} catch EmptySet(): {
 		return false;
@@ -206,17 +213,24 @@ private MethodDeclaration refactorMdl(MethodDeclaration mdl, ExpressionName expN
 				if (expRHSstr == "null")
 					insert parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(\"null\")");
 				else if(shouldConsiderRHS(expRHSstr)) {
-					insert parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(<expRHS>)");
+					insert parse(#LocalVariableDeclaration, "StringBuilder <varId> = new StringBuilder(<firstArgWithToStringIfNeeded(expRHSstr)>)");
 				}
+			}
+		}
+		
+		// LocalVariableDeclaratin without '= exp'
+		case (BlockStatement) `<UnannType varType> <VariableDeclaratorId varId>;`: {
+			if (trim("<varType>") == "String" && trim("<varId>") == "<expName>") {
+				insert parse(#BlockStatement, "StringBuilder <varId>;");
 			}
 		}
 		
 		case (StatementExpression) `<ExpressionName expLHS> <AssignmentOperator op> <Expression expRHS>`: {
 			expRHSstr = trim("<expRHS>");
 			if (expLHS == expName && trim("<op>") == "=" && expRHSstr != "null" && shouldConsiderRHS(expRHSstr)) {
-				insert parse(#StatementExpression, "<expLHS> = new StringBuilder(<expRHS>)");
+				insert parse(#StatementExpression, "<expLHS> = new StringBuilder(<firstArgWithToStringIfNeeded(expRHSstr)>)");
 			} else if (expLHS == expName && trim("<op>") == "+=") {
-				insert parse(#StatementExpression, "<expLHS>.append(<expRHS>)");
+				insert parse(#StatementExpression, "<expLHS>.append(<firstArgWithToStringIfNeeded(expRHSstr)>)");
 			}
 		}
 		
@@ -310,6 +324,94 @@ private bool callsACommonMethod(str miStr) {
 			return true;
 	}
 	return false;
+}
+
+// this is really specific and hard to grasp
+// when using '+' for concatenating strings, one can avoid calling toString() if there is a String as one of the operands
+// but if there is no String, the code will fail to compile
+// String msg; Object obj; Integer i; 
+// msg = msg + object + i; (compiles fine)
+// StringBuilder msg2 = new StringBuilder(object + i); (does not compile)
+// StringBuilder msg3 = new StringBuilder(object.toString + i) (compiles fine) 
+private str firstArgWithToStringIfNeeded(str argList) {
+	operands = split("+", argList);
+	countOfOperands = size(operands);
+	if (countOfOperands == 1 || isMethodInvocation(argList)) {
+		return argList;
+	}
+	if (!hasAnyString(operands)) {
+		firstArg = trim(operands[0]);
+		NumberChecker possibleNumber = checkIfIsNumber(firstArg);
+		// this still can fail to compile with some rare cases
+		// if we refactor from method calls > 1 that do not return String
+		// msg = msg + nonStringReturn() + nonStringReturn()
+		// msg.append(nonStringReturn() + nonStringReturn())   
+		if (!possibleNumber.isNumber) {
+			return replaceFirst(argList, firstArg, "<firstArg>.toString()");
+		} else {
+			return replaceFirst(argList, firstArg, numberToString(possibleNumber.toStringExp));
+		}
+	}
+	return argList;
+}
+
+private bool hasAnyString(list[str] operands) {
+	for (operand <- operands) {
+		if (isVarAString(trim(operand)))
+			return true;
+	}
+	return false;
+}
+
+private bool isVarAString(str var) {
+	return var notin expsToConsider() && (isStrLiteral(var) || isReferenceToAString(var));
+}
+
+private list[str] expsToConsider() {
+	list[str] exps = [];
+	for (exp <- expsLHSToConsider) {
+		exps += "<exp>";
+	}
+	return exps;	
+}
+
+private bool isStrLiteral(str var) {
+	try {
+		parse(#StringLiteral, var);
+		return true;
+	} catch:
+		return false;
+}
+
+private bool isReferenceToAString(str name) {
+	vars = currMethodVars + currClassFields;
+	try {
+		var = findByName(vars, name);
+		return isString(var);
+	} catch: 
+		return false;
+}
+
+private NumberChecker checkIfIsNumber(str number) {
+	try {
+		parse(#IntegerLiteral, number);
+		return numberChecker(true, "Integer.toString(<number>)");
+	} catch: {
+		try {
+			parse(#FloatingPointLiteral, number);
+			return numberChecker(true, "Double.toString(<number>)");
+		} catch: {
+			return numberChecker(false, "");
+		}	 
+	}
+}
+
+private bool isMethodInvocation(str arg) {
+	try {
+		parse(#MethodInvocation, arg);
+		return true;
+	} catch:
+		return false;
 }
 
 private void countModificationForLog(str scope) {
