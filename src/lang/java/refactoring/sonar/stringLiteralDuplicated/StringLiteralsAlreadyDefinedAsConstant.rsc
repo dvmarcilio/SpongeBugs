@@ -167,8 +167,7 @@ private void loadConstantMaps(CompilationUnit unit) {
 							}
 						}
 					}
-					if (!isEmpty(constantName) && !isEmpty(strLiteral) && 
-							isFieldOnlyUsingASingleString(flDecl, constantName, strLiteral)) {
+					if (shouldConsiderThisConstants(flDecl, constantName, strLiteral)) {
 						constantByStrLiteral[strLiteral] = constantName;
 						fieldDeclarationByStrLiteral[strLiteral] = flDecl;
 					}
@@ -176,6 +175,14 @@ private void loadConstantMaps(CompilationUnit unit) {
 			}
 		}
 	}
+}
+
+private bool shouldConsiderThisConstants(FieldDeclaration flDecl, str constantName, str strLiteral) {
+	return !isEmpty(constantName) &&
+	 	   !isEmpty(strLiteral) &&
+		   isFieldOnlyUsingASingleString(flDecl, constantName, strLiteral) &&
+		   // we want to add the first constant, to avoid forward references
+		   strLiteral notin fieldDeclarationByStrLiteral;
 }
 
 // Not considering these cases:
