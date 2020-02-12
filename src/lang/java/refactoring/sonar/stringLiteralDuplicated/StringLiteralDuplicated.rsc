@@ -147,7 +147,7 @@ private void populateMapsWithStringsOfInterestCount(ClassBody classBody) {
 		}
 
 		case (FieldDeclaration) `<FieldDeclaration flDecl>`: {
-			visit(flDecl) {
+			top-down-break visit(flDecl) {
 				case(AdditiveExpression) `<AdditiveExpression concatExp>`: {
 					if (isNotUnaryExpression(concatExp)) {
 						visit (concatExp) {
@@ -162,7 +162,7 @@ private void populateMapsWithStringsOfInterestCount(ClassBody classBody) {
 					}
 				}
 				case (ArgumentList) `<ArgumentList argList>`: {
-					visit(argList) {
+					top-down-break visit(argList) {
 						case (StringLiteral) `<StringLiteral strLiteral>`: {
 							strLiteralAsStr = "<strLiteral>";
 							if (size(strLiteralAsStr) >= SONAR_MINIMUM_LITERAL_LENGTH) {
