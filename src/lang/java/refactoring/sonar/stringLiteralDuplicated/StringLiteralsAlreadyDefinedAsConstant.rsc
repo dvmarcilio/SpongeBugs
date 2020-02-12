@@ -88,14 +88,20 @@ private void doRefactorForEachClassBody(loc fileLoc, CompilationUnit unit, Class
 			modified = false;
 			flDeclRefactored = flDecl;
 			visit(flDecl) {
-				case (StringLiteral) `<StringLiteral stringLiteral>`: {
-					strLiteral = "<stringLiteral>";
-					if (isStrLiteralAlreadyDefinedAndOfMinimumSize(strLiteral) && 
-							fieldDeclarationByStrLiteral[strLiteral] != flDecl) {
-						modified = true;
-						constant = constantByStrLiteral[strLiteral];
-						flDeclRefactored = parse(#FieldDeclaration, replaceAll("<flDeclRefactored>", strLiteral, constant));
-						increaseTimesReplacedByConstant(constant);
+				case(AdditiveExpression) `<AdditiveExpression concatExp>`: {
+					if (isNotUnaryExpression(concatExp)) {
+						visit (concatExp) {				
+							case (StringLiteral) `<StringLiteral stringLiteral>`: {
+								strLiteral = "<stringLiteral>";
+								if (isStrLiteralAlreadyDefinedAndOfMinimumSize(strLiteral) && 
+										fieldDeclarationByStrLiteral[strLiteral] != flDecl) {
+									modified = true;
+									constant = constantByStrLiteral[strLiteral];
+									flDeclRefactored = parse(#FieldDeclaration, replaceAll("<flDeclRefactored>", strLiteral, constant));
+									increaseTimesReplacedByConstant(constant);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -167,7 +173,7 @@ private void loadConstantMaps(CompilationUnit unit) {
 							}
 						}
 					}
-					if (shouldConsiderThisConstants(flDecl, constantName, strLiteral)) {
+					if (shouldConsiderThisConstant(flDecl, constantName, strLiteral)) {
 						constantByStrLiteral[strLiteral] = constantName;
 						fieldDeclarationByStrLiteral[strLiteral] = flDecl;
 					}
@@ -177,7 +183,7 @@ private void loadConstantMaps(CompilationUnit unit) {
 	}
 }
 
-private bool shouldConsiderThisConstants(FieldDeclaration flDecl, str constantName, str strLiteral) {
+private bool shouldConsiderThisConstant(FieldDeclaration flDecl, str constantName, str strLiteral) {
 	return !isEmpty(constantName) &&
 	 	   !isEmpty(strLiteral) &&
 		   isFieldOnlyUsingASingleString(flDecl, constantName, strLiteral) &&
@@ -208,6 +214,14 @@ private void increaseTimesReplacedByConstant(str constant) {
 
 private bool isStrLiteralAlreadyDefinedAndOfMinimumSize(str strLiteral) {
 	return strLiteral in constantByStrLiteral && size(strLiteral) >= SONAR_MINIMUM_LITERAL_LENGTH;
+}
+
+private bool isNotUnaryExpression(AdditiveExpression addExp) {
+	try {
+		parse(#UnaryExpression, "<addExp>");
+		return false;
+	} catch:
+		return true;
 }
 
 private void writeLog(loc fileLoc) {
