@@ -160,7 +160,7 @@ private map[str, void (list[loc], loc)] logFunctionByRule = (
 );
 	
 // should we review this order?	
-private list[str] rulesOrder = ["B2", "B1", "C9", "C2", "C8", "C3", "C7", "C4", "C1", "C5"];	
+private list[str] rulesOrder = ["B2", "B1", "C9", "C2", "C8", "C3", "C7", "C4", "C1", "C5"];
 
 	//resourcesShouldAllBeClosed(fileAsList);	
 	//refactorAllToEqualsIgnoreCase(fileAsList);
@@ -225,6 +225,15 @@ public void sonarFixesForFileIncludes(loc javaFile, list[str] rules, loc logPath
 
 public void sonarFixesForDirectoryIncludes(loc dirLoc, list[str] rules, bool ignoreTestFiles) {
 	list[loc] javaFiles = javaFilesFromDir(dirLoc, ignoreTestFiles);
+	fixForRules(javaFiles, rules);
+}
+
+// debug without runner
+public void sonarFixesForFilesIncludes(list[loc] dirLocs, list[str] rules, bool ignoreTestFiles = true) {
+	list[loc] javaFiles = [];
+	for (dirLoc <- dirLocs) {
+		javaFiles += javaFilesFromDir(dirLoc, ignoreTestFiles);
+	}
 	fixForRules(javaFiles, rules);
 }
 
