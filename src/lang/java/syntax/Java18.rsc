@@ -633,7 +633,9 @@ syntax MethodInvocation = MethodName "(" ArgumentList? ")"
                         | TypeName "." "super" "." TypeArguments? Identifier "(" ArgumentList? ")" 
                         ;
                         
-syntax ArgumentList = { Expression "," }+ ; 
+syntax ArgumentList = { Expression "," }+ ;
+
+syntax DoubleArgumentIndexOf = StringLiteral "," IntegerLiteral;
 
 syntax MethodReference = ExpressionName "::" TypeArguments? Identifier 
                        | Primary "::" TypeArguments? Identifier 
