@@ -213,7 +213,7 @@ private MethodDeclaration ref(MethodDeclaration mdl, ExpressionName expName) {
 			}
 			
 			if (expLHS == expName && trim("<op>") == "+=") {
-				assignmentExp = parse(#StatementExpression, "<expLHS>g(<expRHS>)");
+				assignmentExp = parse(#StatementExpression, "<expLHS>.append(<expRHS>)");
 				insert assignmentExp;
 			}
 		}
