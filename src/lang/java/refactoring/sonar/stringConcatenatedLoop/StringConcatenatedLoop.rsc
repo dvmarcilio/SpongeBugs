@@ -30,8 +30,7 @@ private map[str, int] timesReplacedByScope = ();
 private set[str] commonMethods = {"substring", "length", "charAt", 
 	"codePointAt", "codePointBefore", "codePointCount"};
 
-// Just so we don't get a unitialized exception
-ExpressionName expLHSToConsider = parse(#ExpressionName, "a");
+private list[ExpressionName] expsLHSToConsider = [];
 
 public void refactorAllStringConcatenatedLoop(list[loc] locs) {
 	shouldWriteLog = false;
@@ -63,7 +62,8 @@ private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 }
 
 private bool containForLoop(str javaFileContent) {
-	return findFirst(javaFileContent, "for (") != -1 || findFirst(javaFileContent, "for(") != -1;
+	return findFirst(javaFileContent, "for (") != -1 || findFirst(javaFileContent, "for(") != -1 || 
+		findFirst(javaFileContent, "while (") != -1 || findFirst(javaFileContent, "while(") != -1;
 }
 
 public void refactorStringConcatenatedLoop(loc fileLoc) {
@@ -82,6 +82,7 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 	
 	shouldRewrite = false;
 	timesReplacedByScope = ();
+	expsLHSToConsider = [];
 	
 	unit = visit(unit) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
@@ -127,7 +128,10 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 			}
 			if (modified) {
 				shouldRewrite = true;
-				mdlRefactored = ref(mdl, expLHSToConsider);
+				mdlRefactored = mdl;
+				for (expLHSToConsider <- expsLHSToConsider) {
+					mdlRefactored = ref(mdlRefactored, expLHSToConsider);
+				}
 				insert (MethodDeclaration) `<MethodDeclaration mdlRefactored>`;
 			}
 		}	
@@ -140,27 +144,13 @@ private void doRefactorStringConcatenatedLoop(loc fileLoc) {
 }
 
 private Tree refactorLoop(Tree loopStmt, MethodDeclaration mdl) {
-	loopStmt = top-down-break visit(loopStmt) {
+	loopStmt = top-down visit(loopStmt) {
 		case (StatementExpression) `<ExpressionName expLHS> += <Expression exp>`: {
 			if(isStringAndDeclaredWithinMethod(mdl, expLHS) && methodReturnsStringFromExpLHS(mdl, expLHS)) {
-				expLHSToConsider = expLHS;
+				expsLHSToConsider += expLHS;
 				refactoredToAppend = parse(#StatementExpression, "<expLHS>.append(<exp>)");
 				countModificationForLog(retrieveMethodSignature(mdl));
 				insert refactoredToAppend;
-			}
-		}
-		case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <ExpressionName expRHS2>`: {
-			if (<"expLHS"> == <"expRHS">) {
-				if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
-					println("case 2");
-				}
-			}
-		}
-		case (Assignment) `<ExpressionName expLHS> = <ExpressionName expRHS> + <StringLiteral strLiteral>`: {
-			if (<"expLHS"> == <"expRHS">) {
-				if(isStringAndDeclaredWithinMethod(mdl, expLHS)) {							
-					println("case 3");
-				}
 			}
 		}
 	}
