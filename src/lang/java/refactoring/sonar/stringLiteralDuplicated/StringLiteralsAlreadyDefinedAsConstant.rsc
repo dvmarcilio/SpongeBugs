@@ -12,6 +12,7 @@ import Set;
 private int SONAR_MINIMUM_LITERAL_LENGTH = 7;
 
 private map[str, str] constantByStrLiteral = ();
+private map[str, FieldDeclaration] fieldDeclarationByStrLiteral = ();
 
 private bool shouldRewrite = false;
 
@@ -79,19 +80,48 @@ private list[ClassBody] retrieveClassBodies(CompilationUnit unit) {
 }
 
 private void doRefactorForEachClassBody(loc fileLoc, CompilationUnit unit, ClassBody classBody) {
-	loadConstantByStrLiteral(unit);
+	loadConstantMaps(unit);
 	
 	refactoredClassBody = top-down-break visit(classBody) {
+		
+		case (FieldDeclaration) `<FieldDeclaration flDecl>`: {
+			modified = false;
+			flDeclRefactored = flDecl;
+			visit(flDecl) {
+				case(AdditiveExpression) `<AdditiveExpression concatExp>`: {
+					if (isNotUnaryExpression(concatExp)) {
+						visit (concatExp) {				
+							case (StringLiteral) `<StringLiteral stringLiteral>`: {
+								strLiteral = "<stringLiteral>";
+								if (isStrLiteralAlreadyDefinedAndOfMinimumSize(strLiteral) && 
+										fieldDeclarationByStrLiteral[strLiteral] != flDecl) {
+									modified = true;
+									constant = constantByStrLiteral[strLiteral];
+									flDeclRefactored = parse(#FieldDeclaration, replaceAll("<flDeclRefactored>", strLiteral, constant));
+									increaseTimesReplacedByConstant(constant);
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			if (modified) {
+				shouldRewrite = true;
+				insert flDeclRefactored;
+			}
+		}
+		
 		case (BlockStatement) `<BlockStatement stmt>`: {
 			modified = false;
 			stmtRefactored = stmt;
 			top-down-break visit(stmt) {
-				case (StringLiteral) `<StringLiteral strLiteral>`: {
-					strLiteralAsStr = "<strLiteral>";
-					if (strLiteralAsStr in constantByStrLiteral && size(strLiteralAsStr) >= SONAR_MINIMUM_LITERAL_LENGTH) {
+				case (StringLiteral) `<StringLiteral stringLiteral>`: {
+					strLiteral = "<stringLiteral>";
+					if (isStrLiteralAlreadyDefinedAndOfMinimumSize(strLiteral)) {
 						modified = true;
-						constant = constantByStrLiteral[strLiteralAsStr];
-						stmtRefactoredStr = replaceAll("<stmt>", strLiteralAsStr, constant);
+						constant = constantByStrLiteral[strLiteral];
+						stmtRefactoredStr = replaceAll("<stmt>", strLiteral, constant);
 						stmtRefactored = parse(#BlockStatement, stmtRefactoredStr);
 						increaseTimesReplacedByConstant(constant);
 					}
@@ -121,11 +151,12 @@ private void doRefactorForEachClassBody(loc fileLoc, CompilationUnit unit, Class
 private void resetState() {
 	shouldRewrite = false;
 	constantByStrLiteral = ();
+	fieldDeclarationByStrLiteral = ();
 	definedConstants = [];
 	timesReplacedByConstant = ();
 }
 
-private void loadConstantByStrLiteral(CompilationUnit unit) {
+private void loadConstantMaps(CompilationUnit unit) {
 	top-down visit(unit) {
 		case (FieldDeclaration) `<FieldDeclaration flDecl>`: {
 			top-down-break visit (flDecl) {
@@ -142,9 +173,9 @@ private void loadConstantByStrLiteral(CompilationUnit unit) {
 							}
 						}
 					}
-					if (!isEmpty(constantName) && !isEmpty(strLiteral) &&
-						 isFieldOnlyUsingASingleString(flDecl, constantName, strLiteral)) {
+					if (shouldConsiderThisConstant(flDecl, constantName, strLiteral)) {
 						constantByStrLiteral[strLiteral] = constantName;
+						fieldDeclarationByStrLiteral[strLiteral] = flDecl;
 					}
 				}
 			}
@@ -152,15 +183,14 @@ private void loadConstantByStrLiteral(CompilationUnit unit) {
 	}
 }
 
-// Not considering these cases:
-// even when concatenating other defined constants
-// 
-//// private static final String ROOT = "C:/";
-//// private static final String WORK_FOLDER = "dev/";
-//// private static final String WHERE_TO_SAVE = ROOT + WORK_FOLDER;
-//
-//// static final String HOST_ID = "org.eclipse.e4.ui.workbench.renderers.swt";
-//// protected static final String CONTRIBUTION_URI_PREFIX = "bundleclass://" + HOST_ID;
+private bool shouldConsiderThisConstant(FieldDeclaration flDecl, str constantName, str strLiteral) {
+	return !isEmpty(constantName) &&
+	 	   !isEmpty(strLiteral) &&
+		   isFieldOnlyUsingASingleString(flDecl, constantName, strLiteral) &&
+		   // we want to add the first constant, to avoid forward references
+		   strLiteral notin fieldDeclarationByStrLiteral;
+}
+
 private bool isFieldOnlyUsingASingleString(FieldDeclaration flDecl, str constantName, str strLiteral) {
 	return endsWith("<flDecl>", "<constantName> = <strLiteral>;");
 }
@@ -171,6 +201,18 @@ private void increaseTimesReplacedByConstant(str constant) {
 	} else {
 		timesReplacedByConstant[constant] = 1;
 	}
+}
+
+private bool isStrLiteralAlreadyDefinedAndOfMinimumSize(str strLiteral) {
+	return strLiteral in constantByStrLiteral && size(strLiteral) >= SONAR_MINIMUM_LITERAL_LENGTH;
+}
+
+private bool isNotUnaryExpression(AdditiveExpression addExp) {
+	try {
+		parse(#UnaryExpression, "<addExp>");
+		return false;
+	} catch:
+		return true;
 }
 
 private void writeLog(loc fileLoc) {

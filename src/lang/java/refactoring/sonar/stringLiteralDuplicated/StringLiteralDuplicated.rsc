@@ -24,12 +24,15 @@ private int SONAR_MINIMUM_LITERAL_LENGTH = 7;
 private map[str, int] countByStringLiterals = ();
 
 private map[str, set[BlockStatement]] stmtsByStringLiterals = ();
+private map[str, set[FieldDeclaration]] fieldsByStringLiterals = ();
 
 private set[BlockStatement] stmtsToBeRefactored = {};
+private set[FieldDeclaration] fieldsToBeRefactored = {};
 
 private map[str, str] constantByStrLiteral = ();
 
 private map[BlockStatement, BlockStatement] refactoredByOriginalStmts = ();
+private map[FieldDeclaration, FieldDeclaration] refactoredByOriginalFields = ();
 
 private list[FieldDeclaration] alreadyDefinedConstants = [];
 
@@ -109,9 +112,15 @@ private void doRefactorForEachClassBody(loc fileLoc, CompilationUnit unit, Class
 private void resetFieldsToInitialState() {
 	countByStringLiterals = ();
 	stmtsByStringLiterals = ();
+	fieldsByStringLiterals = ();
+	
 	stmtsToBeRefactored = {};
+	fieldsToBeRefactored = {};
+	
 	constantByStrLiteral = ();
 	refactoredByOriginalStmts = ();
+	refactoredByOriginalFields = ();
+	
 	alreadyDefinedConstants = [];
 }
 
@@ -132,8 +141,40 @@ private void populateMapsWithStringsOfInterestCount(ClassBody classBody) {
 						addStmtToStringLiteralsStmts(strLiteralAsStr, stmt);
 					}
 				}
+
+
 			}
 		}
+
+		case (FieldDeclaration) `<FieldDeclaration flDecl>`: {
+			top-down-break visit(flDecl) {
+				case(AdditiveExpression) `<AdditiveExpression concatExp>`: {
+					if (isNotUnaryExpression(concatExp)) {
+						visit (concatExp) {
+							case (StringLiteral) `<StringLiteral strLiteral>`: {
+								strLiteralAsStr = "<strLiteral>";
+								if (size(strLiteralAsStr) >= SONAR_MINIMUM_LITERAL_LENGTH) {
+									increaseStringLiteralCount(strLiteralAsStr);
+									addFieldToStringLiteralsFields(strLiteralAsStr, flDecl);
+								}
+							}
+						}
+					}
+				}
+				case (ArgumentList) `<ArgumentList argList>`: {
+					top-down-break visit(argList) {
+						case (StringLiteral) `<StringLiteral strLiteral>`: {
+							strLiteralAsStr = "<strLiteral>";
+							if (size(strLiteralAsStr) >= SONAR_MINIMUM_LITERAL_LENGTH) {
+								increaseStringLiteralCount(strLiteralAsStr);
+								addFieldToStringLiteralsFields(strLiteralAsStr, flDecl);
+							}
+						}
+					}
+				}
+			}
+		}
+		
 	}
 }
 
@@ -153,6 +194,14 @@ private void addStmtToStringLiteralsStmts(str strLiteral, BlockStatement stmt) {
 	}
 }
 
+private void addFieldToStringLiteralsFields(str strLiteral, FieldDeclaration field) {
+	if (strLiteral in fieldsByStringLiterals) {
+		fieldsByStringLiterals[strLiteral] += {field};
+	} else {
+		fieldsByStringLiterals[strLiteral] = {field};
+	}
+}
+
 private void filterMapsWithOnlyOccurrencesEqualOrGreaterThanMinimum() {
 	countByStringLiterals = (stringLiteral : countByStringLiterals[stringLiteral] | 
 			stringLiteral <- countByStringLiterals,
@@ -160,11 +209,17 @@ private void filterMapsWithOnlyOccurrencesEqualOrGreaterThanMinimum() {
 			
 	stringLiteralsToRemove = stmtsByStringLiterals - countByStringLiterals;
 	stmtsByStringLiterals = stmtsByStringLiterals - stringLiteralsToRemove;
+	
+	fieldsByStringLiteralsToRemove = fieldsByStringLiterals - countByStringLiterals;
+	fieldsByStringLiterals = fieldsByStringLiterals - fieldsByStringLiteralsToRemove;
 }
 
 private void populateMapOfStmtsToBeRefactored() {
 	stmtsToBeRefactored = { *stmts |
 		 set[BlockStatement] stmts <- range(stmtsByStringLiterals) };
+	
+	fieldsToBeRefactored = { *fields |
+		 set[FieldDeclaration] fields <- range(fieldsByStringLiterals) };
 }
 
 private void refactorDuplicatedOccurrencesToUseConstant(loc fileLoc, CompilationUnit unit, ClassBody classBody) {
@@ -233,7 +288,27 @@ private void populateOriginalAndRefactoredStmts(set[str] strLiterals) {
 				refactoredByOriginalStmts[stmtToBeRefactored] = stmtRefactored;		
 			}
 		}
-	}	
+	}
+	
+	for(fieldToBeRefactored <- fieldsToBeRefactored) {
+		for(strLiteral <- strLiterals) {
+			str fieldToBeRefactoredStr = "<fieldToBeRefactored>";
+			
+			if (fieldToBeRefactored in domain(refactoredByOriginalFields)) {
+				fieldToBeRefactoredStr = unparse(refactoredByOriginalFields[fieldToBeRefactored]);
+			}
+			
+			if (findFirst(fieldToBeRefactoredStr, strLiteral) != -1) {
+				str constantName = constantByStrLiteral["<strLiteral>"];
+				str fieldReplacedStringLiteralWithConstant = replaceAll(fieldToBeRefactoredStr, strLiteral, constantName);
+				//str stmtWithConstantAndOneLessNonNls = removeNonNlsCommentsForEclipse(stmtReplacedStringLiteralWithConstant);
+				fieldRefactored = parse(#FieldDeclaration, fieldReplacedStringLiteralWithConstant);
+				refactoredByOriginalFields[fieldToBeRefactored] = fieldRefactored;
+			}
+		}
+	}
+	
+	
 }
 
 private str removeNonNlsCommentsForEclipse(str stmtReplaced) {
@@ -305,8 +380,23 @@ private ClassBody changeStatementsToUseConstants(ClassBody classBody) {
 				insert (BlockStatement) `<BlockStatement refactored>`;
 			}
 		}
+		
+		case (FieldDeclaration) `<FieldDeclaration flDecl>`: {
+			if (flDecl in refactoredByOriginalFields) {
+				refactored = refactoredByOriginalFields[flDecl];
+				insert (FieldDeclaration) `<FieldDeclaration refactored>`;
+			}
+		}
 	}
 	return classBody;
+}
+
+private bool isNotUnaryExpression(AdditiveExpression addExp) {
+	try {
+		parse(#UnaryExpression, "<addExp>");
+		return false;
+	} catch:
+		return true;
 }
 
 private void writeLog(loc fileLoc) {
