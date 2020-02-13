@@ -19,6 +19,11 @@ private str countLogFileName = "STRING_INDEX_OF_SINGLE_QUOTE_COUNT.txt";
 
 private map[str, int] timesReplacedByScope = ();
 
+// The arguments that we parse contain the quotes already, thats why all escaped chars
+// in the set start and end with \"
+// each \ coming from Java should be two \\ in our rascal string
+private set[str] escapedChars = {"\"\\t\"", "\"\\b\"", "\"\\n\"", "\"\\r\"", "\"\\f\"", "\"\'\"", "\"\"\"", "\"\\\\\""};
+
 public void stringIndexOfSingleQuoteChar(list[loc] locs) {
 	shouldWriteLog = false;
 	doStringIndexOfSingleQuoteChar(locs);
@@ -33,7 +38,7 @@ private void doStringIndexOfSingleQuoteChar(list[loc] locs) {
 		} catch: {
 			println("Exception file: " + fileLoc.file);
 			continue;
-		}	
+		}
 	}
 }
 
@@ -75,58 +80,94 @@ private void doRefactorStringIndexOfSingleQuoteChar(loc fileLoc) {
 			
 			mdl = bottom-up-break visit(mdl) {
 				case (MethodInvocation) `<Primary varName>.<TypeArguments? ts>indexOf(<ArgumentList? args>)`: {
-					if (isArgOfInterest("<args>") && isVarOfInterest(mdl, "<varName>")) {
+					argsStr = "<args>";
+					if (isSingleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
 						modified = true;
 						countModificationForLog(methodSignature);
-						argAsChar = parseSingleCharStringToCharAsArgumentList("<args>");
+						argAsChar = parseSingleCharStringToCharAsArgumentList(argsStr);
 						insert (MethodInvocation) `<Primary varName>.<TypeArguments? ts>indexOf(<ArgumentList argAsChar>)`;
+					} else if (isDoubleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
+						modified = true;
+						countModificationForLog(methodSignature);
+						ArgumentList refactoredDoubleArgList = refactorDoubleArgList(argsStr);
+						insert (MethodInvocation) `<Primary varName>.<TypeArguments? ts>indexOf(<ArgumentList refactoredDoubleArgList>)`;
 					}
 				}
+
 				case (MethodInvocation) `<Primary varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList? args>)`: {
-					if (isArgOfInterest("<args>") && isVarOfInterest(mdl, "<varName>")) {
+					argsStr = "<args>";
+					if (isSingleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
 						modified = true;
 						countModificationForLog(methodSignature);
-						argAsChar = parseSingleCharStringToCharAsArgumentList("<args>");
+						argAsChar = parseSingleCharStringToCharAsArgumentList(argsStr);
 						insert (MethodInvocation) `<Primary varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList argAsChar>)`;
+					} else if (isDoubleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
+						modified = true;
+						countModificationForLog(methodSignature);
+						ArgumentList refactoredDoubleArgList = refactorDoubleArgList(argsStr);
+						insert (MethodInvocation) `<Primary varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList refactoredDoubleArgList>)`;
 					}
 				}
+
 				case (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>indexOf(<ArgumentList? args>)`: {
-					if (isArgOfInterest("<args>") && isVarOfInterest(mdl, "<varName>")) {
+					argsStr = "<args>";
+					if (isSingleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
 						modified = true;
 						countModificationForLog(methodSignature);
-						argAsChar = parseSingleCharStringToCharAsArgumentList("<args>");
+						argAsChar = parseSingleCharStringToCharAsArgumentList(argsStr);
 						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>indexOf(<ArgumentList argAsChar>)`;
+					} else if (isDoubleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
+						modified = true;
+						countModificationForLog(methodSignature);
+						refactoredDoubleArgList = refactorDoubleArgList(argsStr);
+						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>indexOf(<ArgumentList refactoredDoubleArgList>)`;
 					}
 				}
+
 				case (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList? args>)`: {
-					if (isArgOfInterest("<args>") && isVarOfInterest(mdl, "<varName>")) {
+					argsStr = "<args>";
+					if (isSingleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
 						modified = true;
 						countModificationForLog(methodSignature);
-						argAsChar = parseSingleCharStringToCharAsArgumentList("<args>");
+						argAsChar = parseSingleCharStringToCharAsArgumentList(argsStr);
 						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList argAsChar>)`;
+					} else if (isDoubleArgOfInterest(argsStr) && isVarOfInterest(mdl, "<varName>")) {
+						modified = true;
+						countModificationForLog(methodSignature);
+						ArgumentList refactoredDoubleArgList = refactorDoubleArgList(argsStr);
+						insert (MethodInvocation) `<ExpressionName varName>.<TypeArguments? ts>lastIndexOf(<ArgumentList refactoredDoubleArgList>)`;
 					}
 				}
 			}
+
 			if (modified) {
 				shouldRewrite = true;
 				insert (MethodDeclaration) `<MethodDeclaration mdl>`;
 			}
 		}
 	}
-	
-	
+
 	if (shouldRewrite) {
 		writeFile(fileLoc, unit);
 		doWriteLog(fileLoc);
 	}
 }
 
-private bool isMethodNameOfInterest(str methodName) {
-	return methodName == "lastIndexOf" || methodName == "indexOf";
+private bool isSingleArgOfInterest(str arg) {
+	return isEscapedChar(arg) || isAStringWithSizeOne(arg);
 }
 
-private bool isArgOfInterest(str arg) {
-	return findFirst(arg, ",") == -1 && findFirst(arg, "\"") != -1 && size(arg) == 3;
+private bool isEscapedChar(str arg) {
+	return arg in escapedChars;
+}
+
+private bool isAStringWithSizeOne(str arg) {
+	arg = trim(arg);
+	return size(arg) == 3 && isCharAtIndexEqualsToDoubleQuote(arg, 0) && isCharAtIndexEqualsToDoubleQuote(arg, 2);
+}
+
+private bool isCharAtIndexEqualsToDoubleQuote(str arg, int index) {
+	return stringChar(charAt(arg, index)) == "\"";
 }
 
 private bool isVarOfInterest(MethodDeclaration mdl, str varNameOrChainOfInvocation) {
@@ -149,25 +190,16 @@ private bool isVarInTheChainAString(set[MethodVar] localVars, str varNameOrChain
 	}
 	
 	return false;
-	
-	// TODO we are not resolving method invocation chain yet. 
-	// example: file.getResource().getName().indexOf("2") >= 0
-	
-	//list[str] varNamesInChain = split(".", varNameOrChainOfInvocation);
-	//set[str] localVarNames = retrieveAllNames(localVars);
-	//for (varNameInChain <- varNamesInChain) {
-	//	if (varNameInChain in localVarNames) {
-	//		println(varNameInChain);
-	//		MethodVar var = findByName(localVars, varNameInChain);
-	//		if (isString(var))
-	//			return true;
-	//	}
-	//}
 }
 
 private ArgumentList parseSingleCharStringToCharAsArgumentList(str singleCharString) {
-	replaced = replaceAll(singleCharString, "\"", "\'");
+	replaced = transformStringToChar(singleCharString);
 	return parse(#ArgumentList, replaced);
+}
+
+private str transformStringToChar(str singleCharString) {
+	replaced = replaceFirst(singleCharString, "\"", "\'");
+	return replaceLast(replaced, "\"", "\'");
 }
 
 private void countModificationForLog(str scope) {
@@ -181,4 +213,35 @@ private void countModificationForLog(str scope) {
 private void doWriteLog(loc fileLoc) {
 	if (shouldWriteLog)
 		writeLog(fileLoc, logPath, detailedLogFileName, countLogFileName, timesReplacedByScope);
+}
+
+private bool isDoubleArgOfInterest(str args) {
+	try {
+		return tryToParseIsDoubleArgOfInterest(args);
+	} catch:
+		return false;
+}
+
+private bool tryToParseIsDoubleArgOfInterest(str args) {
+	doubleArgs = parse(#DoubleArgumentIndexOf, args);
+
+	top-down-break visit (doubleArgs) {
+		case (DoubleArgumentIndexOf) `<StringLiteral strLiteral> , <IntegerLiteral intLiteral>`: {
+			return isSingleArgOfInterest("<strLiteral>");
+		}
+	}
+
+	return false;
+}
+
+private ArgumentList refactorDoubleArgList(str argsStr) {
+	doubleArgs = parse(#DoubleArgumentIndexOf, argsStr);
+	top-down-break visit (doubleArgs) {
+		case (DoubleArgumentIndexOf) `<StringLiteral strLiteral> , <IntegerLiteral intLiteral>`: {
+			replaced = transformStringToChar("<strLiteral>");
+			return parse(#ArgumentList, "<replaced>, <intLiteral>");
+		}
+	}
+
+	return parse(#ArgumentList, argsStr);
 }
