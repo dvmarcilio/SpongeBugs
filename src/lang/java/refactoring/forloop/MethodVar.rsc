@@ -6,7 +6,7 @@ import lang::java::util::GeneralUtils;
 
 // TODO Review if using a Set is the best choice. Probably not.
 public data MethodVar = methodVar(bool isFinal, str name, str varType, bool isParameter, 
-	bool isDeclaredWithinLoop, bool isEffectiveFinal);
+	bool isDeclaredWithinLoop, bool isEffectiveFinal, bool isField);
 
 private set[str] collections = {"List", "ArrayList", "LinkedList", "Set", "HashSet", "LinkedHashSet",
 	 "TreeSet", "Queue", "Stack", "SortedSet", "EnumSet", "ArrayDeque", "ConcurrentLinkedDeque", "ConcurrentLinkedQueue",
@@ -77,7 +77,19 @@ public set[str] retrieveNonFinalsNames(set[MethodVar] methodVars) {
 }
 
 public MethodVar findByName(set[MethodVar] methodVars, str name) {
-	return getOneFrom({ var | MethodVar var <- methodVars, var.name == name });
+	try {
+		return getOneFrom({ var | MethodVar var <- methodVars, var.name == name });
+	} catch EmptySet():
+		return findByNameField(methodVars, name);
+}
+
+private MethodVar findByNameField(set[MethodVar] methodVars, str name) {
+	str fieldPrefix = "this.";
+	if (startsWith(name, fieldPrefix)) {
+		fieldName = substring(name, size(fieldPrefix));
+		return getOneFrom({ var | MethodVar var <- methodVars, var.name == fieldName });
+	}
+	throw EmptySet();
 }
 
 public set[MethodVar] retrieveParameters(set[MethodVar] methodVars) {
