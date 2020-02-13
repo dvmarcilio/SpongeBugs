@@ -83,27 +83,27 @@ private void doReplaceEmptyConstantWithGenericMethod(loc fileLoc) {
 		case (MethodDeclaration) `<MethodDeclaration mdl>`: {
 			modified = false;
 			mdl = visit(mdl) {
-				case (ReturnStatement) `return <Expression exp>;`: {
-					exp = visit(exp) {
-						case (Expression) `Collections.<Identifier constantName>`: {						
-							if (isConstantOfInterest("<constantName>")) {
-								if (methodReturnsACollection(mdl)) {
-									modified = true;
-									Expression refactored = generateCorrectMethodInvocationFromConstantName("<constantName>");
-									countModificationForLog(retrieveMethodSignature(mdl));
-									insert (Expression) `<Expression refactored>`;
-								}
-							}
-						}
-					}
-					if (modified) {
-						insert (ReturnStatement) `return <Expression exp>;`;
+				case (Expression) `Collections.<Identifier constantName>`: {
+					if (isConstantOfInterest("<constantName>")) {
+						modified = true;
+						Expression refactored = generateCorrectMethodInvocationFromConstantName("<constantName>");
+						countModificationForLog(retrieveMethodSignature(mdl));
+						insert (Expression) `<Expression refactored>`;
 					}
 				}
 			}
 			if (modified) {
 				shouldRewrite = true;
 				insert (MethodDeclaration) `<MethodDeclaration mdl>`;
+			}
+		}
+
+		case (Expression) `Collections.<Identifier constantName>`: {
+			if (isConstantOfInterest("<constantName>")) {
+				shouldRewrite = true;
+				Expression refactored = generateCorrectMethodInvocationFromConstantName("<constantName>");
+				countModificationForLog("outside of method");
+				insert (Expression) `<Expression refactored>`;
 			}
 		}
 	}
@@ -117,15 +117,6 @@ private void doReplaceEmptyConstantWithGenericMethod(loc fileLoc) {
 
 private bool isConstantOfInterest(str constName) {
 	return constName in constantsToCheck;
-}
-
-private bool methodReturnsACollection(MethodDeclaration mdl) {
-	methodReturn = retrieveMethodReturnTypeAsStr(mdl);
-	for (collectionType <- collections) {
-		if (startsWith(methodReturn, collectionType))
-			return true;
-	}
-	return false;
 }
 
 private Expression generateCorrectMethodInvocationFromConstantName(str constName) {
