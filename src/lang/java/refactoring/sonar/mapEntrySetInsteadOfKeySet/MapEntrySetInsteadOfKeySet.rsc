@@ -185,7 +185,6 @@ private map[str, Var] findVarsInstantiatedInMethod(MethodDeclaration mdl) {
 	return varsInMethod;
 }
 
-// What to do with: for (MMenuElement menuElement : new HashSet<>(modelToContribution.keySet())) 
 private MapExp isExpressionCallingKeySetOnAMapInstance(Expression exp, map[str, Var] localVarsByName) {
 	visit(exp) {
 		case (MethodInvocation) `<ExpressionName beforeFunc>.keySet()`: {
@@ -251,7 +250,7 @@ private Statement refactorLoopBody(Statement loopBody, set[MethodInvocation] map
 		loopBodyStr = "<loopBody>";
 		keyAsVar = "<iteratedVarType><iteratedVarName>= <ENTRY_NAME>.getKey();";
 		loopBodyStr = replaceFirst(loopBodyStr, "{", "{\n<keyAsVar>");
-		return parse(#Statement, loopBodyStr);;
+		return parse(#Statement, loopBodyStr);
 	} else {
 		return refactorLoopBodyWithoutKeepingKeyAsLoopVar(loopBody, iteratedVarNameStr);
 	}
@@ -293,12 +292,18 @@ private Statement refactorLoopBodyWithoutKeepingKeyAsLoopVar(Statement loopBody,
 			if (trim("<expName>") == iteratedVarNameStr)
 				insert parse(#Expression, "<ENTRY_NAME>.getKey()");
 		}
+		
+		case (CastExpression) `(<ReferenceType ref> <AdditionalBound* ab>) <ExpressionName expressionName>`: {
+			if (trim("<expressionName>") == iteratedVarNameStr)
+				insert parse(#CastExpression, "(<ref><ab>) <ENTRY_NAME>.getKey()");
+		}
+
 		case (UnaryExpression) `<UnaryExpression expName>`: {
-			if (trim("<expName>") == iteratedVarNameStr) {
+			expNameStr = trim("<expName>");
+			if (expNameStr == iteratedVarNameStr) {
 				insert parse(#UnaryExpression, "<ENTRY_NAME>.getKey()");
 			} else {
-				expNameStr = trim("<expName>");
-				if (containsIteratedVarNameInRightSituation(iteratedVarNameStr, expNameStr)) {
+				if (startsWith(expNameStr, "<iteratedVarNameStr>.")) {
 					try {
 						expRefactoredStr = replaceFirst(expNameStr, iteratedVarNameStr, "<ENTRY_NAME>.getKey()");
 						expRefactored = parse(#UnaryExpression, expRefactoredStr);
@@ -309,11 +314,6 @@ private Statement refactorLoopBodyWithoutKeepingKeyAsLoopVar(Statement loopBody,
 		}
 	}
 	return loopBody;
-}
-
-private bool containsIteratedVarNameInRightSituation(str iteratedVarNameStr, str expNameStr) {
-	return startsWith(expNameStr, "<iteratedVarNameStr>.") ||
-		expNameStr == iteratedVarNameStr; 
 }
 
 private str getMapEntryQualifiedReference(CompilationUnit unit) {
