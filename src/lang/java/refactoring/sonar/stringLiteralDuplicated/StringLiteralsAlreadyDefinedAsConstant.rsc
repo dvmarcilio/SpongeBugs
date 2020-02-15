@@ -13,6 +13,7 @@ private int SONAR_MINIMUM_LITERAL_LENGTH = 7;
 
 private map[str, str] constantByStrLiteral = ();
 private map[str, FieldDeclaration] fieldDeclarationByStrLiteral = ();
+private list[FieldDeclaration] constants = [];
 
 private bool shouldRewrite = false;
 
@@ -94,7 +95,8 @@ private void doRefactorForEachClassBody(loc fileLoc, CompilationUnit unit, Class
 							case (StringLiteral) `<StringLiteral stringLiteral>`: {
 								strLiteral = "<stringLiteral>";
 								if (isStrLiteralAlreadyDefinedAndOfMinimumSize(strLiteral) && 
-										fieldDeclarationByStrLiteral[strLiteral] != flDecl) {
+										fieldDeclarationByStrLiteral[strLiteral] != flDecl &&
+										isNotForwardReference(flDecl, strLiteral)) {
 									modified = true;
 									constant = constantByStrLiteral[strLiteral];
 									flDeclRefactored = parse(#FieldDeclaration, replaceAll("<flDeclRefactored>", strLiteral, constant));
@@ -152,7 +154,7 @@ private void resetState() {
 	shouldRewrite = false;
 	constantByStrLiteral = ();
 	fieldDeclarationByStrLiteral = ();
-	definedConstants = [];
+	constants = [];
 	timesReplacedByConstant = ();
 }
 
@@ -176,6 +178,7 @@ private void loadConstantMaps(CompilationUnit unit) {
 					if (shouldConsiderThisConstant(flDecl, constantName, strLiteral)) {
 						constantByStrLiteral[strLiteral] = constantName;
 						fieldDeclarationByStrLiteral[strLiteral] = flDecl;
+						constants += flDecl;
 					}
 				}
 			}
@@ -205,6 +208,13 @@ private void increaseTimesReplacedByConstant(str constant) {
 
 private bool isStrLiteralAlreadyDefinedAndOfMinimumSize(str strLiteral) {
 	return strLiteral in constantByStrLiteral && size(strLiteral) >= SONAR_MINIMUM_LITERAL_LENGTH;
+}
+
+private bool isNotForwardReference(FieldDeclaration flDecl, str strLiteral) {
+	indexOfCurrConstant = indexOf(constants, flDecl);
+	indexOfConstantToUse = indexOf(constants, fieldDeclarationByStrLiteral[strLiteral]);
+	
+	return indexOfConstantToUse < indexOfCurrConstant;
 }
 
 private bool isNotUnaryExpression(AdditiveExpression addExp) {
