@@ -229,11 +229,12 @@ public void sonarFixesForDirectoryIncludes(loc dirLoc, list[str] rules, bool ign
 }
 
 // debug without runner
-public void sonarFixesForFilesIncludes(list[loc] dirLocs, list[str] rules, bool ignoreTestFiles = true) {
+public void sonarFixesForDirsIncludes(list[loc] dirLocs, list[str] rules, bool ignoreTestFiles = true) {
 	list[loc] javaFiles = [];
 	for (dirLoc <- dirLocs) {
 		javaFiles += javaFilesFromDir(dirLoc, ignoreTestFiles);
 	}
+	println(size(javaFiles));
 	fixForRules(javaFiles, rules);
 }
 
