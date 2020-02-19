@@ -2,7 +2,7 @@
 
 Please download the [runnable.jar](https://github.com/dvmarcilio/SpongeBugs/releases/download/1.0.1/spongebugs-runner-20-12-19.jar).
 
-Make sure that your java points to a JDK (version >= 8).
+Make sure that your java path points to a JDK (version >= 8).
 
 You can pass several path arguments to the jar, including directories and .java files. Make sure to provide full paths.
 
@@ -14,14 +14,14 @@ You can pass several path arguments to the jar, including directories and .java 
 
 ## Parameters
 
-## Ignoring test files
+### Ignoring test files
 
 `--ignoreTestFiles=true` (default)
 
 `--ignoreTestFiles=false`
 
 ### Including/excluding rules
-You can either include some rules, or exclude rules. You can't have both.
+You can either include some rules, or exclude rules. You cannot have both.
 
 Use `,` as a separator if you want more than one rule, with no spaces in between. 
 
