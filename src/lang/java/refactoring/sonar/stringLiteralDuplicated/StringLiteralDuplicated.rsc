@@ -41,7 +41,9 @@ private bool shouldWriteLog = false;
 private loc logPath; 
 
 private str detailedLogFileName = "STRING_LITERAL_DUPLICATED_DETAILED.txt";
-private str countLogFileName = "STRING_LITERAL_DUPLICATED_COUNT.txt"; 
+private str countLogFileName = "STRING_LITERAL_DUPLICATED_COUNT.txt";
+
+private str unitStr = "";
 
 public void stringLiteralDuplicated(list[loc] locs) {
 	shouldWriteLog = false;
@@ -88,6 +90,7 @@ private CompilationUnit retrieveCompilationUnitFromLoc(loc fileLoc) {
 
 private void refactorForEachClassBody(loc fileLoc, CompilationUnit unit) { 
 	for(classBody <- retrieveClassBodies(unit)) {
+		unitStr = "<unit>";
 		doRefactorForEachClassBody(fileLoc, unit, classBody);
 		unit = retrieveCompilationUnitFromLoc(fileLoc);
 	}	
@@ -231,20 +234,24 @@ private void refactorDuplicatedOccurrencesToUseConstant(loc fileLoc, Compilation
 	}
 }
 
-// FIXME Right now we can't verify a Constant name that is inherited
-// will fail on rare situations when the name of the constant is already defined (by inheritance) in this case
 private void generateConstantNamesForEachStrLiteral(ClassBody classBody, set[str] strLiterals) {
 	set[str] alreadyDefinedConstantsNamesAndGenerated = retrieveThisClassConstantNames(classBody);
+	classHasExtendsStr = findFirst(unitStr, "extends") != -1;
 	for (strLiteral <- strLiterals) {
 		constantNameForThisStrLiteral = stringValueToConstantName(strLiteral);
 		count = 1;
-		while (constantNameForThisStrLiteral in alreadyDefinedConstantsNamesAndGenerated) {
+		while (constantNameForThisStrLiteral in alreadyDefinedConstantsNamesAndGenerated
+				|| unitHasPotentialConstantName(classHasExtendsStr, constantNameForThisStrLiteral)) {
 			count += 1;
 			constantNameForThisStrLiteral += "_<count>";
 		}
 		constantByStrLiteral[strLiteral] = constantNameForThisStrLiteral;
 		alreadyDefinedConstantsNamesAndGenerated += constantNameForThisStrLiteral;
 	}
+}
+
+private bool unitHasPotentialConstantName(bool classHasExtendsStr, str constantNameForThisStrLiteral) {
+	return classHasExtendsStr && findFirst(unitStr, constantNameForThisStrLiteral) != -1;
 }
 
 private set[str] retrieveThisClassConstantNames(ClassBody classBody) {
