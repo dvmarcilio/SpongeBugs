@@ -253,7 +253,7 @@ private Statement refactorLoopBody(Statement loopBody, set[MethodInvocation] map
 	if (shouldKeepKeyAsLoopVar(loopBody, iteratedVarNameStr)) {
 		loopBodyStr = "<loopBody>";
 		keyAsVar = "<iteratedVarType><iteratedVarName>= <ENTRY_NAME>.getKey();";
-		loopBodyStr = replaceFirst(loopBodyStr, "{", "{\n<keyAsVar>");
+		loopBodyStr = replaceFirst(loopBodyStr, "{", "{\n            <keyAsVar>");
 		return parse(#Statement, loopBodyStr);
 	} else {
 		return refactorLoopBodyWithoutKeepingKeyAsLoopVar(loopBody, iteratedVarNameStr);
