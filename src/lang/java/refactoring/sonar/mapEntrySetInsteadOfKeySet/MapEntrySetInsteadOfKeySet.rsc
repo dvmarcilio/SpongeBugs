@@ -205,12 +205,16 @@ private MapExp generateMapExp(Tree beforeFunc, map[str, Var] localVarsByName) {
 	}
 }
 
+// Map has to have generic types
+// If it's raw we get a compiler error
 private bool isBeforeFuncAMapInstance(str beforeFunc, map[str, Var] localVarsByName) {
 	if (beforeFunc in localVarsByName) {
-		return localVarsByName[beforeFunc].varType in mapTypes;
+		var = localVarsByName[beforeFunc];
+		return var.varType in mapTypes && !isEmpty(var.generics);
 	}
 	if (beforeFunc in fieldsByName) {
-		return fieldsByName[beforeFunc].varType in mapTypes;
+		var = fieldsByName[beforeFunc];
+		return var.varType in mapTypes && !isEmpty(var.generics);
 	}
 	return false;
 }
