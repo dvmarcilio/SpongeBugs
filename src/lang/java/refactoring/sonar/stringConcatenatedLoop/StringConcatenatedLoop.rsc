@@ -58,10 +58,10 @@ private void doRefactorAllStringConcatenatedLoop(list[loc] locs) {
 
 private bool shouldContinueWithASTAnalysis(loc fileLoc) {
 	javaFileContent = readFile(fileLoc);
-	return containForLoop(javaFileContent) && findFirst(javaFileContent, "+=") != -1;
+	return containLoop(javaFileContent) && findFirst(javaFileContent, "+=") != -1;
 }
 
-private bool containForLoop(str javaFileContent) {
+private bool containLoop(str javaFileContent) {
 	return findFirst(javaFileContent, "for (") != -1 || findFirst(javaFileContent, "for(") != -1 || 
 		findFirst(javaFileContent, "while (") != -1 || findFirst(javaFileContent, "while(") != -1;
 }
