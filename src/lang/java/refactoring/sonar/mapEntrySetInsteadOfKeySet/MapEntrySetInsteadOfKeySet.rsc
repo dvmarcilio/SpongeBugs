@@ -292,6 +292,12 @@ private Statement replaceGetCalls(Statement loopBody, set[MethodInvocation] mapG
 
 private Statement refactorLoopBodyWithoutKeepingKeyAsLoopVar(Statement loopBody, str iteratedVarNameStr) {
 	loopBody = visit(loopBody) {
+
+		case (MethodInvocation) `<Identifier before>. <TypeArguments? ta> <Identifier methodName> (<ArgumentList? args>)`: {
+			if (trim("<before>") == iteratedVarNameStr)
+				insert parse(#MethodInvocation, "<ENTRY_NAME>.getKey().<ta><methodName>(<args>)");
+		}
+
 		case (Expression) `<ExpressionName expName>`: {
 			if (trim("<expName>") == iteratedVarNameStr)
 				insert parse(#Expression, "<ENTRY_NAME>.getKey()");
