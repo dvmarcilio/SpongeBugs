@@ -52,9 +52,7 @@ public void refactorAllEntrySetInsteadOfKeySet(list[loc] locs, loc logPathArg) {
 private void doRefactorAllEntrySetInsteadOfKeySet(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				doRefactorFileEntrySetInsteadOfKeySet(fileLoc);
-			}
 		} catch Ambiguity: {
 			println("Ambiguity file (MapEntrySetInsteadOfKeySet): " + fileLoc.file);
 			continue;

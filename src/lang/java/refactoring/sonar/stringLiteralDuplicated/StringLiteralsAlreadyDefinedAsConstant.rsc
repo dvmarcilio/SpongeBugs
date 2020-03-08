@@ -34,9 +34,7 @@ public void allStringLiteralsAlreadyDefinedAsConstant(list[loc] locs) {
 private void doAllStringLiteralsAlreadyDefinedAsConstant(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				refactorForEachClassBody(fileLoc);
-			}
 		} catch: {
 			println("Exception file (StringLiteralsAlreadyDefinedAsConstant): <fileLoc.file>");
 			continue;

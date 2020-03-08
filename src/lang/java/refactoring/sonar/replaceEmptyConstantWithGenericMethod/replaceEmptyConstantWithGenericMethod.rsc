@@ -47,9 +47,7 @@ public void replaceAllEmptyConstantWithGenericMethods(list[loc] locs, loc logPat
 private void doReplaceAllEmptyConstantWithGenericMethods(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				doReplaceEmptyConstantWithGenericMethod(fileLoc);	
-			}
 		} catch: {
 			continue;
 		}	

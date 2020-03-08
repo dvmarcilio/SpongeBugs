@@ -47,10 +47,8 @@ public void refactorAllReferenceComparison(list[loc] locs) {
 private void doRefactorAllReferenceComparison(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				fieldsByName = ();
 				refactorFileReferenceComparison(fileLoc);
-			}
 		} catch: {
 			println("Exception file: " + fileLoc.file);
 			continue;

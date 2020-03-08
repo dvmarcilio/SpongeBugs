@@ -35,9 +35,7 @@ public void refactorAllToCollectionIsEmpty(list[loc] locs) {
 private void doRefactorAllToCollectionIsEmpty(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				doRefactorCollectionIsEmpty(fileLoc);
-			}
 		} catch: {
 			println("Exception file (CollectionIsEmpty): " + fileLoc.file);
 			continue;

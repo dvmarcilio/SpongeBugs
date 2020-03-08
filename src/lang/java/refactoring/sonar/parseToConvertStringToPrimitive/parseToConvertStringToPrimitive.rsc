@@ -67,9 +67,7 @@ public void refactorAllParseToConvertStringToPrimitive(list[loc] locs, loc logPa
 private void doRefactorAllParseToConvertStringToPrimitive(list[loc] locs) {
 	for (fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				doRefactorFileParseToConvertStringToPrimitive(fileLoc);
-			}
 		} catch: {
 			println("Exception file: " + fileLoc.file);
 			continue;

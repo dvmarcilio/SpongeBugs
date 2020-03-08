@@ -30,9 +30,7 @@ public void refactorAllStringLiteralLHSEquality(list[loc] locs, loc logPathArg) 
 private void doRefactorAllStringLiteralLHSEquality(list[loc] locs) {
 	for (fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				doRefactorFileStringLiteralLHSEquality(fileLoc);
-			}
 		} catch: {
 			println("Exception file (StringLiteralLHSEquality): " + fileLoc.file);
 			continue;

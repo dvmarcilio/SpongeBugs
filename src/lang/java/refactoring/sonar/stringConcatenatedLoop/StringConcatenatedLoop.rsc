@@ -46,9 +46,7 @@ public void refactorAllStringConcatenatedLoop(list[loc] locs, loc logPathArg) {
 private void doRefactorAllStringConcatenatedLoop(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				doRefactorStringConcatenatedLoop(fileLoc);
-			}
 		} catch: {
 			println("Exception file (StringConcatenatedLoop): " + fileLoc.file);
 			continue;

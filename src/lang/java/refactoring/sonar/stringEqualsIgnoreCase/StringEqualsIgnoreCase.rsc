@@ -15,10 +15,8 @@ private bool shouldRewrite = false;
 public void refactorAllToEqualsIgnoreCase(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				shouldRewrite = false;
 				refactorFileToEqualsIgnoreCase(fileLoc);
-			}
 		} catch: {
 			println("Exception file: " + fileLoc.file);
 			continue;

@@ -32,9 +32,7 @@ public void stringIndexOfSingleQuoteChar(list[loc] locs) {
 private void doStringIndexOfSingleQuoteChar(list[loc] locs) {
 	for(fileLoc <- locs) {
 		try {
-			if (shouldContinueWithASTAnalysis(fileLoc)) {
 				doRefactorStringIndexOfSingleQuoteChar(fileLoc);
-			}
 		} catch: {
 			println("Exception file: " + fileLoc.file);
 			continue;
