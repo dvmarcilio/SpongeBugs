@@ -17,7 +17,7 @@ month={Sep.},}
 ```
 
 ## Running
-Please download the [runnable.jar](https://github.com/dvmarcilio/SpongeBugs/releases/download/1.0.1/spongebugs-runner-20-12-19.jar).
+Please download the [runnable.jar](https://github.com/dvmarcilio/SpongeBugs/releases/download/2.0.0/spongebugs-runner-2.0.0.jar).
 
 For a quickstart with default settings (all rules and ignoring test files):
 
@@ -38,10 +38,14 @@ For almost every project we asked whether pull-requests fixing issues would be w
 ### Eclipse IDE
 
 **GitHub (mirror):** https://github.com/eclipse/eclipse.platform.ui
-
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-eclipse-platform-ui
-
 **PRs welcome?** [Tweet by Lars Vogel](https://twitter.com/vogella/status/1096088933144952832)
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-eclipse-platform-ui
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-eclipse-platform-ui
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-eclipse-platform-ui
+**commit hash**: af25f6b71e4741983a94346ba782fbc272bbcdf5
+**Build instructions**: https://www.slideshare.net/LarsVogel/eclipse-ide-and-platform-news-on-fosdem-2020/34
+**Build instructions 2**: https://www.vogella.com/tutorials/EclipsePlatformDevelopment/article.html#build-instructions
 
 **PRs:** 
 1. https://git.eclipse.org/r/#/c/140484/
@@ -58,9 +62,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/SonarSource/sonarqube
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-sonar
-
 **PRs welcome?** Didn't ask.
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-sonar
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-sonar
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-sonar
+**commit hash**: fd0b1a9c43ff7e50d3b817cb0f0359b6db4c6206
+**Build instructions**: https://github.com/SonarSource/sonarqube#building
 
 **PRs:** 
 1. https://github.com/SonarSource/sonarqube/pull/3212
@@ -69,9 +77,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/spotbugs/spotbugs
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-spotbugs
-
 **PRs welcome?** Question asked through e-mail.
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-spotbugs
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-spotbugs
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-spotbugs
+**commit hash**: 01bc7b564e464860361f42a4bfd524a3f87cf2a2
+**Build instructions**: https://github.com/spotbugs/spotbugs#build
 
 **PRs:** 
 1. https://github.com/spotbugs/spotbugs/pull/967
@@ -80,9 +92,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/atomix/atomix
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-atomix
-
 **PRs welcome?** [Asked on slack](https://atomixio.slack.com/archives/CE20WE4JC/p1559158367001400)
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-atomix
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-atomix
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-atomix
+**commit hash**: dbad13756abfd997386c2d046a3d8bb8d45570d3
+**Build instructions**: none
 
 **PRs:** 
 1. https://github.com/atomix/atomix/pull/1032
@@ -92,9 +108,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/ant-media/Ant-Media-Server
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-ant-media-server
-
 **PRs welcome?** [Asked on Google Group](https://groups.google.com/forum/#!topic/ant-media-server/Fo3n5zpU7vg)
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-ant-media-server
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-ant-media-server
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-ant-media-server
+**commit hash**: 650f09b1aba67a6430fab16150f60ce58c7291ab
+**Build instructions**: https://github.com/ant-media/Ant-Media-Server/wiki/Build-From-Source
 
 **PRs:** 
 1. https://github.com/ant-media/Ant-Media-Server/pull/1301
@@ -105,9 +125,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/database-rider/database-rider
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-database-rider
-
 **PRs welcome?** Question asked through e-mail.
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-database-rider
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-database-rider
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-database-rider
+**commit hash**: 016f8bd6cdeb1521101d33905c3ac65c9f19f743
+**Build instructions**: https://database-rider.github.io/getting-started/#setup_database_rider
 
 **PRs:** 
 1. https://github.com/database-rider/database-rider/pull/138
@@ -119,9 +143,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/codice/ddf
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-ddf 
-
 **PRs welcome?** [Asked on Google group](https://groups.google.com/forum/?fromgroups#!topic/ddf-developers/Ovdj2lohGow).
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-ddf 
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-ddf
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-ddf
+**commit hash**: 60518b55dbdd45f799eecf0e618be65077a0fbff
+**Build instructions**: https://codice.atlassian.net/wiki/spaces/DDF/pages/70986756/Cloning+Building+DDF
 
 **PRs:** 
 1. https://github.com/codice/ddf/pull/4933
@@ -132,9 +160,14 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/jeremylong/DependencyCheck
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-dependency-check
-
 **PRs welcome?** [GitHub issue](https://github.com/jeremylong/DependencyCheck/issues/1963)
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-dependency-check
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-dependency-check
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-dependency-check
+**commit hash**: c91f5ad50307598804382f379e3ea779470ba833
+**Build instructions**: https://github.com/jeremylong/DependencyCheck#development-usage
+**Build instructions 2**: https://github.com/jeremylong/DependencyCheck#building-from-source
 
 **PRs:** 
 1. https://github.com/jeremylong/DependencyCheck/pull/1976
@@ -143,9 +176,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/improbable-research/keanu
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-keanu
-
 **PRs welcome?** [GitHub issue](https://github.com/improbable-research/keanu/issues/565)
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-keanu
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-keanu
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-keanu
+**commit hash**: 0088e7841265a106dcdafee717d521353dbb4868
+**Build instructions**: https://github.com/improbable-research/keanu#building-the-code
 
 **PRs:** 
 1. https://github.com/improbable-research/keanu/pull/566
@@ -156,9 +193,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/microsoft/mssql-jdbc
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-mssql-jdbc
-
 **PRs welcome?** [GitHub issue](https://github.com/microsoft/mssql-jdbc/issues/1076)
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-mssql-jdbc
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-mssql-jdbc
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-mssql-jdbc
+**commit hash**: 8d4613ef8cc3ce20ad4d58d6686a4070f12c30ed
+**Build instructions**: https://github.com/microsoft/mssql-jdbc#build
 
 **PRs:** 
 1. https://github.com/microsoft/mssql-jdbc/pull/1077
@@ -167,9 +208,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/payara/Payara
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-payara
-
 **PRs welcome?** [GitHub issue](https://github.com/payara/Payara/issues/4017)
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-payara
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-payara2
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-payara
+**commit hash**: c5ddbc755c
+**Build instructions**: https://payara.gitbooks.io/payara-server/build-instructions/build-instructions.html
 
 **PRs:** 
 1. https://github.com/payara/Payara/pull/4022
@@ -183,9 +228,13 @@ For almost every project we asked whether pull-requests fixing issues would be w
 
 **GitHub:** https://github.com/primefaces/primefaces
 
-**SonarCloud dashboard**: https://sonarcloud.io/dashboard?id=spongebugs-primefaces
-
 **PRs welcome?** [Asked on forum](https://forum.primefaces.org/viewtopic.php?f=3&t=59104)
+
+**SonarCloud dashboard (Original)**: https://sonarcloud.io/dashboard?id=spongebugs-primefaces
+**SonarCloud dashboard (Extension)**: https://sonarcloud.io/dashboard?id=spongebugs-ext-primefaces
+**SonarCloud dashboard Without Step 1:**: https://sonarcloud.io/dashboard?id=spongebugs-ext-nostep1-primefaces
+**commit hash**: 3183384cfd940d3d4d46ace5bbbd379818a0a567
+**Build instructions**: https://github.com/primefaces/primefaces/wiki/Building-From-Source
 
 **PRs:** 
 1. https://github.com/primefaces/primefaces/pull/4879
