@@ -3,17 +3,23 @@
 Automatically fixing SonarQube and SpotBugs Java rules with source-to-source transformations.
 
 ```
-@INPROCEEDINGS{Marcilio:SCAM:2019,
-author={Diego {Marcilio} and Carlo A. {Furia} and Rodrigo {Bonifácio} and Gustavo {Pinto}},
-booktitle={2019 19th International Working Conference on Source Code Analysis and Manipulation (SCAM)},
-title={Automatically Generating Fix Suggestions in Response to Static Code Analysis Warnings},
-year={2019},
-pages={34-44},
-keywords={Java;program debugging;program diagnostics;program verification;public domain software;software maintenance;software quality;static code analysis warnings;static code analysis tools;fix suggestions;open-source projects;industrial projects;Java program transformation;SpotBugs tools;SonarQube tools;Static Analysis Tools;Program Repair;Program Transformation},
-doi={10.1109/SCAM.2019.00013},
-ISSN={1942-5430},
-month={Sep.},}
-
+@article{DBLP:journals/jss/MarcilioFBP20,
+  author    = {Diego Marcilio and
+               Carlo A. Furia and
+               Rodrigo Bonif{\'{a}}cio and
+               Gustavo Pinto},
+  title     = {SpongeBugs: Automatically generating fix suggestions in response to
+               static code analysis warnings},
+  journal   = {J. Syst. Softw.},
+  volume    = {168},
+  pages     = {110671},
+  year      = {2020},
+  url       = {https://doi.org/10.1016/j.jss.2020.110671},
+  doi       = {10.1016/j.jss.2020.110671},
+  timestamp = {Thu, 10 Sep 2020 09:33:17 +0200},
+  biburl    = {https://dblp.org/rec/journals/jss/MarcilioFBP20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
 ```
 
 ## Running
