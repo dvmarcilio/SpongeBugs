@@ -35,6 +35,8 @@ You can pass several path arguments to the jar, including directories and .java 
 
 For more advanced settings, such as including/excluding specific rules, or to not ignore test files, refer to [RUNNING.md](RUNNING.md).
 
+The list of the rules fixed by SpongeBugs is also available in [RUNNING.md](https://github.com/dvmarcilio/SpongeBugs/blob/master/RUNNING.md#rules).
+
 ## Evaluation
 
 First, we run SonarQube (through SonarCloud) on each project before and after running SpongeBugs. The rules implemented by SpongeBugs are outlined in the [Quality Profile](https://sonarcloud.io/organizations/spongebugs/rules?activation=true&qprofile=AWwfYsZg8aVgWcqKQLXH) used. Projects' dashboards can be found in [SpongeBugs' organization](https://sonarcloud.io/organizations/spongebugs/projects) in SonarCloud, and in the links below. Note that the dashboards below are related to SpongeBugs, and not the projects' original.  
