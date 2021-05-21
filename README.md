@@ -23,7 +23,7 @@ Automatically fixing SonarQube and SpotBugs Java rules with source-to-source tra
 
 ## Running
 
-Please download the [runnable.jar](https://github.com/dvmarcilio/SpongeBugs/releases/download/2.0.0/spongebugs-runner-2.0.0.jar).
+Please download the [runnable.jar](https://github.com/dvmarcilio/SpongeBugs/releases/download/2.0.0-final/spongebugs-runner-2.0.0.jar).
 
 For a quickstart with default settings (all rules and ignoring test files):
 
