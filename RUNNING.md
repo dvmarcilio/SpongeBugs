@@ -1,6 +1,6 @@
 # Running
 
-Please download the [runnable.jar](https://github.com/dvmarcilio/SpongeBugs/releases/download/1.0.1/spongebugs-runner-20-12-19.jar).
+Please download the [runnable.jar](https://github.com/dvmarcilio/SpongeBugs/releases/download/2.0.0-final/spongebugs-runner-2.0.0.jar).
 
 Make sure that your java path points to a JDK (version >= 8).
 
